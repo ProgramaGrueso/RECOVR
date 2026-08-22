@@ -10,7 +10,10 @@
       <h2 class="section-title">CATEGORÍAS DE SERVICIO</h2>
     </div>
 
-    <div class="categories-brackets-grid">
+    <div
+      class="categories-brackets-grid drag-scroll-container"
+      (mouseenter)="setCursor('[ FILTRAR ]')"
+      (mouseleave)="resetCursor()">
       <button
         class="bracket-card"
         [class.active]="activeCategory === 'ALL'"
@@ -69,7 +72,10 @@
   <!-- 4. EL ESPACIO (8 SUITES RECOVR) -->
   <section class="space-section" id="espacio" aria-label="El espacio RECOVR">
     <div class="space-container">
-      <div class="space-image-wrapper">
+      <div
+        class="space-image-wrapper"
+        (mouseenter)="setCursor('[ SANCTUM 01 ]')"
+        (mouseleave)="resetCursor()">
         <img
           src="assets/Krea2-155013_00001_.png"
           alt="Sala de tratamiento gótica RECOVR con espejos y candelabros"
@@ -103,7 +109,10 @@
     <!-- SUITES GRID -->
     <div class="spaces-grid-container">
       <h3 class="spaces-grid-title">[ ÁREAS DE TRATAMIENTO — 8 ESPACIOS ]</h3>
-      <div class="spaces-grid">
+      <div
+        class="spaces-grid drag-scroll-container"
+        (mouseenter)="setCursor('[ DESLIZAR ]')"
+        (mouseleave)="resetCursor()">
         <div class="space-card" *ngFor="let spc of spaces">
           <div class="space-card-header">
             <span class="space-code">{{ spc.code }}</span>
@@ -123,14 +132,12 @@
     </div>
   </section>
 
-
-
   <app-section-divider></app-section-divider>
 
   <!-- 5. EQUIPO -->
   <section class="team-section" id="equipo" aria-label="Equipo profesional">
     <div class="section-header">
-      <span class="section-subtitle">EXPERTOS EN ANATOMÍA & REHABILITACIÓN</span>
+      <span class="section-subtitle">[ EXPERTOS EN ANATOMÍA & REHABILITACIÓN ]</span>
       <h2 class="section-title">EQUIPO PROFESIONAL</h2>
       <p class="section-description">
         Kinesiólogos deportivos y podólogos clínicos especializados en alto rendimiento físico.

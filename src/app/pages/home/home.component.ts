@@ -1,12 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { ServiceCardComponent } from '../../components/service-card/service-card.component';
 import { ProfessionalCardComponent } from '../../components/professional-card/professional-card.component';
 import { SectionDividerComponent } from '../../components/section-divider/section-divider.component';
 import { CatalogService } from '../../services/catalog.service';
 import { BookingService } from '../../services/booking.service';
+import { CursorService } from '../../services/cursor.service';
 import { ServiceItem, ServiceCategory } from '../../models/service.model';
 import { Professional } from '../../models/professional.model';
 import { SpaceItem } from '../../models/space.model';
@@ -16,7 +16,6 @@ import { SpaceItem } from '../../models/space.model';
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     HeroComponent,
     ServiceCardComponent,
     ProfessionalCardComponent,
@@ -26,17 +25,15 @@ import { SpaceItem } from '../../models/space.model';
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
+  private catalogService = inject(CatalogService);
+  private bookingService = inject(BookingService);
+  private cursorService = inject(CursorService);
 
   featuredServices: ServiceItem[] = [];
   filteredServices: ServiceItem[] = [];
   professionals: Professional[] = [];
   spaces: SpaceItem[] = [];
   activeCategory: ServiceCategory | 'ALL' = 'ALL';
-
-  constructor(
-    private catalogService: CatalogService,
-    private bookingService: BookingService
-  ) {}
 
   ngOnInit(): void {
     this.catalogService.getFeaturedServices().subscribe(services => {
@@ -53,7 +50,6 @@ export class HomeComponent implements OnInit {
     });
   }
 
-
   filterCategory(category: ServiceCategory | 'ALL'): void {
     this.activeCategory = category;
     if (category === 'ALL') {
@@ -69,5 +65,13 @@ export class HomeComponent implements OnInit {
 
   onSelectProfessional(professional: Professional): void {
     this.bookingService.openBookingModal();
+  }
+
+  setCursor(label: string) {
+    this.cursorService.setCursor(label, true, 'drag');
+  }
+
+  resetCursor() {
+    this.cursorService.resetCursor();
   }
 }

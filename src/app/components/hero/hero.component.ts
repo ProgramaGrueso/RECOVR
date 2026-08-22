@@ -1,22 +1,23 @@
-import { Component, EventEmitter, Output, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, ElementRef, AfterViewInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { BookingService } from '../../services/booking.service';
+import { CursorService } from '../../services/cursor.service';
 
 @Component({
   selector: 'app-hero',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './hero.component.html',
   styleUrls: ['./hero.component.scss']
 })
 export class HeroComponent implements AfterViewInit {
+  private bookingService = inject(BookingService);
+  private cursorService = inject(CursorService);
+
   @Output() reserveClick = new EventEmitter<void>();
   @ViewChild('heroVideo') heroVideoRef?: ElementRef<HTMLVideoElement>;
 
   isVideoFailed = false;
-
-  constructor(private bookingService: BookingService) {}
 
   ngAfterViewInit(): void {
     const video = this.heroVideoRef?.nativeElement;
@@ -24,7 +25,6 @@ export class HeroComponent implements AfterViewInit {
       const playPromise = video.play();
       if (playPromise !== undefined) {
         playPromise.catch(() => {
-          // Autoplay fue bloqueado por el navegador o modo ahorro de datos
           this.isVideoFailed = true;
         });
       }
@@ -39,5 +39,12 @@ export class HeroComponent implements AfterViewInit {
     this.bookingService.navigateToBooking();
     this.reserveClick.emit();
   }
-}
 
+  setCursor(label: string) {
+    this.cursorService.setCursor(label, true, 'default');
+  }
+
+  resetCursor() {
+    this.cursorService.resetCursor();
+  }
+}

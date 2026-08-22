@@ -11,7 +11,12 @@
   </div>
 </article>
 
-<article class="service-card" *ngIf="!isLoading && service">
+<article
+  class="service-card"
+  *ngIf="!isLoading && service"
+  (mouseenter)="setCursor('[ ' + (service.code || 'PROTOCOLO') + ' ]')"
+  (mouseleave)="resetCursor()">
+  
   <div class="card-image-wrapper">
     <img [src]="service.imageUrl" [alt]="service.name" class="card-image" loading="lazy" />
     <span class="card-category-badge">[ {{ service.category }} ]</span>
@@ -35,14 +40,11 @@
       </div>
 
       <a
-        routerLink="/reserva"
-        [queryParams]="{ serviceId: service.id }"
+        (click)="onReserve()"
         class="btn-primary card-cta"
         [id]="'btn-reserve-' + service.id">
-        [ RESERVAR SESIÓN ]
+        [ RESERVAR ]
       </a>
     </div>
   </div>
 </article>
-
-

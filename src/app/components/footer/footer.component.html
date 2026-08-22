@@ -4,12 +4,10 @@
     <h2 class="footer-headline">RITUAL DE RECUPERACIÓN</h2>
 
     <p class="footer-subhead">Rendimiento físico y acondicionamiento corporal sin concesiones.</p>
-    <a routerLink="/reserva" class="btn-primary footer-cta-btn" id="footer-cta-reserve">
+    <a (click)="onReserve()" (mouseenter)="setCursor('[ RESERVAR ]')" (mouseleave)="resetCursor()" class="btn-primary footer-cta-btn" id="footer-cta-reserve">
       [ RESERVAR SESIÓN ]
     </a>
   </div>
-
-
 
   <div class="footer-divider"></div>
 
@@ -18,22 +16,22 @@
       <h3 class="footer-wordmark">RECOVR</h3>
       <p class="brand-tagline">El cuerpo, restaurado.</p>
       <p class="brand-desc">
-        Masaje terapéutico de alta presión y podología clínica bajo un estándar de máxima exigencia.
+        Masaje terapéutico de alta presión y podología clínica bajo una atmósfera gótico-editorial de máxima exigencia.
       </p>
     </div>
 
     <div class="footer-col">
-      <h4 class="col-title">PROTOCOLOS</h4>
+      <h4 class="col-title">[ PROTOCOLOS ]</h4>
       <ul class="footer-links">
-        <li><a href="#protocolos">Descompresión Miofascial</a></li>
-        <li><a href="#protocolos">Podología Reconstructiva</a></li>
-        <li><a href="#protocolos">Masaje Deportivo</a></li>
-        <li><a href="#protocolos">Perfilado Podológico</a></li>
+        <li><a href="#protocolos">[ 01 ] Descompresión Miofascial</a></li>
+        <li><a href="#protocolos">[ 02 ] Podología Reconstructiva</a></li>
+        <li><a href="#protocolos">[ 03 ] Masaje Deportivo Elite</a></li>
+        <li><a href="#protocolos">[ 04 ] Perfilado Podológico</a></li>
       </ul>
     </div>
 
     <div class="footer-col">
-      <h4 class="col-title">UBICACIÓN & HORARIOS</h4>
+      <h4 class="col-title">[ SANCTUM & ATENCIÓN ]</h4>
       <p class="info-line">Av. San Martín 1040, Ciudad</p>
       <p class="info-line">Lunes a Sábado — 09:00 a 21:00</p>
       <p class="info-line">Atención exclusiva con reserva previa</p>
@@ -41,7 +39,7 @@
   </div>
 
   <div class="footer-bottom">
-    <p class="copyright">&copy; RECOVR. Todos los derechos reservados.</p>
-    <p class="credits">DISEÑO EDITORIAL GÓTICO-PREMIUM</p>
+    <p class="copyright">&copy; RECOVR SANCTUM. Todos los derechos reservados.</p>
+    <p class="credits">[ ESTÉTICA EDITORIAL GÓTICO-PREMIUM ]</p>
   </div>
 </footer>

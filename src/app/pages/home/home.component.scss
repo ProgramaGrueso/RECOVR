@@ -4,29 +4,28 @@
   width: 100%;
   overflow-x: hidden;
 
-  // Encabezados comunes de sección
   .section-header {
     text-align: center;
     max-width: 750px;
-    margin: 0 auto 3.5rem;
+    margin: 0 auto 3.8rem;
     padding: 0 1.5rem;
 
     .section-subtitle {
       display: block;
       font-family: var(--font-body);
-      font-size: 0.7rem;
-      letter-spacing: 0.3em;
+      font-size: 0.75rem;
+      letter-spacing: 0.25em;
       color: var(--color-accent-soft);
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.85rem;
       font-weight: 600;
       text-transform: uppercase;
     }
 
     .section-title {
       font-family: var(--font-display);
-      font-size: clamp(2rem, 4vw, 3rem);
-      letter-spacing: 0.2em;
-      margin-bottom: 1rem;
+      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+      letter-spacing: var(--letter-spacing-wide);
+      margin-bottom: 1.1rem;
       color: var(--color-text);
     }
 
@@ -34,37 +33,37 @@
       font-family: var(--font-body);
       font-size: 0.95rem;
       color: var(--color-text-muted);
-      line-height: 1.6;
+      line-height: 1.65;
     }
   }
 
-  // 2. SECCIÓN CATEGORÍAS (Corchetes tipo Serotoninn)
+  // 2. SECCIÓN CATEGORÍAS (Corchetes Serotoninn 1:1)
   .categories-section {
-    padding: 5rem 2rem 2rem;
-    max-width: 1300px;
+    padding: 5.5rem 2rem 2.5rem;
+    max-width: 1350px;
     margin: 0 auto;
 
     .categories-brackets-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
+      gap: 1.6rem;
 
       .bracket-card {
         background: var(--color-bg-alt);
-        border: 1px solid rgba(184, 180, 176, 0.12);
-        padding: 2rem 1.75rem;
+        border: 1px solid rgba(184, 180, 176, 0.14);
+        padding: 2.2rem 2rem;
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.75rem;
+        gap: 0.85rem;
         cursor: pointer;
         text-align: left;
-        transition: all 0.35s $transition-smooth;
+        transition: all 0.4s var(--ease-serotoninn);
 
         &:hover, &.active {
           border-color: var(--color-accent-soft);
-          background: rgba(20, 16, 20, 0.95);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(92, 26, 43, 0.2);
+          background: rgba(20, 16, 20, 0.98);
+          box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(92, 26, 43, 0.25);
 
           .bracket-code {
             color: var(--color-text);
@@ -77,24 +76,24 @@
 
         .bracket-code {
           font-family: var(--font-display);
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           letter-spacing: 0.25em;
           color: var(--color-accent-soft);
           font-weight: 600;
-          transition: color 0.3s $transition-smooth;
+          transition: color 0.3s var(--ease-serotoninn);
         }
 
         .bracket-name {
           font-family: var(--font-body);
-          font-size: 0.8rem;
+          font-size: 0.82rem;
           letter-spacing: 0.15em;
           color: var(--color-text-muted);
-          transition: color 0.3s $transition-smooth;
+          transition: color 0.3s var(--ease-serotoninn);
         }
 
         .bracket-count {
           font-family: var(--font-display);
-          font-size: 0.75rem;
+          font-size: 0.78rem;
           color: var(--color-metal);
           letter-spacing: 0.2em;
           margin-top: 0.5rem;
@@ -105,52 +104,52 @@
 
   // 3. SECCIÓN PROTOCOLOS
   .protocols-section {
-    padding: 2rem 2rem 4rem;
-    max-width: 1300px;
+    padding: 2.5rem 2rem 4.5rem;
+    max-width: 1350px;
     margin: 0 auto;
 
     .services-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 2rem;
+      gap: 2.2rem;
     }
   }
 
-  // 4. SECCIÓN EL ESPACIO
+  // 4. SECCIÓN EL ESPACIO (8 SUITES RECOVR)
   .space-section {
-    padding: 4rem 2rem;
-    max-width: 1300px;
+    padding: 4.5rem 2rem;
+    max-width: 1350px;
     margin: 0 auto;
 
     .space-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 4rem;
+      gap: 4.5rem;
       align-items: center;
 
       .space-image-wrapper {
         position: relative;
         width: 100%;
-        height: 500px;
+        height: 520px;
         overflow: hidden;
-        border: 1px solid rgba(184, 180, 176, 0.15);
+        border: 1px solid rgba(184, 180, 176, 0.18);
 
         .space-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
           filter: contrast(1.1) brightness(0.85);
-          transition: transform 0.6s $transition-smooth;
+          transition: transform 0.7s var(--ease-serotoninn);
 
           &:hover {
-            transform: scale(1.03);
+            transform: scale(1.04);
           }
         }
 
         .space-img-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(135deg, rgba(10, 10, 11, 0.4), transparent);
+          background: linear-gradient(135deg, rgba(10, 10, 11, 0.45), transparent);
           pointer-events: none;
         }
       }
@@ -162,40 +161,40 @@
 
         .space-badge {
           font-family: var(--font-body);
-          font-size: 0.7rem;
-          letter-spacing: 0.3em;
+          font-size: 0.72rem;
+          letter-spacing: 0.28em;
           color: var(--color-accent-soft);
-          margin-bottom: 0.85rem;
+          margin-bottom: 0.95rem;
           font-weight: 600;
         }
 
         .space-title {
           font-family: var(--font-display);
-          font-size: clamp(2rem, 3.5vw, 3.2rem);
-          letter-spacing: 0.2em;
-          margin-bottom: 1.5rem;
+          font-size: clamp(2.2rem, 3.8vw, 3.4rem);
+          letter-spacing: var(--letter-spacing-wide);
+          margin-bottom: 1.6rem;
         }
 
         .space-lead {
           font-family: var(--font-display);
-          font-size: 1.15rem;
+          font-size: 1.2rem;
           font-style: italic;
           color: var(--color-metal);
           line-height: 1.5;
-          margin-bottom: 1rem;
+          margin-bottom: 1.1rem;
         }
 
         .space-body {
           font-family: var(--font-body);
-          font-size: 0.9rem;
+          font-size: 0.92rem;
           color: var(--color-text-muted);
-          line-height: 1.6;
-          margin-bottom: 2rem;
+          line-height: 1.65;
+          margin-bottom: 2.2rem;
         }
 
         .space-stats {
           display: flex;
-          gap: 3rem;
+          gap: 3.5rem;
           margin-bottom: 1rem;
 
           .stat-item {
@@ -204,7 +203,7 @@
 
             .stat-val {
               font-family: var(--font-display);
-              font-size: 2.2rem;
+              font-size: 2.4rem;
               font-weight: 600;
               color: var(--color-text);
               letter-spacing: 0.1em;
@@ -212,7 +211,7 @@
 
             .stat-lbl {
               font-family: var(--font-body);
-              font-size: 0.65rem;
+              font-size: 0.68rem;
               letter-spacing: 0.2em;
               color: var(--color-text-muted);
             }
@@ -223,64 +222,64 @@
 
     // SPACES GRID
     .spaces-grid-container {
-      margin-top: 5rem;
+      margin-top: 5.5rem;
 
       .spaces-grid-title {
         font-family: var(--font-display);
-        font-size: 1.2rem;
-        letter-spacing: 0.25em;
+        font-size: 1.25rem;
+        letter-spacing: 0.28em;
         color: var(--color-accent-soft);
-        margin-bottom: 2.5rem;
+        margin-bottom: 2.8rem;
         text-align: center;
         text-transform: uppercase;
       }
 
       .spaces-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+        gap: 1.6rem;
 
         .space-card {
           background: var(--color-bg-alt);
-          border: 1px solid rgba(184, 180, 176, 0.12);
-          padding: 1.75rem;
+          border: 1px solid rgba(184, 180, 176, 0.14);
+          padding: 1.9rem;
           display: flex;
           flex-direction: column;
-          transition: all 0.35s $transition-smooth;
+          transition: all 0.4s var(--ease-serotoninn);
 
           &:hover {
             border-color: var(--color-metal);
             transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65);
           }
 
           .space-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.85rem;
 
             .space-code {
               font-family: var(--font-display);
-              font-size: 0.8rem;
+              font-size: 0.82rem;
               letter-spacing: 0.2em;
               color: var(--color-accent-soft);
             }
 
             .space-capacity {
               font-family: var(--font-body);
-              font-size: 0.65rem;
+              font-size: 0.68rem;
               letter-spacing: 0.15em;
               color: var(--color-text-muted);
               background: rgba(255, 255, 255, 0.05);
               padding: 0.2rem 0.6rem;
-              border: 1px solid rgba(184, 180, 176, 0.1);
+              border: 1px solid rgba(184, 180, 176, 0.12);
             }
           }
 
           .space-card-name {
             font-family: var(--font-display);
-            font-size: 1.25rem;
+            font-size: 1.3rem;
             letter-spacing: 0.1em;
             color: var(--color-text);
             margin-bottom: 0.25rem;
@@ -288,7 +287,7 @@
 
           .space-card-subtitle {
             font-family: var(--font-body);
-            font-size: 0.75rem;
+            font-size: 0.78rem;
             letter-spacing: 0.1em;
             color: var(--color-accent-soft);
             margin-bottom: 1rem;
@@ -298,22 +297,22 @@
 
           .space-card-desc {
             font-family: var(--font-body);
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             color: var(--color-text-muted);
-            line-height: 1.5;
-            margin-bottom: 1.25rem;
+            line-height: 1.55;
+            margin-bottom: 1.35rem;
           }
 
           .space-card-features {
             display: flex;
             flex-direction: column;
             gap: 0.35rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.6rem;
             margin-top: auto;
 
             .feature-tag {
               font-family: var(--font-body);
-              font-size: 0.75rem;
+              font-size: 0.78rem;
               color: var(--color-metal);
               letter-spacing: 0.05em;
             }
@@ -321,7 +320,7 @@
 
           .space-card-btn {
             width: 100%;
-            padding: 0.6rem 1rem;
+            padding: 0.65rem 1rem;
             font-size: 0.75rem;
             text-align: center;
             cursor: pointer;
@@ -331,21 +330,19 @@
     }
   }
 
-
   // 5. SECCIÓN EQUIPO
   .team-section {
-    padding: 2rem 2rem 4rem;
-    max-width: 1300px;
+    padding: 2.5rem 2rem 4.5rem;
+    max-width: 1350px;
     margin: 0 auto;
 
     .team-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2rem;
+      gap: 2.2rem;
     }
   }
 }
-
 
 @media (max-width: 992px) {
   .home-page {
@@ -354,7 +351,7 @@
       gap: 2.5rem;
 
       .space-image-wrapper {
-        height: 350px;
+        height: 360px;
       }
     }
   }

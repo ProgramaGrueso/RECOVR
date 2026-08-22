@@ -1,7 +1,8 @@
 // src/styles/_tokens.scss
-// Tokens de diseño RECOVR — Identidad Gótico-Editorial Oscuro
+// Tokens de diseño RECOVR — Estética Serotoninn 1:1 adaptada a RECOVR (Gótico-Editorial)
 
 :root {
+  // Paleta RECOVR oficial
   --color-bg: #0A0A0B;
   --color-bg-alt: #141014;
   --color-accent: #5C1A2B;
@@ -10,15 +11,23 @@
   --color-text-muted: #8A8285;
   --color-metal: #B8B4B0;
 
+  // Tipografía Serotoninn Escalada
   --font-display: 'Bodoni Moda', serif;
   --font-body: 'Inter', sans-serif;
 
+  // Tracking y espaciado editorial
+  --letter-spacing-tight: -0.04em;
+  --letter-spacing-normal: 0.05em;
   --letter-spacing-wide: 0.25em;
-  --letter-spacing-ultra: 0.4em;
+  --letter-spacing-ultra: 0.45em;
+
+  // Motion & Cubic Beziers Serotoninn 1:1
+  --ease-serotoninn: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-smooth: cubic-bezier(0.25, 1, 0.5, 1);
   --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-// Variables SCSS para importación directa en componentes
+// Variables SCSS
 $color-bg: var(--color-bg);
 $color-bg-alt: var(--color-bg-alt);
 $color-accent: var(--color-accent);
@@ -30,9 +39,10 @@ $color-metal: var(--color-metal);
 $font-display: var(--font-display);
 $font-body: var(--font-body);
 
+$ease-serotoninn: cubic-bezier(0.16, 1, 0.3, 1);
 $transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
-// Breakpoints estándar mobile-first (Angular Material / Tailwind)
+// Breakpoints
 $breakpoint-md: 768px;
 $breakpoint-lg: 1024px;
 
@@ -48,16 +58,25 @@ $breakpoint-lg: 1024px;
   }
 }
 
-// Mixins de utilidad
+// Mixins de firma Serotoninn
 @mixin font-wordmark {
   font-family: $font-display;
   text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-wide);
+  letter-spacing: var(--letter-spacing-ultra);
   font-weight: 500;
 }
 
+@mixin serotoninn-bracket-label {
+  font-family: $font-body;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--color-metal);
+  text-transform: uppercase;
+}
+
 @mixin gothic-border-bottom {
-  border-bottom: 1px solid rgba(184, 180, 176, 0.15);
+  border-bottom: 1px solid rgba(184, 180, 176, 0.12);
   position: relative;
 
   &::after {
@@ -72,7 +91,7 @@ $breakpoint-lg: 1024px;
   }
 }
 
-// Keyframes y clase para Skeleton Dark Loading State
+// Keyframes & Skeleton
 @keyframes skeleton-pulse {
   0% {
     background-color: #141014;
@@ -92,6 +111,4 @@ $breakpoint-lg: 1024px;
   animation: skeleton-pulse 1.8s ease-in-out infinite;
   background-color: #141014;
   border: 1px solid rgba(92, 26, 43, 0.2);
-  border-radius: 2px;
 }
-

@@ -2,28 +2,28 @@
 
 .service-card {
   background: var(--color-bg-alt);
-  border: 1px solid rgba(184, 180, 176, 0.12);
+  border: 1px solid rgba(184, 180, 176, 0.14);
   display: flex;
   flex-direction: column;
   height: 100%;
   position: relative;
-  transition: transform 0.4s $transition-smooth, border-color 0.4s $transition-smooth, box-shadow 0.4s $transition-smooth;
+  transition: transform 0.4s var(--ease-serotoninn), border-color 0.4s var(--ease-serotoninn), box-shadow 0.4s var(--ease-serotoninn);
   overflow: hidden;
 
   &:hover {
     transform: translateY(-4px);
     border-color: var(--color-accent-soft);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6), 0 0 15px rgba(92, 26, 43, 0.25);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7), 0 0 20px rgba(92, 26, 43, 0.3);
 
     .card-image {
-      transform: scale(1.05);
+      transform: scale(1.06);
     }
   }
 
   .card-image-wrapper {
     position: relative;
     width: 100%;
-    height: 220px;
+    height: 240px;
     overflow: hidden;
     background: #000;
 
@@ -31,8 +31,8 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: transform 0.6s $transition-smooth;
-      filter: contrast(1.08) brightness(0.9);
+      transition: transform 0.7s var(--ease-serotoninn);
+      filter: contrast(1.08) brightness(0.92);
     }
 
     .card-category-badge {
@@ -40,11 +40,11 @@
       top: 1rem;
       right: 1rem;
       z-index: 2;
-      background: rgba(10, 10, 11, 0.85);
+      background: rgba(10, 10, 11, 0.88);
       color: var(--color-metal);
-      border: 1px solid rgba(184, 180, 176, 0.2);
+      border: 1px solid rgba(184, 180, 176, 0.25);
       padding: 0.25rem 0.65rem;
-      font-size: 0.65rem;
+      font-size: 0.68rem;
       letter-spacing: 0.2em;
       font-weight: 600;
       text-transform: uppercase;
@@ -62,7 +62,7 @@
   }
 
   .card-content {
-    padding: 1.5rem;
+    padding: 1.6rem;
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -75,7 +75,7 @@
 
       .card-code {
         font-family: var(--font-display);
-        font-size: 0.75rem;
+        font-size: 0.78rem;
         letter-spacing: 0.2em;
         color: var(--color-accent-soft);
         font-weight: 600;
@@ -91,7 +91,7 @@
 
     .card-title {
       font-family: var(--font-display);
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       line-height: 1.3;
       letter-spacing: 0.08em;
       margin-bottom: 0.85rem;
@@ -103,8 +103,8 @@
       font-family: var(--font-body);
       font-size: 0.85rem;
       color: var(--color-text-muted);
-      line-height: 1.5;
-      margin-bottom: 1.5rem;
+      line-height: 1.55;
+      margin-bottom: 1.6rem;
       flex: 1;
     }
 
@@ -114,11 +114,11 @@
       justify-content: space-between;
       gap: 1rem;
       padding-top: 1rem;
-      border-top: 1px solid rgba(184, 180, 176, 0.1);
+      border-top: 1px solid rgba(184, 180, 176, 0.12);
 
       .card-price {
         font-family: var(--font-body);
-        font-size: 1.4rem;
+        font-size: 1.45rem;
         font-weight: 600;
         color: var(--color-text);
 
@@ -137,13 +137,12 @@
       }
 
       .card-cta {
-        padding: 0.6rem 1.2rem;
+        padding: 0.65rem 1.3rem;
         font-size: 0.75rem;
       }
     }
   }
 
-  // Styles for skeleton card content
   .skeleton-line {
     background: rgba(184, 180, 176, 0.08);
     height: 14px;
@@ -157,4 +156,3 @@
     &.skel-btn { width: 100px; height: 32px; }
   }
 }
-

@@ -1,4 +1,9 @@
-<section class="hero-container" aria-label="Sección principal de RECOVR">
+<section
+  class="hero-container"
+  (mouseenter)="setCursor('[ RECOVR SANCTUM ]')"
+  (mouseleave)="resetCursor()"
+  aria-label="Sección principal de RECOVR">
+  
   <div class="video-wrapper" [class.video-failed]="isVideoFailed">
     <video
       #heroVideo
@@ -18,12 +23,17 @@
   </div>
 
   <div class="hero-content">
+    <span class="hero-badge">[ PROTOCOLOS DE RESTAURACIÓN FISCAL & PODOLOGÍA ]</span>
     <h1 class="hero-wordmark">RECOVR</h1>
 
     <p class="hero-tagline">El cuerpo, restaurado.</p>
 
     <div class="hero-actions">
-      <a routerLink="/reserva" class="btn-primary" id="hero-cta-reserve">
+      <a
+        (click)="onReserve()"
+        (mouseenter)="setCursor('[ RESERVAR ]')"
+        class="btn-primary"
+        id="hero-cta-reserve">
         [ RESERVAR SESIÓN ]
       </a>
     </div>

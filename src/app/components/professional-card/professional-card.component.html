@@ -1,4 +1,9 @@
-<article class="professional-card" *ngIf="professional">
+<article
+  class="professional-card"
+  *ngIf="professional"
+  (mouseenter)="setCursor()"
+  (mouseleave)="resetCursor()">
+  
   <div class="card-portrait-wrapper">
     <img [src]="professional.photoUrl" [alt]="professional.name" class="portrait-img" loading="lazy" />
     <div class="portrait-overlay"></div>
@@ -26,10 +31,8 @@
       <span class="duties-text">{{ professional.duties }}</span>
     </div>
 
-    <a routerLink="/reserva" class="btn-secondary prof-cta" [id]="'btn-prof-' + professional.id">
-      [ RESERVAR CON {{ professional.name.split(' ')[0] | uppercase }} ]
+    <a (click)="onSelect()" class="btn-secondary prof-cta" [id]="'btn-prof-' + professional.id">
+      [ RESERVAR CON {{ getFirstNameUppercase(professional.name) }} ]
     </a>
   </div>
 </article>
-
-

@@ -1,22 +1,23 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { ServiceItem } from '../../models/service.model';
 import { BookingService } from '../../services/booking.service';
+import { CursorService } from '../../services/cursor.service';
 
 @Component({
   selector: 'app-service-card',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './service-card.component.html',
   styleUrls: ['./service-card.component.scss']
 })
 export class ServiceCardComponent {
+  private bookingService = inject(BookingService);
+  private cursorService = inject(CursorService);
+
   @Input() service?: ServiceItem;
   @Input() isLoading = false;
   @Output() reserve = new EventEmitter<ServiceItem>();
-
-  constructor(private bookingService: BookingService) {}
 
   onReserve(): void {
     if (this.service) {
@@ -24,5 +25,12 @@ export class ServiceCardComponent {
       this.reserve.emit(this.service);
     }
   }
-}
 
+  setCursor(label: string) {
+    this.cursorService.setCursor(label, true, 'reserve');
+  }
+
+  resetCursor() {
+    this.cursorService.resetCursor();
+  }
+}
