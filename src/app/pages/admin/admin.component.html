@@ -1,0 +1,47 @@
+<main class="admin-page">
+  <header class="admin-header">
+    <div class="header-title-box">
+      <span class="subhead">[ GESTIÓN DE SANCTUM ]</span>
+      <h1 class="title">PANEL DE ADMINISTRACIÓN</h1>
+    </div>
+    <div class="admin-status">[ SISTEMA OPERATIVO &bull; SPRING BOOT MOCK ]</div>
+  </header>
+
+  <!-- Metric Cards -->
+  <section class="stats-grid">
+    <div class="stat-card" *ngFor="let s of stats">
+      <span class="stat-label">{{ s.label }}</span>
+      <h3 class="stat-value">{{ s.value }}</h3>
+      <span class="stat-change">{{ s.change }} vs mes anterior</span>
+    </div>
+  </section>
+
+  <!-- Occupancy Calendar / Bookings Table -->
+  <section class="admin-section">
+    <h2 class="section-heading">[ PRÓXIMAS RESERVAS DE SESIÓN ]</h2>
+    <div class="table-container">
+      <table class="dark-table">
+        <thead>
+          <tr>
+            <th>CÓDIGO</th>
+            <th>CLIENTE</th>
+            <th>PROTOCOLO</th>
+            <th>ESPECIALISTA</th>
+            <th>FECHA & HORA</th>
+            <th>ESTADO</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of bookings">
+            <td class="code-cell">{{ b.id }}</td>
+            <td>{{ b.client }}</td>
+            <td>{{ b.service }}</td>
+            <td>{{ b.prof }}</td>
+            <td>{{ b.date }}</td>
+            <td><span class="status-badge" [class.confirmed]="b.status === 'CONFIRMADA'" [class.completed]="b.status === 'COMPLETADA'">{{ b.status }}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>

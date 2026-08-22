@@ -1,0 +1,130 @@
+@use '../../../styles/tokens' as *;
+
+.admin-page {
+  padding: 110px 2rem 5rem;
+  max-width: 1300px;
+  margin: 0 auto;
+
+  .admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 3rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(184, 180, 176, 0.15);
+
+    .subhead {
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      letter-spacing: 0.25em;
+      color: var(--color-accent-soft);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .title {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      letter-spacing: 0.2em;
+    }
+
+    .admin-status {
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: #81c784;
+    }
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3.5rem;
+
+    .stat-card {
+      background: var(--color-bg-alt);
+      border: 1px solid rgba(184, 180, 176, 0.15);
+      padding: 1.75rem;
+
+      .stat-label {
+        font-size: 0.7rem;
+        letter-spacing: 0.2em;
+        color: var(--color-metal);
+        display: block;
+        margin-bottom: 0.75rem;
+      }
+
+      .stat-value {
+        font-family: var(--font-display);
+        font-size: 2rem;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-change {
+        font-size: 0.75rem;
+        color: var(--color-accent-soft);
+      }
+    }
+  }
+
+  .admin-section {
+    .section-heading {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      letter-spacing: 0.2em;
+      margin-bottom: 1.5rem;
+      color: var(--color-metal);
+    }
+
+    .table-container {
+      background: var(--color-bg-alt);
+      border: 1px solid rgba(184, 180, 176, 0.15);
+      overflow-x: auto;
+
+      .dark-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.85rem;
+
+        th, td {
+          padding: 1.2rem 1.5rem;
+          border-bottom: 1px solid rgba(184, 180, 176, 0.08);
+        }
+
+        th {
+          font-family: var(--font-body);
+          font-size: 0.7rem;
+          letter-spacing: 0.2em;
+          color: var(--color-metal);
+          background: rgba(10, 10, 11, 0.5);
+        }
+
+        .code-cell {
+          font-family: var(--font-display);
+          color: var(--color-accent-soft);
+        }
+
+        .status-badge {
+          font-size: 0.65rem;
+          letter-spacing: 0.15em;
+          padding: 0.25rem 0.6rem;
+          background: rgba(184, 180, 176, 0.1);
+          color: var(--color-metal);
+
+          &.confirmed {
+            background: rgba(92, 26, 43, 0.3);
+            color: var(--color-text);
+            border: 1px solid var(--color-accent-soft);
+          }
+
+          &.completed {
+            background: rgba(46, 125, 50, 0.2);
+            color: #81c784;
+          }
+        }
+      }
+    }
+  }
+}

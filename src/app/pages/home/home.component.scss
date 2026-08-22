@@ -1,0 +1,361 @@
+@use '../../../styles/tokens' as *;
+
+.home-page {
+  width: 100%;
+  overflow-x: hidden;
+
+  // Encabezados comunes de sección
+  .section-header {
+    text-align: center;
+    max-width: 750px;
+    margin: 0 auto 3.5rem;
+    padding: 0 1.5rem;
+
+    .section-subtitle {
+      display: block;
+      font-family: var(--font-body);
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      color: var(--color-accent-soft);
+      margin-bottom: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: 0.2em;
+      margin-bottom: 1rem;
+      color: var(--color-text);
+    }
+
+    .section-description {
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+  }
+
+  // 2. SECCIÓN CATEGORÍAS (Corchetes tipo Serotoninn)
+  .categories-section {
+    padding: 5rem 2rem 2rem;
+    max-width: 1300px;
+    margin: 0 auto;
+
+    .categories-brackets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+
+      .bracket-card {
+        background: var(--color-bg-alt);
+        border: 1px solid rgba(184, 180, 176, 0.12);
+        padding: 2rem 1.75rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.35s $transition-smooth;
+
+        &:hover, &.active {
+          border-color: var(--color-accent-soft);
+          background: rgba(20, 16, 20, 0.95);
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5), 0 0 15px rgba(92, 26, 43, 0.2);
+
+          .bracket-code {
+            color: var(--color-text);
+          }
+
+          .bracket-name {
+            color: var(--color-text);
+          }
+        }
+
+        .bracket-code {
+          font-family: var(--font-display);
+          font-size: 0.9rem;
+          letter-spacing: 0.25em;
+          color: var(--color-accent-soft);
+          font-weight: 600;
+          transition: color 0.3s $transition-smooth;
+        }
+
+        .bracket-name {
+          font-family: var(--font-body);
+          font-size: 0.8rem;
+          letter-spacing: 0.15em;
+          color: var(--color-text-muted);
+          transition: color 0.3s $transition-smooth;
+        }
+
+        .bracket-count {
+          font-family: var(--font-display);
+          font-size: 0.75rem;
+          color: var(--color-metal);
+          letter-spacing: 0.2em;
+          margin-top: 0.5rem;
+        }
+      }
+    }
+  }
+
+  // 3. SECCIÓN PROTOCOLOS
+  .protocols-section {
+    padding: 2rem 2rem 4rem;
+    max-width: 1300px;
+    margin: 0 auto;
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+    }
+  }
+
+  // 4. SECCIÓN EL ESPACIO
+  .space-section {
+    padding: 4rem 2rem;
+    max-width: 1300px;
+    margin: 0 auto;
+
+    .space-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+
+      .space-image-wrapper {
+        position: relative;
+        width: 100%;
+        height: 500px;
+        overflow: hidden;
+        border: 1px solid rgba(184, 180, 176, 0.15);
+
+        .space-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          filter: contrast(1.1) brightness(0.85);
+          transition: transform 0.6s $transition-smooth;
+
+          &:hover {
+            transform: scale(1.03);
+          }
+        }
+
+        .space-img-overlay {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(10, 10, 11, 0.4), transparent);
+          pointer-events: none;
+        }
+      }
+
+      .space-content {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+
+        .space-badge {
+          font-family: var(--font-body);
+          font-size: 0.7rem;
+          letter-spacing: 0.3em;
+          color: var(--color-accent-soft);
+          margin-bottom: 0.85rem;
+          font-weight: 600;
+        }
+
+        .space-title {
+          font-family: var(--font-display);
+          font-size: clamp(2rem, 3.5vw, 3.2rem);
+          letter-spacing: 0.2em;
+          margin-bottom: 1.5rem;
+        }
+
+        .space-lead {
+          font-family: var(--font-display);
+          font-size: 1.15rem;
+          font-style: italic;
+          color: var(--color-metal);
+          line-height: 1.5;
+          margin-bottom: 1rem;
+        }
+
+        .space-body {
+          font-family: var(--font-body);
+          font-size: 0.9rem;
+          color: var(--color-text-muted);
+          line-height: 1.6;
+          margin-bottom: 2rem;
+        }
+
+        .space-stats {
+          display: flex;
+          gap: 3rem;
+          margin-bottom: 1rem;
+
+          .stat-item {
+            display: flex;
+            flex-direction: column;
+
+            .stat-val {
+              font-family: var(--font-display);
+              font-size: 2.2rem;
+              font-weight: 600;
+              color: var(--color-text);
+              letter-spacing: 0.1em;
+            }
+
+            .stat-lbl {
+              font-family: var(--font-body);
+              font-size: 0.65rem;
+              letter-spacing: 0.2em;
+              color: var(--color-text-muted);
+            }
+          }
+        }
+      }
+    }
+
+    // SPACES GRID
+    .spaces-grid-container {
+      margin-top: 5rem;
+
+      .spaces-grid-title {
+        font-family: var(--font-display);
+        font-size: 1.2rem;
+        letter-spacing: 0.25em;
+        color: var(--color-accent-soft);
+        margin-bottom: 2.5rem;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .spaces-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+
+        .space-card {
+          background: var(--color-bg-alt);
+          border: 1px solid rgba(184, 180, 176, 0.12);
+          padding: 1.75rem;
+          display: flex;
+          flex-direction: column;
+          transition: all 0.35s $transition-smooth;
+
+          &:hover {
+            border-color: var(--color-metal);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+          }
+
+          .space-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+
+            .space-code {
+              font-family: var(--font-display);
+              font-size: 0.8rem;
+              letter-spacing: 0.2em;
+              color: var(--color-accent-soft);
+            }
+
+            .space-capacity {
+              font-family: var(--font-body);
+              font-size: 0.65rem;
+              letter-spacing: 0.15em;
+              color: var(--color-text-muted);
+              background: rgba(255, 255, 255, 0.05);
+              padding: 0.2rem 0.6rem;
+              border: 1px solid rgba(184, 180, 176, 0.1);
+            }
+          }
+
+          .space-card-name {
+            font-family: var(--font-display);
+            font-size: 1.25rem;
+            letter-spacing: 0.1em;
+            color: var(--color-text);
+            margin-bottom: 0.25rem;
+          }
+
+          .space-card-subtitle {
+            font-family: var(--font-body);
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            color: var(--color-accent-soft);
+            margin-bottom: 1rem;
+            display: block;
+            font-weight: 500;
+          }
+
+          .space-card-desc {
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            color: var(--color-text-muted);
+            line-height: 1.5;
+            margin-bottom: 1.25rem;
+          }
+
+          .space-card-features {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            margin-bottom: 1.5rem;
+            margin-top: auto;
+
+            .feature-tag {
+              font-family: var(--font-body);
+              font-size: 0.75rem;
+              color: var(--color-metal);
+              letter-spacing: 0.05em;
+            }
+          }
+
+          .space-card-btn {
+            width: 100%;
+            padding: 0.6rem 1rem;
+            font-size: 0.75rem;
+            text-align: center;
+            cursor: pointer;
+          }
+        }
+      }
+    }
+  }
+
+
+  // 5. SECCIÓN EQUIPO
+  .team-section {
+    padding: 2rem 2rem 4rem;
+    max-width: 1300px;
+    margin: 0 auto;
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+  }
+}
+
+
+@media (max-width: 992px) {
+  .home-page {
+    .space-section .space-container {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+
+      .space-image-wrapper {
+        height: 350px;
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+<section class="hero-container" aria-label="Sección principal de RECOVR">
+  <div class="video-wrapper" [class.video-failed]="isVideoFailed">
+    <video
+      #heroVideo
+      class="hero-video"
+      poster="assets/Krea2-155013_00001_.png"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      (error)="onVideoError()"
+      aria-hidden="true">
+      <source src="assets/Video_00025.mp4" type="video/mp4" />
+      Tu navegador no soporta el elemento de video.
+    </video>
+    <div class="video-overlay"></div>
+  </div>
+
+  <div class="hero-content">
+    <h1 class="hero-wordmark">RECOVR</h1>
+
+    <p class="hero-tagline">El cuerpo, restaurado.</p>
+
+    <div class="hero-actions">
+      <a routerLink="/reserva" class="btn-primary" id="hero-cta-reserve">
+        [ RESERVAR SESIÓN ]
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-scroll-indicator">
+    <span class="scroll-label">[ DESCUBRIR ]</span>
+    <div class="scroll-line-vertical"></div>
+  </div>
+</section>

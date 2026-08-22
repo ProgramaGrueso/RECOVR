@@ -1,0 +1,54 @@
+<header class="navbar" id="main-header">
+  <div class="navbar-container">
+    <a routerLink="/" class="brand-logo" (click)="closeMobileMenu()">
+      <app-brand-mark size="sm" color="var(--color-text)"></app-brand-mark>
+      <span class="brand-text">RECOVR</span>
+    </a>
+
+    <!-- Botón único de apertura/cierre de menú tipo Serotoninn -->
+    <button
+      class="menu-toggle-btn"
+      (click)="toggleMobileMenu()"
+      [attr.aria-expanded]="isMobileMenuOpen"
+      aria-label="Menú principal">
+      <span *ngIf="!isMobileMenuOpen">[ MENU + ]</span>
+      <span *ngIf="isMobileMenuOpen">[ CERRAR &times; ]</span>
+    </button>
+  </div>
+</header>
+
+<!-- Overlay a Pantalla Completa (Solid Black, Bodoni Moda Typography) -->
+<div class="fullscreen-nav-overlay" [class.open]="isMobileMenuOpen" aria-hidden="!isMobileMenuOpen">
+  <div class="overlay-inner">
+    <div class="overlay-brand">
+      <app-brand-mark size="sm" color="var(--color-metal)"></app-brand-mark>
+      <span class="overlay-wordmark">RECOVR</span>
+    </div>
+
+
+    <nav class="overlay-menu-links" aria-label="Navegación completa">
+      <a routerLink="/" class="overlay-link" (click)="closeMobileMenu()">
+        [ INICIO ]
+      </a>
+      <a routerLink="/" fragment="categorias" class="overlay-link" (click)="closeMobileMenu()">
+        [ CATEGORÍAS ]
+      </a>
+      <a routerLink="/" fragment="protocolos" class="overlay-link" (click)="closeMobileMenu()">
+        [ PROTOCOLOS ]
+      </a>
+      <a routerLink="/" fragment="espacio" class="overlay-link" (click)="closeMobileMenu()">
+        [ EL ESPACIO ]
+      </a>
+      <a routerLink="/" fragment="equipo" class="overlay-link" (click)="closeMobileMenu()">
+        [ EQUIPO ]
+      </a>
+      <a routerLink="/reserva" class="overlay-link overlay-cta" (click)="closeMobileMenu()">
+        [ RESERVAR SESIÓN ]
+      </a>
+    </nav>
+
+    <div class="overlay-footer">
+      <span class="sanctum-tag">SANCTUM DE RECUPERACIÓN MASCULINA</span>
+    </div>
+  </div>
+</div>

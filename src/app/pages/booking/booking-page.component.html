@@ -1,0 +1,24 @@
+<main class="booking-page-main">
+  <!-- Page Header Banner -->
+  <section class="booking-hero-banner">
+    <div class="banner-content">
+      <nav class="breadcrumb" aria-label="Navegación secundaria">
+        <a routerLink="/" class="breadcrumb-link">INICIO</a>
+        <span class="separator">/</span>
+        <span class="breadcrumb-current">RESERVA DE SESIÓN</span>
+      </nav>
+
+      <h1 class="page-title">AGENDAMIENTO RITUAL</h1>
+      <p class="page-subtitle">
+        Selecciona tu protocolo de recuperación y agenda tu turno con nuestros especialistas clínicos.
+      </p>
+    </div>
+  </section>
+
+  <!-- Flow Container Section -->
+  <section class="booking-flow-section">
+    <app-booking-flow [preselectedServiceId]="selectedServiceIdParam"></app-booking-flow>
+  </section>
+
+  <app-section-divider></app-section-divider>
+</main>

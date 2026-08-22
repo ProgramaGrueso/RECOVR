@@ -1,0 +1,269 @@
+<div class="booking-flow-container">
+
+  <!-- Stepper Header -->
+  <header class="flow-header" *ngIf="!bookingSuccess">
+    <div class="stepper-bar">
+      <div
+        class="step"
+        [class.active]="currentStep >= 1"
+        [class.current]="currentStep === 1"
+        (click)="goToStep(1)">
+        <span class="step-num">01</span>
+        <span class="step-label">PROTOCOLO</span>
+      </div>
+      <div class="step-line" [class.active]="currentStep >= 2"></div>
+      <div
+        class="step"
+        [class.active]="currentStep >= 2"
+        [class.current]="currentStep === 2"
+        [class.disabled]="!bookingForm.get('serviceId')?.value"
+        (click)="bookingForm.get('serviceId')?.value && goToStep(2)">
+        <span class="step-num">02</span>
+        <span class="step-label">PROFESIONAL</span>
+      </div>
+      <div class="step-line" [class.active]="currentStep >= 3"></div>
+      <div
+        class="step"
+        [class.active]="currentStep >= 3"
+        [class.current]="currentStep === 3"
+        [class.disabled]="!bookingForm.get('professionalId')?.value"
+        (click)="bookingForm.get('professionalId')?.value && goToStep(3)">
+        <span class="step-num">03</span>
+        <span class="step-label">HORARIO</span>
+      </div>
+      <div class="step-line" [class.active]="currentStep >= 4"></div>
+      <div
+        class="step"
+        [class.active]="currentStep >= 4"
+        [class.current]="currentStep === 4"
+        [class.disabled]="!bookingForm.get('timeSlot')?.value"
+        (click)="bookingForm.get('timeSlot')?.value && goToStep(4)">
+        <span class="step-num">04</span>
+        <span class="step-label">CONFIRMACIÓN</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Error State Banner -->
+  <div class="dark-error-banner" *ngIf="hasError">
+    <div class="error-icon">!</div>
+    <div class="error-info">
+      <h4 class="error-title">SISTEMA TEMPORALMENTE NO DISPONIBLE</h4>
+      <p class="error-msg">{{ errorMessage }}</p>
+    </div>
+    <button type="button" class="btn-secondary btn-sm" (click)="loadInitialData()">
+      Reintentar conexión
+    </button>
+  </div>
+
+  <!-- Success Screen -->
+  <div class="flow-card success-card" *ngIf="bookingSuccess">
+    <div class="success-icon-wrapper">
+      <app-brand-mark size="lg" color="var(--color-metal)"></app-brand-mark>
+    </div>
+
+    <h3 class="success-title">RESERVA CONFIRMADA CON ÉXITO</h3>
+    <p class="success-code">CÓDIGO DE SEGUIMIENTO: <strong>{{ bookingSuccess.id }}</strong></p>
+
+    <div class="summary-box">
+      <div class="summary-row">
+        <span>Estado:</span>
+        <span class="status-tag">{{ bookingSuccess.status }}</span>
+      </div>
+      <div class="summary-row">
+        <span>Fecha y Turno:</span>
+        <span>{{ bookingSuccess.date }} &bull; {{ bookingSuccess.timeSlot }} HS</span>
+      </div>
+      <div class="summary-row">
+        <span>Cliente:</span>
+        <span>{{ bookingForm.value.clientName }}</span>
+      </div>
+      <div class="summary-row" *ngIf="selectedService">
+        <span>Protocolo:</span>
+        <span>{{ selectedService.name }}</span>
+      </div>
+      <div class="summary-row" *ngIf="selectedProfessional">
+        <span>Especialista:</span>
+        <span>{{ selectedProfessional.name }}</span>
+      </div>
+    </div>
+
+    <p class="success-note">
+      Hemos enviado los detalles y el código QR de acceso a <em>{{ bookingForm.value.clientEmail }}</em>.
+    </p>
+
+    <div class="success-actions">
+      <button class="btn-primary" (click)="resetFlow()">Reservar otra sesión</button>
+    </div>
+  </div>
+
+  <!-- Form Steps Container -->
+  <div class="flow-card" *ngIf="!bookingSuccess">
+    <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()">
+
+      <!-- STEP 1: SERVICE SELECTION -->
+      <div class="step-content" *ngIf="currentStep === 1">
+        <h3 class="step-heading">PASO 01 — SELECCIONA EL PROTOCOLO DE TRATAMIENTO</h3>
+
+        <!-- Skeleton Loading State for Services -->
+        <div class="services-list" *ngIf="isLoadingServices">
+          <div class="service-item-option skeleton-dark" *ngFor="let item of [1,2,3,4]">
+            <div class="skeleton-line title-skel"></div>
+            <div class="skeleton-line text-skel"></div>
+          </div>
+        </div>
+
+        <!-- Loaded Services List -->
+        <div class="services-list" *ngIf="!isLoadingServices">
+          <div
+            *ngFor="let s of services"
+            class="service-item-option"
+            [class.selected]="bookingForm.get('serviceId')?.value === s.id"
+            (click)="selectService(s)">
+            <div class="option-header">
+              <span class="option-code">{{ s.code }}</span>
+              <span class="option-price">${{ s.price }} USD</span>
+            </div>
+            <h4 class="option-title">{{ s.name }}</h4>
+            <p class="option-desc">{{ s.description }}</p>
+            <div class="option-footer">
+              <span class="option-meta">{{ s.category }} &bull; {{ s.durationMinutes }} MINUTOS</span>
+              <span class="select-badge" *ngIf="bookingForm.get('serviceId')?.value === s.id">SELECCIONADO</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: PROFESSIONAL SELECTION -->
+      <div class="step-content" *ngIf="currentStep === 2">
+        <h3 class="step-heading">PASO 02 — SELECCIONA EL ESPECIALISTA HABILITADO</h3>
+
+        <!-- Skeleton Loading State for Professionals -->
+        <div class="professionals-list" *ngIf="isLoadingProfessionals">
+          <div class="prof-item-option skeleton-dark" *ngFor="let item of [1,2,3]">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-text-group">
+              <div class="skeleton-line title-skel"></div>
+              <div class="skeleton-line text-skel"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Loaded Professionals List -->
+        <div class="professionals-list" *ngIf="!isLoadingProfessionals">
+          <div
+            *ngFor="let p of professionals"
+            class="prof-item-option"
+            [class.selected]="bookingForm.get('professionalId')?.value === p.id"
+            (click)="selectProfessional(p)">
+            <img [src]="p.photoUrl" [alt]="p.name" class="option-prof-img" />
+            <div class="option-prof-info">
+              <h4 class="option-prof-name">{{ p.name }}</h4>
+              <p class="option-prof-title">{{ p.title }}</p>
+              <p class="option-prof-specialty">{{ p.specialty }}</p>
+              <span class="option-prof-avail">{{ p.availability }}</span>
+            </div>
+            <span class="select-badge" *ngIf="bookingForm.get('professionalId')?.value === p.id">SELECCIONADO</span>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn-secondary" (click)="prevStep()">Volver a protocolos</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: DATE & TIME SELECTION -->
+      <div class="step-content" *ngIf="currentStep === 3">
+        <h3 class="step-heading">PASO 03 — SELECCIONA FECHA Y TURNO DISPONIBLE</h3>
+
+        <div class="datetime-grid">
+          <div class="date-picker-group">
+            <label for="booking-date" class="form-label">FECHA DE SESIÓN *</label>
+            <input type="date" id="booking-date" formControlName="date" class="form-input dark-date-input" />
+          </div>
+
+          <div class="slots-group">
+            <label class="form-label">TURNOS DISPONIBLES *</label>
+            <div class="slots-grid">
+              <button
+                type="button"
+                *ngFor="let slot of timeSlots"
+                class="slot-btn"
+                [class.selected]="bookingForm.get('timeSlot')?.value === slot"
+                (click)="selectTimeSlot(slot)">
+                {{ slot }} HS
+              </button>
+            </div>
+            <div *ngIf="bookingForm.get('timeSlot')?.touched && bookingForm.get('timeSlot')?.invalid" class="form-error">
+              Por favor selecciona un turno horario.
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn-secondary" (click)="prevStep()">Volver a especialista</button>
+          <button type="button" class="btn-primary" [disabled]="!bookingForm.get('timeSlot')?.value" (click)="nextStep()">
+            Continuar a confirmación
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 4: CLIENT DATA & CONFIRMATION -->
+      <div class="step-content" *ngIf="currentStep === 4">
+        <h3 class="step-heading">PASO 04 — DATOS DE CONTACTO Y CONFIRMACIÓN DE RESERVA</h3>
+
+        <!-- Resumen de reserva -->
+        <div class="booking-summary-preview" *ngIf="selectedService && selectedProfessional">
+          <div class="summary-preview-header">RESUMEN DEL PROTOCOLO</div>
+          <div class="preview-item"><strong>Protocolo:</strong> {{ selectedService.code }} — {{ selectedService.name }}</div>
+          <div class="preview-item"><strong>Especialista:</strong> {{ selectedProfessional.name }}</div>
+          <div class="preview-item"><strong>Duración:</strong> {{ selectedService.durationMinutes }} Minutos</div>
+          <div class="preview-item"><strong>Fecha y Hora:</strong> {{ bookingForm.value.date }} a las {{ bookingForm.value.timeSlot }} HS</div>
+          <div class="preview-item preview-total"><strong>Valor Total:</strong> ${{ selectedService.price }} USD</div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="clientName" class="form-label">NOMBRE Y APELLIDO COMPLETO *</label>
+            <input type="text" id="clientName" formControlName="clientName" class="form-input" placeholder="Ej. Carlos Mendoza" />
+            <div *ngIf="bookingForm.get('clientName')?.touched && bookingForm.get('clientName')?.invalid" class="form-error">
+              Nombre válido requerido (mínimo 3 caracteres).
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="clientEmail" class="form-label">CORREO ELECTRÓNICO DE CONFIRMACIÓN *</label>
+            <input type="email" id="clientEmail" formControlName="clientEmail" class="form-input" placeholder="ejemplo@dominio.com" />
+            <div *ngIf="bookingForm.get('clientEmail')?.touched && bookingForm.get('clientEmail')?.invalid" class="form-error">
+              Correo electrónico válido requerido.
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="clientPhone" class="form-label">TELÉFONO DE CONTACTO *</label>
+            <input type="tel" id="clientPhone" formControlName="clientPhone" class="form-input" placeholder="+54 9 11 1234 5678" />
+            <div *ngIf="bookingForm.get('clientPhone')?.touched && bookingForm.get('clientPhone')?.invalid" class="form-error">
+              Teléfono válido requerido (mínimo 8 dígitos).
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="notes" class="form-label">OBSERVACIONES O CONDICIONES FÍSICAS (OPCIONAL)</label>
+            <textarea id="notes" formControlName="notes" class="form-textarea" rows="3" placeholder="Detalle molestias musculares, lesiones previas o preferencias..."></textarea>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn-secondary" (click)="prevStep()">Volver a horario</button>
+          <button type="submit" class="btn-primary" [disabled]="isSubmitting || bookingForm.invalid">
+            <span *ngIf="!isSubmitting">Confirmar reserva de sesión</span>
+            <span *ngIf="isSubmitting" class="submitting-spinner">
+              <span class="spinner-dot"></span> Procesando registro...
+            </span>
+          </button>
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>

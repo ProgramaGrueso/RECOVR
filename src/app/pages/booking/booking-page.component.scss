@@ -1,0 +1,81 @@
+@use '../../../styles/tokens' as *;
+
+.booking-page-main {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  padding-top: 80px; // Espacio para el navbar fijo
+
+  .booking-hero-banner {
+    background: linear-gradient(180deg, var(--color-bg-alt) 0%, var(--color-bg) 100%);
+    border-bottom: 1px solid rgba(184, 180, 176, 0.1);
+    padding: 3rem 1.5rem 2.5rem;
+    text-align: center;
+
+    @include media-md {
+      padding: 4.5rem 2rem 3.5rem;
+    }
+
+    .banner-content {
+      max-width: 800px;
+      margin: 0 auto;
+
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.25em;
+        margin-bottom: 1.5rem;
+        color: var(--color-metal);
+
+        .breadcrumb-link {
+          color: var(--color-metal);
+          &:hover {
+            color: var(--color-accent-soft);
+          }
+        }
+
+        .separator {
+          color: var(--color-accent-soft);
+        }
+
+        .breadcrumb-current {
+          color: var(--color-text);
+          font-weight: 600;
+        }
+      }
+
+      .page-title {
+        font-family: var(--font-display);
+        font-size: 2.2rem;
+        letter-spacing: 0.25em;
+        margin-bottom: 1rem;
+
+        @include media-md {
+          font-size: 3rem;
+        }
+      }
+
+      .page-subtitle {
+        font-size: 0.95rem;
+        color: var(--color-text-muted);
+        line-height: 1.6;
+        max-width: 600px;
+        margin: 0 auto;
+
+        @include media-md {
+          font-size: 1.05rem;
+        }
+      }
+    }
+  }
+
+  .booking-flow-section {
+    padding: 2.5rem 1.5rem 4rem;
+
+    @include media-md {
+      padding: 4rem 2rem 6rem;
+    }
+  }
+}

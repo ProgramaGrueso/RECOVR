@@ -1,0 +1,173 @@
+@use '../../../styles/tokens' as *;
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 200;
+  background: rgba(10, 10, 11, 0.92);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(184, 180, 176, 0.1);
+  transition: background 0.3s $transition-smooth;
+
+  .navbar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+
+      .brand-icon {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+      }
+
+      .brand-text {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 600;
+        letter-spacing: 0.35em;
+        color: var(--color-text);
+      }
+    }
+
+    .menu-toggle-btn {
+      font-family: var(--font-body);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      color: var(--color-text);
+      background: transparent;
+      border: 1px solid rgba(184, 180, 176, 0.3);
+      padding: 0.5rem 1.1rem;
+      cursor: pointer;
+      transition: all 0.3s $transition-smooth;
+
+      &:hover {
+        border-color: var(--color-accent-soft);
+        color: var(--color-accent-soft);
+        box-shadow: 0 0 12px rgba(92, 26, 43, 0.4);
+      }
+    }
+  }
+}
+
+// Fullscreen Overlay Menu (Serotoninn Style)
+.fullscreen-nav-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 150;
+  background-color: #0A0A0B; // Fondo negro sólido
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.98);
+  transition: opacity 0.4s $transition-smooth, transform 0.4s $transition-smooth;
+
+  &.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+  }
+
+  .overlay-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 80vh;
+    max-height: 700px;
+    width: 100%;
+    max-width: 900px;
+    padding: 2rem;
+
+    .overlay-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      opacity: 0.5;
+
+      .overlay-logo-icon {
+        width: 20px;
+        height: 20px;
+      }
+
+      .overlay-wordmark {
+        font-family: var(--font-display);
+        font-size: 0.9rem;
+        letter-spacing: 0.4em;
+        color: var(--color-metal);
+      }
+    }
+
+    .overlay-menu-links {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.25rem;
+
+      .overlay-link {
+        font-family: var(--font-display);
+        font-size: clamp(1.8rem, 4vw, 3.2rem);
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        color: var(--color-text);
+        text-transform: uppercase;
+        transition: all 0.3s $transition-smooth;
+        text-decoration: none;
+
+        &:hover {
+          color: var(--color-accent-soft);
+          letter-spacing: 0.28em;
+          text-shadow: 0 0 20px rgba(122, 46, 63, 0.6);
+        }
+
+        &.overlay-cta {
+          color: var(--color-metal);
+          font-size: clamp(1.5rem, 3vw, 2.5rem);
+          margin-top: 1rem;
+          border-bottom: 1px solid var(--color-accent);
+
+          &:hover {
+            color: var(--color-text);
+            border-color: var(--color-accent-soft);
+          }
+        }
+      }
+    }
+
+    .overlay-footer {
+      .sanctum-tag {
+        font-family: var(--font-body);
+        font-size: 0.7rem;
+        letter-spacing: 0.3em;
+        color: var(--color-text-muted);
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar .navbar-container {
+    padding: 1rem 1.25rem;
+  }
+
+  .fullscreen-nav-overlay .overlay-inner .overlay-menu-links .overlay-link {
+    font-size: 1.6rem;
+    letter-spacing: 0.15em;
+  }
+}

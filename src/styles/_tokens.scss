@@ -1,0 +1,97 @@
+// src/styles/_tokens.scss
+// Tokens de diseño RECOVR — Identidad Gótico-Editorial Oscuro
+
+:root {
+  --color-bg: #0A0A0B;
+  --color-bg-alt: #141014;
+  --color-accent: #5C1A2B;
+  --color-accent-soft: #7A2E3F;
+  --color-text: #F2EDEA;
+  --color-text-muted: #8A8285;
+  --color-metal: #B8B4B0;
+
+  --font-display: 'Bodoni Moda', serif;
+  --font-body: 'Inter', sans-serif;
+
+  --letter-spacing-wide: 0.25em;
+  --letter-spacing-ultra: 0.4em;
+  --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+// Variables SCSS para importación directa en componentes
+$color-bg: var(--color-bg);
+$color-bg-alt: var(--color-bg-alt);
+$color-accent: var(--color-accent);
+$color-accent-soft: var(--color-accent-soft);
+$color-text: var(--color-text);
+$color-text-muted: var(--color-text-muted);
+$color-metal: var(--color-metal);
+
+$font-display: var(--font-display);
+$font-body: var(--font-body);
+
+$transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+
+// Breakpoints estándar mobile-first (Angular Material / Tailwind)
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+
+@mixin media-md {
+  @media (min-width: #{$breakpoint-md}) {
+    @content;
+  }
+}
+
+@mixin media-lg {
+  @media (min-width: #{$breakpoint-lg}) {
+    @content;
+  }
+}
+
+// Mixins de utilidad
+@mixin font-wordmark {
+  font-family: $font-display;
+  text-transform: uppercase;
+  letter-spacing: var(--letter-spacing-wide);
+  font-weight: 500;
+}
+
+@mixin gothic-border-bottom {
+  border-bottom: 1px solid rgba(184, 180, 176, 0.15);
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 1px;
+    background-color: var(--color-accent);
+  }
+}
+
+// Keyframes y clase para Skeleton Dark Loading State
+@keyframes skeleton-pulse {
+  0% {
+    background-color: #141014;
+    border-color: rgba(92, 26, 43, 0.2);
+  }
+  50% {
+    background-color: #1a161c;
+    border-color: rgba(122, 46, 63, 0.4);
+  }
+  100% {
+    background-color: #141014;
+    border-color: rgba(92, 26, 43, 0.2);
+  }
+}
+
+.skeleton-dark {
+  animation: skeleton-pulse 1.8s ease-in-out infinite;
+  background-color: #141014;
+  border: 1px solid rgba(92, 26, 43, 0.2);
+  border-radius: 2px;
+}
+

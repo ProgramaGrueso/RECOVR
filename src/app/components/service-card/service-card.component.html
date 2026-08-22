@@ -1,0 +1,48 @@
+<article class="service-card" *ngIf="isLoading">
+  <div class="card-image-wrapper skeleton-dark"></div>
+  <div class="card-content">
+    <div class="skeleton-line skel-header"></div>
+    <div class="skeleton-line skel-title"></div>
+    <div class="skeleton-line skel-desc"></div>
+    <div class="card-footer">
+      <div class="skeleton-line skel-price"></div>
+      <div class="skeleton-line skel-btn"></div>
+    </div>
+  </div>
+</article>
+
+<article class="service-card" *ngIf="!isLoading && service">
+  <div class="card-image-wrapper">
+    <img [src]="service.imageUrl" [alt]="service.name" class="card-image" loading="lazy" />
+    <span class="card-category-badge">[ {{ service.category }} ]</span>
+    <div class="card-overlay"></div>
+  </div>
+
+  <div class="card-content">
+    <div class="card-header">
+      <span class="card-code">{{ service.code }}</span>
+      <span class="card-duration">{{ service.durationMinutes }} MIN</span>
+    </div>
+
+    <h3 class="card-title">{{ service.name }}</h3>
+
+    <p class="card-description">{{ service.description }}</p>
+
+    <div class="card-footer">
+      <div class="card-price">
+        <span class="currency">$</span>{{ service.price }}
+        <span class="currency-code">USD</span>
+      </div>
+
+      <a
+        routerLink="/reserva"
+        [queryParams]="{ serviceId: service.id }"
+        class="btn-primary card-cta"
+        [id]="'btn-reserve-' + service.id">
+        [ RESERVAR SESIÓN ]
+      </a>
+    </div>
+  </div>
+</article>
+
+
