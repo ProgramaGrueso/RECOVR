@@ -1,9 +1,18 @@
 @use '../../../styles/tokens' as *;
 
 .admin-page {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
   padding: 110px 2rem 5rem;
-  max-width: 1300px;
-  margin: 0 auto;
+  width: 100%;
+
+  .admin-content {
+    position: relative;
+    z-index: 1;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
 
   .admin-header {
     display: flex;
@@ -42,9 +51,18 @@
     margin-bottom: 3.5rem;
 
     .stat-card {
-      background: var(--color-bg-alt);
-      border: 1px solid rgba(184, 180, 176, 0.15);
+      background: rgba(20, 16, 20, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(184, 180, 176, 0.18);
       padding: 1.75rem;
+      transition: all 0.3s $transition-smooth;
+
+      &:hover {
+        border-color: var(--color-accent-soft);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+      }
 
       .stat-label {
         font-size: 0.7rem;
@@ -78,8 +96,10 @@
     }
 
     .table-container {
-      background: var(--color-bg-alt);
-      border: 1px solid rgba(184, 180, 176, 0.15);
+      background: rgba(20, 16, 20, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(184, 180, 176, 0.18);
       overflow-x: auto;
 
       .dark-table {
@@ -98,7 +118,7 @@
           font-size: 0.7rem;
           letter-spacing: 0.2em;
           color: var(--color-metal);
-          background: rgba(10, 10, 11, 0.5);
+          background: rgba(10, 10, 11, 0.6);
         }
 
         .code-cell {

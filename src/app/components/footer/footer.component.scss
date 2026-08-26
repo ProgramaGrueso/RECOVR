@@ -1,9 +1,18 @@
 @use '../../../styles/tokens' as *;
 
 .footer-container {
+  position: relative;
+  overflow: hidden;
   background-color: var(--color-bg);
   border-top: 1px solid rgba(184, 180, 176, 0.14);
   padding: 5.5rem 2rem 2.5rem;
+
+  .footer-content {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 
   .footer-cta-banner {
     max-width: 850px;

@@ -1,9 +1,18 @@
 @use '../../../styles/tokens' as *;
 
 .catalog-page {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
   padding: 8rem 2rem 4rem;
-  max-width: 1300px;
-  margin: 0 auto;
+  width: 100%;
+
+  .catalog-content {
+    position: relative;
+    z-index: 1;
+    max-width: 1300px;
+    margin: 0 auto;
+  }
 
   .catalog-header {
     text-align: center;
@@ -43,8 +52,10 @@
 
     .filter-btn {
       padding: 0.65rem 1.4rem;
-      background: var(--color-bg-alt);
-      border: 1px solid rgba(184, 180, 176, 0.15);
+      background: rgba(20, 16, 20, 0.82);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(184, 180, 176, 0.18);
       color: var(--color-metal);
       font-family: var(--font-body);
       font-size: 0.75rem;
@@ -55,6 +66,7 @@
         border-color: var(--color-accent-soft);
         background: var(--color-accent);
         color: var(--color-text);
+        box-shadow: 0 0 15px rgba(92, 26, 43, 0.4);
       }
     }
   }
@@ -66,3 +78,4 @@
     margin-bottom: 4rem;
   }
 }
+

@@ -5,44 +5,53 @@
 
   <!-- 2. CATEGORÍAS (Estilo corchetes Serotoninn) -->
   <section class="categories-section" id="categorias" aria-label="Categorías de recuperación">
-    <div class="section-header">
-      <span class="section-subtitle">[ ÁREAS DE TRATAMIENTO ]</span>
-      <h2 class="section-title">CATEGORÍAS DE SERVICIO</h2>
+    <div class="section-video-bg" aria-hidden="true">
+      <video class="section-bg-video" poster="assets/Krea2-155023_00001_.png" autoplay muted loop playsinline preload="auto">
+        <source src="assets/Video_00027.mp4" type="video/mp4" />
+      </video>
+      <div class="section-video-overlay"></div>
     </div>
 
-    <div
-      class="categories-brackets-grid drag-scroll-container"
-      (mouseenter)="setCursor('[ FILTRAR ]')"
-      (mouseleave)="resetCursor()">
-      <button
-        class="bracket-card"
-        [class.active]="activeCategory === 'ALL'"
-        (click)="filterCategory('ALL')"
-        id="cat-all">
-        <span class="bracket-code">[ TODOS ]</span>
-        <span class="bracket-name">PROTOCOLOS COMPLETOS</span>
-        <span class="bracket-count">[ 4 ]</span>
-      </button>
+    <div class="section-content-wrapper">
+      <div class="section-header">
+        <span class="section-subtitle">[ ÁREAS DE TRATAMIENTO ]</span>
+        <h2 class="section-title">CATEGORÍAS DE SERVICIO</h2>
+      </div>
 
-      <button
-        class="bracket-card"
-        [class.active]="activeCategory === 'MASAJE'"
-        (click)="filterCategory('MASAJE')"
-        id="cat-masaje">
-        <span class="bracket-code">[ MASAJE TERAPÉUTICO ]</span>
-        <span class="bracket-name">TERAPIA MIOFASCIAL & DEPORTIVA</span>
-        <span class="bracket-count">[ 4 ]</span>
-      </button>
+      <div
+        class="categories-brackets-grid drag-scroll-container"
+        (mouseenter)="setCursor('[ FILTRAR ]')"
+        (mouseleave)="resetCursor()">
+        <button
+          class="bracket-card"
+          [class.active]="activeCategory === 'ALL'"
+          (click)="filterCategory('ALL')"
+          id="cat-all">
+          <span class="bracket-code">[ TODOS ]</span>
+          <span class="bracket-name">PROTOCOLOS COMPLETOS</span>
+          <span class="bracket-count">[ 4 ]</span>
+        </button>
 
-      <button
-        class="bracket-card"
-        [class.active]="activeCategory === 'PODOLOGÍA'"
-        (click)="filterCategory('PODOLOGÍA')"
-        id="cat-podologia">
-        <span class="bracket-code">[ PODOLOGÍA CLÍNICA ]</span>
-        <span class="bracket-name">ACONDICIONAMIENTO PLANTAR</span>
-        <span class="bracket-count">[ 4 ]</span>
-      </button>
+        <button
+          class="bracket-card"
+          [class.active]="activeCategory === 'MASAJE'"
+          (click)="filterCategory('MASAJE')"
+          id="cat-masaje">
+          <span class="bracket-code">[ MASAJE TERAPÉUTICO ]</span>
+          <span class="bracket-name">TERAPIA MIOFASCIAL & DEPORTIVA</span>
+          <span class="bracket-count">[ 4 ]</span>
+        </button>
+
+        <button
+          class="bracket-card"
+          [class.active]="activeCategory === 'PODOLOGÍA'"
+          (click)="filterCategory('PODOLOGÍA')"
+          id="cat-podologia">
+          <span class="bracket-code">[ PODOLOGÍA CLÍNICA ]</span>
+          <span class="bracket-name">ACONDICIONAMIENTO PLANTAR</span>
+          <span class="bracket-count">[ 4 ]</span>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -50,20 +59,29 @@
 
   <!-- 3. PROTOCOLOS DESTACADOS -->
   <section class="protocols-section" id="protocolos" aria-label="Protocolos destacados">
-    <div class="section-header">
-      <span class="section-subtitle">[ RITUALES DE RECUPERACIÓN ]</span>
-      <h2 class="section-title">PROTOCOLOS DESTACADOS</h2>
-      <p class="section-description">
-        Tratamientos diseñados bajo estándares de máxima exigencia para la restauración física integral.
-      </p>
+    <div class="section-video-bg" aria-hidden="true">
+      <video class="section-bg-video" poster="assets/Krea2-155034_00001_.png" autoplay muted loop playsinline preload="auto">
+        <source src="assets/reserva.mp4" type="video/mp4" />
+      </video>
+      <div class="section-video-overlay"></div>
     </div>
 
-    <div class="services-grid">
-      <app-service-card
-        *ngFor="let service of filteredServices"
-        [service]="service"
-        (reserve)="onReserve($event)">
-      </app-service-card>
+    <div class="section-content-wrapper">
+      <div class="section-header">
+        <span class="section-subtitle">[ RITUALES DE RECUPERACIÓN ]</span>
+        <h2 class="section-title">PROTOCOLOS DESTACADOS</h2>
+        <p class="section-description">
+          Tratamientos diseñados bajo estándares de máxima exigencia para la restauración física integral.
+        </p>
+      </div>
+
+      <div class="services-grid">
+        <app-service-card
+          *ngFor="let service of filteredServices"
+          [service]="service"
+          (reserve)="onReserve($event)">
+        </app-service-card>
+      </div>
     </div>
   </section>
 
@@ -71,62 +89,71 @@
 
   <!-- 4. EL ESPACIO (8 SUITES RECOVR) -->
   <section class="space-section" id="espacio" aria-label="El espacio RECOVR">
-    <div class="space-container">
-      <div
-        class="space-image-wrapper"
-        (mouseenter)="setCursor('[ SANCTUM 01 ]')"
-        (mouseleave)="resetCursor()">
-        <img
-          src="assets/Krea2-155013_00001_.png"
-          alt="Sala de tratamiento gótica RECOVR con espejos y candelabros"
-          class="space-img"
-          loading="lazy" />
-        <div class="space-img-overlay"></div>
-      </div>
+    <div class="section-video-bg" aria-hidden="true">
+      <video class="section-bg-video" poster="assets/Krea2-155101_00001_.png" autoplay muted loop playsinline preload="auto">
+        <source src="assets/Video_00031.mp4" type="video/mp4" />
+      </video>
+      <div class="section-video-overlay"></div>
+    </div>
 
-      <div class="space-content">
-        <span class="space-badge">[ ATMÓSFERA & SANCTUM ]</span>
-        <h2 class="space-title">EL ESPACIO & 8 SUITES DE TRATAMIENTO</h2>
-        <p class="space-lead">
-          Un ambiente sobrio, confidencial y concebido bajo una arquitectura visual gótico-editorial.
-        </p>
-        <p class="space-body">
-          8 áreas privadas e insonorizadas, iluminación tenue de penumbra controlada y equipamiento de precisión médica para garantizar la total inmersión en la regeneración corporal.
-        </p>
-        <div class="space-stats">
-          <div class="stat-item">
-            <span class="stat-val">100%</span>
-            <span class="stat-lbl">PRIVACIDAD INDIVIDUAL</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-val">08</span>
-            <span class="stat-lbl">ESPACIOS & SUITES</span>
+    <div class="section-content-wrapper">
+      <div class="space-container">
+        <div
+          class="space-image-wrapper"
+          (mouseenter)="setCursor('[ SANCTUM 01 ]')"
+          (mouseleave)="resetCursor()">
+          <img
+            src="assets/Krea2-155013_00001_.png"
+            alt="Sala de tratamiento gótica RECOVR con espejos y candelabros"
+            class="space-img"
+            loading="lazy" />
+          <div class="space-img-overlay"></div>
+        </div>
+
+        <div class="space-content">
+          <span class="space-badge">[ ATMÓSFERA & SANCTUM ]</span>
+          <h2 class="space-title">EL ESPACIO & 8 SUITES DE TRATAMIENTO</h2>
+          <p class="space-lead">
+            Un ambiente sobrio, confidencial y concebido bajo una arquitectura visual gótico-editorial.
+          </p>
+          <p class="space-body">
+            8 áreas privadas e insonorizadas, iluminación tenue de penumbra controlada y equipamiento de precisión médica para garantizar la total inmersión en la regeneración corporal.
+          </p>
+          <div class="space-stats">
+            <div class="stat-item">
+              <span class="stat-val">100%</span>
+              <span class="stat-lbl">PRIVACIDAD INDIVIDUAL</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-val">08</span>
+              <span class="stat-lbl">ESPACIOS & SUITES</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- SUITES GRID -->
-    <div class="spaces-grid-container">
-      <h3 class="spaces-grid-title">[ ÁREAS DE TRATAMIENTO — 8 ESPACIOS ]</h3>
-      <div
-        class="spaces-grid drag-scroll-container"
-        (mouseenter)="setCursor('[ DESLIZAR ]')"
-        (mouseleave)="resetCursor()">
-        <div class="space-card" *ngFor="let spc of spaces">
-          <div class="space-card-header">
-            <span class="space-code">{{ spc.code }}</span>
-            <span class="space-capacity">{{ spc.capacity }}</span>
+      <!-- SUITES GRID -->
+      <div class="spaces-grid-container">
+        <h3 class="spaces-grid-title">[ ÁREAS DE TRATAMIENTO — 8 ESPACIOS ]</h3>
+        <div
+          class="spaces-grid drag-scroll-container"
+          (mouseenter)="setCursor('[ DESLIZAR ]')"
+          (mouseleave)="resetCursor()">
+          <div class="space-card" *ngFor="let spc of spaces">
+            <div class="space-card-header">
+              <span class="space-code">{{ spc.code }}</span>
+              <span class="space-capacity">{{ spc.capacity }}</span>
+            </div>
+            <h4 class="space-card-name">{{ spc.name }}</h4>
+            <span class="space-card-subtitle">{{ spc.subtitle }}</span>
+            <p class="space-card-desc">{{ spc.description }}</p>
+            <div class="space-card-features">
+              <span class="feature-tag" *ngFor="let feat of spc.features">
+                • {{ feat }}
+              </span>
+            </div>
+            <a (click)="onReserve()" class="btn-secondary space-card-btn">[ RESERVAR ÁREA ]</a>
           </div>
-          <h4 class="space-card-name">{{ spc.name }}</h4>
-          <span class="space-card-subtitle">{{ spc.subtitle }}</span>
-          <p class="space-card-desc">{{ spc.description }}</p>
-          <div class="space-card-features">
-            <span class="feature-tag" *ngFor="let feat of spc.features">
-              • {{ feat }}
-            </span>
-          </div>
-          <a (click)="onReserve()" class="btn-secondary space-card-btn">[ RESERVAR ÁREA ]</a>
         </div>
       </div>
     </div>
@@ -136,20 +163,29 @@
 
   <!-- 5. EQUIPO -->
   <section class="team-section" id="equipo" aria-label="Equipo profesional">
-    <div class="section-header">
-      <span class="section-subtitle">[ EXPERTOS EN ANATOMÍA & REHABILITACIÓN ]</span>
-      <h2 class="section-title">EQUIPO PROFESIONAL</h2>
-      <p class="section-description">
-        Kinesiólogos deportivos y podólogos clínicos especializados en alto rendimiento físico.
-      </p>
+    <div class="section-video-bg" aria-hidden="true">
+      <video class="section-bg-video" poster="assets/Krea2-193952_00001_.png" autoplay muted loop playsinline preload="auto">
+        <source src="assets/Video_00030.mp4" type="video/mp4" />
+      </video>
+      <div class="section-video-overlay"></div>
     </div>
 
-    <div class="team-grid">
-      <app-professional-card
-        *ngFor="let prof of professionals"
-        [professional]="prof"
-        (selectProfessional)="onSelectProfessional($event)">
-      </app-professional-card>
+    <div class="section-content-wrapper">
+      <div class="section-header">
+        <span class="section-subtitle">[ EXPERTOS EN ANATOMÍA & REHABILITACIÓN ]</span>
+        <h2 class="section-title">EQUIPO PROFESIONAL</h2>
+        <p class="section-description">
+          Kinesiólogos deportivos y podólogos clínicos especializados en alto rendimiento físico.
+        </p>
+      </div>
+
+      <div class="team-grid">
+        <app-professional-card
+          *ngFor="let prof of professionals"
+          [professional]="prof"
+          (selectProfessional)="onSelectProfessional($event)">
+        </app-professional-card>
+      </div>
     </div>
   </section>
 
