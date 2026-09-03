@@ -18,6 +18,9 @@ public class Servicio {
     @Column(name = "duracion_minutos")
     private Integer duracionMinutos;
 
+    @Column(name = "tiempo_limpieza_minutos")
+    private Integer tiempoLimpiezaMinutos;
+
     @Column(nullable = false)
     private BigDecimal precio;
 
@@ -34,6 +37,9 @@ public class Servicio {
 
     public Integer getDuracionMinutos() { return duracionMinutos; }
     public void setDuracionMinutos(Integer duracionMinutos) { this.duracionMinutos = duracionMinutos; }
+
+    public Integer getTiempoLimpiezaMinutos() { return tiempoLimpiezaMinutos; }
+    public void setTiempoLimpiezaMinutos(Integer tiempoLimpiezaMinutos) { this.tiempoLimpiezaMinutos = tiempoLimpiezaMinutos; }
 
     public BigDecimal getPrecio() { return precio; }
     public void setPrecio(BigDecimal precio) { this.precio = precio; }

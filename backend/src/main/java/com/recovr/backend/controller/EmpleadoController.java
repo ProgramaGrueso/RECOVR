@@ -3,8 +3,10 @@ package com.recovr.backend.controller;
 import com.recovr.backend.entity.Empleado;
 import com.recovr.backend.service.EmpleadoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -37,5 +39,12 @@ public class EmpleadoController {
     @DeleteMapping("/{id}")
     public void eliminar(@PathVariable Long id) {
         empleadoService.eliminar(id);
+    }
+
+    @GetMapping("/disponibles")
+    public List<Empleado> disponibles(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin) {
+        return empleadoService.buscarDisponibles(inicio, fin);
     }
 }

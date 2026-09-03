@@ -30,6 +30,7 @@ public class ServicioService {
         Servicio servicio = buscarPorId(id);
         servicio.setNombre(datos.getNombre());
         servicio.setDuracionMinutos(datos.getDuracionMinutos());
+        servicio.setTiempoLimpiezaMinutos(datos.getTiempoLimpiezaMinutos());
         servicio.setPrecio(datos.getPrecio());
         return servicioRepository.save(servicio);
     }
