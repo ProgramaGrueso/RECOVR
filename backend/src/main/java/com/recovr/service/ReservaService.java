@@ -65,12 +65,26 @@ public class ReservaService {
 
     /**
      * Registra una nueva reserva validando disponibilidad y asignando el estado PENDIENTE.
+     * Aplica validaciones de reglas de negocio para casos borde.
      */
     public Reserva crearReserva(Reserva reserva) {
         if (reserva.getFechaHora() == null) {
             throw new IllegalArgumentException("La fecha y hora de la reserva es requerida.");
         }
-        if (reserva.getDuracionTotalMinutos() == null || reserva.getDuracionTotalMinutos() <= 0) {
+        if (reserva.getFechaHora().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("No se pueden registrar reservas en fechas u horas pasadas.");
+        }
+        if (reserva.getClienteId() == null || reserva.getEmpleadoId() == null ||
+                reserva.getServicioId() == null || reserva.getSalaId() == null) {
+            throw new IllegalArgumentException("Los identificadores de cliente, especialista, servicio y sala son obligatorios.");
+        }
+        if (reserva.getDuracionTotalMinutos() != null && reserva.getDuracionTotalMinutos() <= 0) {
+            throw new IllegalArgumentException("La duración de la reserva debe ser un valor positivo.");
+        }
+        if (reserva.getMontoTotal() != null && reserva.getMontoTotal().compareTo(java.math.BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El monto total de la reserva no puede ser negativo.");
+        }
+        if (reserva.getDuracionTotalMinutos() == null) {
             reserva.setDuracionTotalMinutos(60);
         }
 

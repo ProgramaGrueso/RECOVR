@@ -194,4 +194,88 @@ class ReservaServiceTest {
                 reservaService.buscarPorId(9999L)
         );
     }
+
+    @Test
+    @DisplayName("Debe rechazar la reserva si la fecha solicitada se encuentra en el pasado")
+    void debeRechazarReservaCuandoFechaEsEnElPasado() {
+        Reserva pasada = new Reserva(
+                null, 1L, 1L, 1L, 1L,
+                LocalDateTime.now().minusHours(2),
+                60, null, new BigDecimal("65.00")
+        );
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                reservaService.crearReserva(pasada)
+        );
+        assertTrue(ex.getMessage().contains("fechas u horas pasadas"));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar la reserva si faltan identificadores obligatorios")
+    void debeRechazarReservaCuandoFaltanIdentificadoresObligatorios() {
+        // Falta clienteId y empleadoId
+        Reserva incompleta = new Reserva(
+                null, null, null, 1L, 1L,
+                LocalDateTime.of(2026, 9, 20, 10, 0),
+                60, null, new BigDecimal("65.00")
+        );
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                reservaService.crearReserva(incompleta)
+        );
+        assertTrue(ex.getMessage().contains("obligatorios"));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar la reserva si la duración en minutos es cero o negativa")
+    void debeRechazarReservaCuandoDuracionEsInvalida() {
+        Reserva duracionNegativa = new Reserva(
+                null, 1L, 1L, 1L, 1L,
+                LocalDateTime.of(2026, 9, 20, 10, 0),
+                -15, null, new BigDecimal("65.00")
+        );
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                reservaService.crearReserva(duracionNegativa)
+        );
+        assertTrue(ex.getMessage().contains("valor positivo"));
+    }
+
+    @Test
+    @DisplayName("Debe rechazar la reserva si el monto total es negativo")
+    void debeRechazarReservaCuandoMontoEsNegativo() {
+        Reserva montoInvalido = new Reserva(
+                null, 1L, 1L, 1L, 1L,
+                LocalDateTime.of(2026, 9, 20, 10, 0),
+                60, null, new BigDecimal("-10.00")
+        );
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+                reservaService.crearReserva(montoInvalido)
+        );
+        assertTrue(ex.getMessage().contains("no puede ser negativo"));
+    }
+
+    @Test
+    @DisplayName("Debe permitir reservas consecutivas contiguas donde el fin de una coincide con el inicio de la siguiente")
+    void debePermitirReservaInmediatamenteConsecutivaSinSolapamiento() {
+        // Turno 1: 10:00 a 11:30 (90 min)
+        Reserva turno1 = new Reserva(
+                null, 1L, 1L, 1L, 1L,
+                LocalDateTime.of(2026, 9, 20, 10, 0),
+                90, EstadoReserva.CONFIRMADA, new BigDecimal("65.00")
+        );
+        reservaRepository.save(turno1);
+
+        // Turno 2 en la misma sala y especialista que inicia exactamente a las 11:30 (no debe solaparse)
+        Reserva turno2 = new Reserva(
+                null, 2L, 1L, 2L, 1L,
+                LocalDateTime.of(2026, 9, 20, 11, 30),
+                60, null, new BigDecimal("55.00")
+        );
+
+        Reserva creada = reservaService.crearReserva(turno2);
+        assertNotNull(creada.getId());
+        assertEquals(EstadoReserva.PENDIENTE, creada.getEstado());
+    }
 }

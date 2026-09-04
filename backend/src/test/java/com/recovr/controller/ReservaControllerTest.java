@@ -137,4 +137,20 @@ class ReservaControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("CANCELADA"));
     }
+
+    @Test
+    @DisplayName("POST /api/reservas debe retornar HTTP 400 Bad Request si la fecha es en el pasado")
+    void debeRetornar400CuandoFechaEsEnElPasado() throws Exception {
+        CrearReservaRequest requestInvalido = new CrearReservaRequest(
+                1L, 2L, 3L, 4L,
+                LocalDateTime.now().minusDays(1),
+                60, new BigDecimal("65.00")
+        );
+
+        mockMvc.perform(post("/api/reservas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(requestInvalido)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Solicitud Inválida"));
+    }
 }
