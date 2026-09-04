@@ -16,6 +16,7 @@ public class Reserva {
     private Long servicioId;
     private Long salaId;
     private LocalDateTime fechaHora;
+    private Integer duracionTotalMinutos;
     private EstadoReserva estado;
     private BigDecimal montoTotal;
 
@@ -23,13 +24,14 @@ public class Reserva {
     }
 
     public Reserva(Long id, Long clienteId, Long empleadoId, Long servicioId, Long salaId,
-                   LocalDateTime fechaHora, EstadoReserva estado, BigDecimal montoTotal) {
+                   LocalDateTime fechaHora, Integer duracionTotalMinutos, EstadoReserva estado, BigDecimal montoTotal) {
         this.id = id;
         this.clienteId = clienteId;
         this.empleadoId = empleadoId;
         this.servicioId = servicioId;
         this.salaId = salaId;
         this.fechaHora = fechaHora;
+        this.duracionTotalMinutos = duracionTotalMinutos;
         this.estado = estado;
         this.montoTotal = montoTotal;
     }
@@ -80,6 +82,14 @@ public class Reserva {
 
     public void setFechaHora(LocalDateTime fechaHora) {
         this.fechaHora = fechaHora;
+    }
+
+    public Integer getDuracionTotalMinutos() {
+        return duracionTotalMinutos;
+    }
+
+    public void setDuracionTotalMinutos(Integer duracionTotalMinutos) {
+        this.duracionTotalMinutos = duracionTotalMinutos;
     }
 
     public EstadoReserva getEstado() {
