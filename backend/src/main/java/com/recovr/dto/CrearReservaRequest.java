@@ -86,4 +86,22 @@ public class CrearReservaRequest {
     public void setMontoTotal(BigDecimal montoTotal) {
         this.montoTotal = montoTotal;
     }
+
+    /**
+     * Mapea el DTO a la entidad de dominio Reserva.
+     * Mantiene los controladores desacoplados y delgados.
+     */
+    public com.recovr.model.Reserva toDomain() {
+        return new com.recovr.model.Reserva(
+                null,
+                clienteId,
+                empleadoId,
+                servicioId,
+                salaId,
+                fechaHora,
+                duracionTotalMinutos,
+                null,
+                montoTotal
+        );
+    }
 }

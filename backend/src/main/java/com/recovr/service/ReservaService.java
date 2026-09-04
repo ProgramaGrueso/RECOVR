@@ -8,6 +8,7 @@ import com.recovr.model.Servicio;
 import com.recovr.repository.ReservaRepository;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,6 +18,8 @@ import java.util.List;
  */
 @Service
 public class ReservaService {
+
+    private static final int DURACION_ESTANDAR_MINUTOS = 60;
 
     private final ReservaRepository reservaRepository;
 
@@ -48,44 +51,23 @@ public class ReservaService {
     public void validarDisponibilidad(Long empleadoId, Long salaId, LocalDateTime inicio, int duracionMinutos) {
         LocalDateTime fin = inicio.plusMinutes(duracionMinutos);
 
-        List<Reserva> reservasEmpleado = reservaRepository.findByEmpleadoId(empleadoId);
-        for (Reserva r : reservasEmpleado) {
-            if (estaActiva(r) && haySolapamiento(r.getFechaHora(), r.getDuracionTotalMinutos(), inicio, fin)) {
-                throw new ReservaConflictException("El especialista seleccionado no se encuentra disponible en el turno solicitado.");
-            }
+        if (existeConflicto(reservaRepository.findByEmpleadoId(empleadoId), inicio, fin)) {
+            throw new ReservaConflictException("El especialista seleccionado no se encuentra disponible en el turno solicitado.");
         }
 
-        List<Reserva> reservasSala = reservaRepository.findBySalaId(salaId);
-        for (Reserva r : reservasSala) {
-            if (estaActiva(r) && haySolapamiento(r.getFechaHora(), r.getDuracionTotalMinutos(), inicio, fin)) {
-                throw new ReservaConflictException("La suite o sala de tratamiento seleccionada ya se encuentra ocupada.");
-            }
+        if (existeConflicto(reservaRepository.findBySalaId(salaId), inicio, fin)) {
+            throw new ReservaConflictException("La suite o sala de tratamiento seleccionada ya se encuentra ocupada.");
         }
     }
 
     /**
      * Registra una nueva reserva validando disponibilidad y asignando el estado PENDIENTE.
-     * Aplica validaciones de reglas de negocio para casos borde.
      */
     public Reserva crearReserva(Reserva reserva) {
-        if (reserva.getFechaHora() == null) {
-            throw new IllegalArgumentException("La fecha y hora de la reserva es requerida.");
-        }
-        if (reserva.getFechaHora().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("No se pueden registrar reservas en fechas u horas pasadas.");
-        }
-        if (reserva.getClienteId() == null || reserva.getEmpleadoId() == null ||
-                reserva.getServicioId() == null || reserva.getSalaId() == null) {
-            throw new IllegalArgumentException("Los identificadores de cliente, especialista, servicio y sala son obligatorios.");
-        }
-        if (reserva.getDuracionTotalMinutos() != null && reserva.getDuracionTotalMinutos() <= 0) {
-            throw new IllegalArgumentException("La duración de la reserva debe ser un valor positivo.");
-        }
-        if (reserva.getMontoTotal() != null && reserva.getMontoTotal().compareTo(java.math.BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("El monto total de la reserva no puede ser negativo.");
-        }
+        validarDatosReserva(reserva);
+
         if (reserva.getDuracionTotalMinutos() == null) {
-            reserva.setDuracionTotalMinutos(60);
+            reserva.setDuracionTotalMinutos(DURACION_ESTANDAR_MINUTOS);
         }
 
         validarDisponibilidad(
@@ -132,12 +114,36 @@ public class ReservaService {
                 .orElseThrow(() -> new ReservaNotFoundException("No existe reserva con identificador: " + id));
     }
 
+    private void validarDatosReserva(Reserva reserva) {
+        if (reserva.getFechaHora() == null) {
+            throw new IllegalArgumentException("La fecha y hora de la reserva es requerida.");
+        }
+        if (reserva.getFechaHora().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("No se pueden registrar reservas en fechas u horas pasadas.");
+        }
+        if (reserva.getClienteId() == null || reserva.getEmpleadoId() == null ||
+                reserva.getServicioId() == null || reserva.getSalaId() == null) {
+            throw new IllegalArgumentException("Los identificadores de cliente, especialista, servicio y sala son obligatorios.");
+        }
+        if (reserva.getDuracionTotalMinutos() != null && reserva.getDuracionTotalMinutos() <= 0) {
+            throw new IllegalArgumentException("La duración de la reserva debe ser un valor positivo.");
+        }
+        if (reserva.getMontoTotal() != null && reserva.getMontoTotal().compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("El monto total de la reserva no puede ser negativo.");
+        }
+    }
+
+    private boolean existeConflicto(List<Reserva> reservas, LocalDateTime inicio, LocalDateTime fin) {
+        return reservas.stream()
+                .anyMatch(r -> estaActiva(r) && haySolapamiento(r.getFechaHora(), r.getDuracionTotalMinutos(), inicio, fin));
+    }
+
     private boolean estaActiva(Reserva r) {
         return r.getEstado() == EstadoReserva.PENDIENTE || r.getEstado() == EstadoReserva.CONFIRMADA;
     }
 
     private boolean haySolapamiento(LocalDateTime inicio1, Integer duracion1, LocalDateTime inicio2, LocalDateTime fin2) {
-        int dur = (duracion1 != null && duracion1 > 0) ? duracion1 : 60;
+        int dur = (duracion1 != null && duracion1 > 0) ? duracion1 : DURACION_ESTANDAR_MINUTOS;
         LocalDateTime fin1 = inicio1.plusMinutes(dur);
         return inicio1.isBefore(fin2) && inicio2.isBefore(fin1);
     }

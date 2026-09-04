@@ -32,19 +32,7 @@ public class ReservaController {
      */
     @PostMapping
     public ResponseEntity<ReservaResponse> crearReserva(@RequestBody CrearReservaRequest request) {
-        Reserva reserva = new Reserva(
-                null,
-                request.getClienteId(),
-                request.getEmpleadoId(),
-                request.getServicioId(),
-                request.getSalaId(),
-                request.getFechaHora(),
-                request.getDuracionTotalMinutos(),
-                null,
-                request.getMontoTotal()
-        );
-
-        Reserva creada = reservaService.crearReserva(reserva);
+        Reserva creada = reservaService.crearReserva(request.toDomain());
         return ResponseEntity.status(HttpStatus.CREATED).body(ReservaResponse.fromDomain(creada));
     }
 
