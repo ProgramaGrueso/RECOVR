@@ -20,10 +20,14 @@ public class ReservaService {
     }
 
     /**
-     * Paso RED de TDD: Definición del método sin implementación real.
-     * Retorna null deliberadamente para validar que el test falla por la razón esperada.
+     * Paso GREEN de TDD: Implementación mínima para satisfacer el cálculo del bloque.
+     * Suma la duración del servicio más el tiempo de limpieza e higienización de la sala.
      */
     public LocalDateTime calcularFinBloque(LocalDateTime inicio, Servicio servicio) {
-        return null;
+        int minutosTotales = servicio.getDuracionMinutos();
+        if (servicio.getTiempoLimpiezaMinutos() != null) {
+            minutosTotales += servicio.getTiempoLimpiezaMinutos();
+        }
+        return inicio.plusMinutes(minutosTotales);
     }
 }
