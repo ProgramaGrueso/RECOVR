@@ -1,0 +1,50 @@
+<footer class="footer-container" id="footer-section">
+  <div class="footer-cta-banner">
+    <app-brand-mark size="md" color="var(--color-metal)"></app-brand-mark>
+    <h2 class="footer-headline">RITUAL DE RECUPERACIÓN</h2>
+
+    <p class="footer-subhead">Rendimiento físico y acondicionamiento corporal sin concesiones.</p>
+    <a (click)="onReserve()" (mouseenter)="setCursor('[ RESERVAR ]')" (mouseleave)="resetCursor()" class="btn-primary footer-cta-btn" id="footer-cta-reserve">
+      [ RESERVAR SESIÓN ]
+    </a>
+  </div>
+
+  <div class="footer-divider"></div>
+
+  <div class="footer-main">
+    <div class="footer-col brand-col">
+      <h3 class="footer-wordmark">RECOVR</h3>
+      <p class="brand-tagline">El cuerpo, restaurado.</p>
+      <p class="brand-desc">
+        Masaje terapéutico de alta presión y podología clínica bajo una atmósfera gótico-editorial de máxima exigencia.
+      </p>
+    </div>
+
+    <div class="footer-col">
+      <h4 class="col-title">[ PROTOCOLOS ]</h4>
+      <ul class="footer-links">
+        <li><a href="#protocolos">[ 01 ] Descompresión Miofascial</a></li>
+        <li><a href="#protocolos">[ 02 ] Podología Reconstructiva</a></li>
+        <li><a href="#protocolos">[ 03 ] Masaje Deportivo Elite</a></li>
+        <li><a href="#protocolos">[ 04 ] Perfilado Podológico</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4 class="col-title">[ SANCTUM &amp; ATENCIÓN ]</h4>
+      <p class="info-line">Av. San Martín 1040, Ciudad</p>
+      <p class="info-line">Lunes a Sábado — 09:00 a 21:00</p>
+      <p class="info-line">Atención exclusiva con reserva previa</p>
+      <div class="footer-admin-link-box">
+        <a routerLink="/admin/login" class="footer-admin-link">
+          <span>[ ✠ ] Acceso a Control &amp; Roles ↗</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p class="copyright">&copy; RECOVR SANCTUM. Todos los derechos reservados.</p>
+    <p class="credits">[ ESTÉTICA EDITORIAL GÓTICO-PREMIUM ]</p>
+  </div>
+</footer>

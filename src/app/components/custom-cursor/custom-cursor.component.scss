@@ -1,0 +1,48 @@
+// src/app/components/custom-cursor/custom-cursor.component.scss
+@use '../../../styles/tokens' as *;
+
+.custom-cursor-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  mix-blend-mode: difference;
+  opacity: 0;
+  transition: opacity 0.3s var(--ease-serotoninn);
+
+  &.active {
+    opacity: 1;
+  }
+
+  @media (max-width: 768px) {
+    display: none; // Desactivar en pantallas táctiles
+  }
+}
+
+.cursor-dot {
+  width: 12px;
+  height: 12px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.2s var(--ease-serotoninn);
+}
+
+.cursor-label {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #ffffff;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  border-radius: 2px;
+}

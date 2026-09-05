@@ -1,0 +1,54 @@
+<section
+  class="hero-container"
+  (mouseenter)="setCursor('[ RECOVR SANCTUM ]')"
+  (mouseleave)="resetCursor()"
+  aria-label="Sección principal de RECOVR">
+  
+  @if (showVideo) {
+    <div class="video-wrapper" [class.video-failed]="isVideoFailed">
+      <video
+        #heroVideo
+        class="hero-video"
+        poster="assets/Krea2-155013_00001_.png"
+        [src]="videoSource"
+        autoplay
+        [muted]="true"
+        loop
+        playsinline
+        preload="auto"
+        (error)="onVideoError()"
+        aria-hidden="true">
+        Tu navegador no soporta el elemento de video.
+      </video>
+      <div class="video-overlay"></div>
+    </div>
+  } @else {
+    <div class="video-wrapper">
+      <img src="assets/Krea2-155013_00001_.png" alt="Recovr Sanctum Background" style="width: 100%; height: 100%; object-fit: cover;">
+      <div class="video-overlay"></div>
+    </div>
+  }
+
+  <div class="hero-content">
+    <span class="hero-badge">[ PROTOCOLOS DE RESTAURACIÓN FISCAL & PODOLOGÍA ]</span>
+    <h1 class="hero-wordmark">RECOVR</h1>
+
+    <p class="hero-tagline">El cuerpo, restaurado.</p>
+
+    <div class="hero-actions">
+      <a
+        (click)="onReserve()"
+        (mouseenter)="setCursor('[ RESERVAR ]')"
+        (mouseleave)="resetCursor()"
+        class="btn-primary"
+        id="hero-cta-reserve">
+        [ RESERVAR SESIÓN ]
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-scroll-indicator">
+    <span class="scroll-label">[ DESCUBRIR ]</span>
+    <div class="scroll-line-vertical"></div>
+  </div>
+</section>

@@ -1,0 +1,38 @@
+<article
+  class="professional-card"
+  *ngIf="professional"
+  (mouseenter)="setCursor()"
+  (mouseleave)="resetCursor()">
+  
+  <div class="card-portrait-wrapper">
+    <img [src]="professional.photoUrl" [alt]="professional.name" class="portrait-img" loading="lazy" />
+    <div class="portrait-overlay"></div>
+    <span class="availability-badge">
+      <span class="dot"></span>
+      {{ professional.availability }}
+    </span>
+  </div>
+
+  <div class="card-details">
+    <h3 class="prof-name">{{ professional.name }}</h3>
+    <p class="prof-title">{{ professional.title }}</p>
+
+    <div class="prof-bio" *ngIf="professional.bio">
+      <p class="bio-text">{{ professional.bio }}</p>
+    </div>
+
+    <div class="prof-specialty">
+      <span class="specialty-label">[ ESPECIALIDAD ]</span>
+      <span class="specialty-text">{{ professional.specialty }}</span>
+    </div>
+
+    <div class="prof-duties" *ngIf="professional.duties">
+      <span class="duties-label">[ ¿QUÉ REALIZA? ]</span>
+      <span class="duties-text">{{ professional.duties }}</span>
+    </div>
+
+    <a (click)="onSelect()" class="btn-secondary prof-cta" [id]="'btn-prof-' + professional.id">
+      [ RESERVAR CON {{ getFirstNameUppercase(professional.name) }} ]
+    </a>
+  </div>
+</article>
