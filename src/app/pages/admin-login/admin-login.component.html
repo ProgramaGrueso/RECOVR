@@ -10,23 +10,6 @@
 
     <h1 class="login-headline">ACCESO SANCTUM</h1>
 
-    <!-- Selector de Modo: Cliente vs Personal -->
-    <div class="mode-tabs">
-      <button
-        type="button"
-        class="mode-tab-btn"
-        [class.active]="loginMode === 'CLIENT'"
-        (click)="setLoginMode('CLIENT')">
-        [ PORTAL CLIENTE ]
-      </button>
-      <button
-        type="button"
-        class="mode-tab-btn"
-        [class.active]="loginMode === 'STAFF'"
-        (click)="setLoginMode('STAFF')">
-        [ ACCESO PERSONAL & STAFF ]
-      </button>
-    </div>
 
     <!-- ========================================================= -->
     <!-- MODO 1: PORTAL CLIENTE / PACIENTES                        -->
@@ -57,12 +40,12 @@
         @if (clientTab === 'LOGIN') {
           <form (ngSubmit)="submitClientLogin()" class="minimal-login-form">
             <div class="input-group">
-              <span class="input-label-tag">[ CORREO ELECTRÓNICO ]</span>
+              <span class="input-label-tag">[ CORREO O ID ]</span>
               <input
-                type="email"
+                type="text"
                 name="clientEmail"
                 [(ngModel)]="clientEmail"
-                placeholder="ej. carlos.mendoza@gmail.com"
+                placeholder="ej. carlos@gmail.com o cli-01"
                 required />
             </div>
 
@@ -98,13 +81,7 @@
               [ INGRESAR A MI CUENTA ]
             </button>
 
-            <!-- Acceso Rápido Demo para Carlos Mendoza -->
-            <button
-              type="button"
-              class="btn-demo-quick"
-              (click)="quickLoginClientDemo()">
-              ⚡ Acceso Inmediato como Carlos Mendoza (Cliente Demo)
-            </button>
+
           </form>
         }
 
@@ -188,21 +165,7 @@
           Acceso exclusivo para colaboradores del Sanctum (Kinesiólogas, Front-Desk, Gerencia y DevOps).
         </p>
 
-        <!-- Selector Rápido de Roles de Staff para Exposición -->
-        <div class="staff-role-pills">
-          <span class="staff-pills-label">[ PRESELECCIONAR CREDENCIAL DE STAFF ]:</span>
-          <div class="pills-grid">
-            @for (u of staffDemoUsers; track u.role) {
-              <button
-                type="button"
-                class="role-pill"
-                [class.selected]="selectedRole === u.role"
-                (click)="prefillStaffCredentials(u.role)">
-                {{ u.role }} ({{ u.roleTitle.split('/')[0] }})
-              </button>
-            }
-          </div>
-        </div>
+
 
         <form (ngSubmit)="submitStaffLogin()" class="minimal-login-form">
           <div class="input-group">
@@ -249,6 +212,10 @@
 
     <div class="login-footer-security">
       <span>🔒 Sistema RBAC Sanctum v2.0 • Sesiones aisladas por rol y token de seguridad</span>
+      <br><br>
+      <a style="font-size: 0.75rem; color: #666; cursor: pointer; text-decoration: underline;" (click)="resetLocalData()">
+        (Limpiar datos de prueba y perfiles antiguos)
+      </a>
     </div>
   </div>
 </main>

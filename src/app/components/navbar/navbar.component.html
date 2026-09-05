@@ -6,9 +6,7 @@
     </a>
 
     <div class="navbar-actions">
-      <a routerLink="/admin/login" class="nav-login-btn">
-        [ ACCEDER ]
-      </a>
+
 
       <!-- Botón de menú tipo Serotoninn -->
       <button
@@ -53,7 +51,10 @@
         [ RESERVAR SESIÓN ]
       </a>
       <a routerLink="/admin/login" class="overlay-link overlay-login-link" (click)="closeMobileMenu()">
-        [ INICIAR SESIÓN / PORTAL ↗ ]
+        [ INICIAR SESIÓN PACIENTE ↗ ]
+      </a>
+      <a routerLink="/admin/login" [queryParams]="{ mode: 'staff' }" class="overlay-link overlay-login-link" (click)="closeMobileMenu()">
+        [ ACCESO PERSONAL STAFF ↗ ]
       </a>
     </nav>
 

@@ -36,8 +36,8 @@
       <p class="info-line">Lunes a Sábado — 09:00 a 21:00</p>
       <p class="info-line">Atención exclusiva con reserva previa</p>
       <div class="footer-admin-link-box">
-        <a routerLink="/admin/login" class="footer-admin-link">
-          <span>[ ✠ ] Acceso a Control &amp; Roles ↗</span>
+        <a routerLink="/admin/login" [queryParams]="{ mode: 'staff' }" class="footer-admin-link">
+          <span>[ ✠ ] Acceso a Control &amp; Staff ↗</span>
         </a>
       </div>
     </div>

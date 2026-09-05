@@ -455,6 +455,19 @@
         color: var(--color-text);
         box-shadow: 0 0 10px rgba(92, 26, 43, 0.4);
       }
+      
+      &.exit-role-btn {
+        background: rgba(255, 60, 60, 0.1);
+        border-color: rgba(255, 60, 60, 0.4);
+        color: #ff6b6b;
+        font-weight: 600;
+        margin-left: auto;
+        
+        &:hover {
+          background: rgba(255, 60, 60, 0.2);
+          border-color: #ff6b6b;
+        }
+      }
     }
   }
 }

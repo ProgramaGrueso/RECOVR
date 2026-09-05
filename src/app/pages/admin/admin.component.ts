@@ -15,6 +15,7 @@ import {
   ClientBookingItem,
   PointTransaction
 } from '../../models/rbac.model';
+import { ServerTimeService } from '../../services/server-time.service';
 
 @Component({
   selector: 'app-admin',
@@ -26,6 +27,7 @@ import {
 export class AdminComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   auth = inject(AuthService);
+  private serverTimeService = inject(ServerTimeService);
 
   activeView = 'RESUMEN';
   toastMessage: string | null = null;
@@ -56,7 +58,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   updateClock() {
-    this.serverTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    this.serverTime = this.serverTimeService.getNowISOString().replace('T', ' ').substring(0, 19);
   }
 
   // Roles disponibles para la barra de cambio rápido en vivo
@@ -64,6 +66,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   // Usuario actual computado desde AuthService
   currentUser = computed(() => this.auth.currentUser()!);
+  originalUser = computed(() => this.auth.originalUser());
 
   // -------------------------------------------------------------
   // MENÚ DE NAVEGACIÓN BASADO EN PERMISOS (RBAC)
@@ -71,6 +74,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   allNavItems = [
     { key: 'RESUMEN', icon: '◈', label: 'Resumen' },
     { key: 'AGENDA', icon: '◷', label: 'Agenda & Salas' },
+    { key: 'PACIENTES', icon: '☗', label: 'Directorio Pacientes' },
     { key: 'CLINICA', icon: '✚', label: 'Ficha Clínica' },
     { key: 'CAJA', icon: '❖', label: 'Caja & POS' },
     { key: 'PERSONAL', icon: '◌', label: 'Personal & Turnos' },
@@ -82,6 +86,50 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   get allowedNavItems() {
     return this.allNavItems.filter(item => this.auth.canAccess(item.key, this.currentUser().role));
+  }
+
+  get allRegisteredClients() {
+    return this.auth.getRegisteredClients();
+  }
+
+  editingClient: any = null;
+
+  editClient(clientId: string) {
+    const clients = this.auth.getRegisteredClients();
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    
+    // Create a copy to edit without affecting the original until saved
+    this.editingClient = { ...client };
+  }
+
+  saveClientEdit() {
+    if (!this.editingClient) return;
+    
+    const confirmSave = confirm("¿Estás seguro de que deseas guardar los cambios de este perfil?");
+    if (!confirmSave) return;
+    
+    // Convert points to number if needed
+    this.editingClient.points = parseInt(this.editingClient.points, 10) || 0;
+    
+    this.auth.updateClient(this.editingClient);
+    
+    this.toastMessage = `Cliente ${this.editingClient.id} actualizado exitosamente.`;
+    this.editingClient = null; // Close modal
+    
+    setTimeout(() => this.toastMessage = null, 3000);
+  }
+
+  closeEditModal() {
+    this.editingClient = null;
+  }
+
+  deleteClient(clientId: string) {
+    if (confirm(`¿Confirmas que deseas eliminar permanentemente el cliente con ID ${clientId}?`)) {
+      this.auth.deleteClient(clientId);
+      this.toastMessage = `Cliente ${clientId} eliminado del sistema.`;
+      setTimeout(() => this.toastMessage = null, 3000);
+    }
   }
 
   // -------------------------------------------------------------
@@ -126,7 +174,7 @@ export class AdminComponent implements OnInit, OnDestroy {
       clientPhone: '+56 9 6543 2198',
       service: 'Masaje Terapéutico Deportivo',
       serviceCategory: 'MASAJE',
-      prof: 'Gabriel Vane',
+      prof: 'Astrid Vane',
       room: 'Sanctum 02 (Masoterapia)',
       date: '2026-08-22',
       time: '09:00',
@@ -329,7 +377,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     },
     {
       id: 'STF-03',
-      name: 'Gabriel Vane',
+      name: 'Astrid Vane',
       role: 'ESPECIALISTA',
       specialty: 'Masoterapeuta & Recuperación Miofascial',
       email: 'gabriel@recovr.cl',
@@ -446,6 +494,32 @@ export class AdminComponent implements OnInit, OnDestroy {
   // -------------------------------------------------------------
   clientBookings: ClientBookingItem[] = [];
   pointsHistory: PointTransaction[] = [];
+
+  // --- CLIENT DASHBOARD GETTERS ---
+  get nextSession(): ClientBookingItem | undefined {
+    // Busca la primera reserva futura/confirmada del cliente
+    // (Simplificado: tomamos la primera CONFIRMADA del array local)
+    return this.clientBookings.find(b => b.status === 'CONFIRMADA');
+  }
+
+  get clientMembershipLevel(): string {
+    const pts = this.currentUser().points || 0;
+    if (pts < 100) return 'NUEVO INGRESO';
+    if (pts < 300) return 'MIEMBRO ACTIVO';
+    return 'SANCTUM ELITE';
+  }
+
+  get clientMembershipDesc(): string {
+    const pts = this.currentUser().points || 0;
+    if (pts < 100) return 'Acumulando puntos iniciales';
+    if (pts < 300) return 'Beneficios estándar';
+    return 'Beneficios de recuperación';
+  }
+
+  get clientBonos() {
+    return this.currentUser().bonos;
+  }
+  
   redeemableBenefits: BenefitItem[] = [
     {
       id: 'BEN-01',
@@ -533,7 +607,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   get nextBookingCountdown(): { label: string; isCritical: boolean; hours: number; deadline: string } {
     const booking = this.activeNextBooking;
     if (!booking) {
-      return { label: 'Sin sesiones activas programadas', isCritical: false, hours: 99, deadline: 'N/A' };
+      return { label: 'Sin sesiones activas programadas', isCritical: false, hours: 99, deadline: this.serverTimeService.getNowISOString().substring(0, 10) };
     }
 
     const { canCancelFree, hoursRemaining, deadlineTime } = this.auth.canCancelWithoutIndemnity(booking);
@@ -648,9 +722,20 @@ export class AdminComponent implements OnInit, OnDestroy {
     this.showToast(`Rol activo cambiado a: [ ${newRole} ] (${this.currentUser().roleTitle})`);
   }
 
+  restoreOriginalRole(): void {
+    this.auth.restoreOriginalRole();
+    this.activeView = 'RESUMEN';
+    this.showToast(`Restaurado rol original: [ ${this.currentUser().role} ]`);
+  }
+
   logout(): void {
+    const role = this.currentUser().role;
     this.auth.logout();
-    this.router.navigate(['/admin/login']);
+    if (role === 'CLIENTE') {
+      this.router.navigate(['/admin/login']);
+    } else {
+      this.router.navigate(['/admin/login'], { queryParams: { mode: 'staff' } });
+    }
   }
 
   showToast(message: string): void {
@@ -682,6 +767,43 @@ export class AdminComponent implements OnInit, OnDestroy {
   // -------------------------------------------------------------
   // OPERACIONES DE AGENDA Y RESERVAS
   // -------------------------------------------------------------
+  get waitingClients(): BookingAdminItem[] {
+    return this.bookings.filter(b => b.status === 'EN ESPERA');
+  }
+
+  get activeSessions(): BookingAdminItem[] {
+    return this.bookings.filter(b => b.status === 'EN SESIÓN');
+  }
+
+  get staffStatuses() {
+    return this.staffList.filter(s => s.role === 'ESPECIALISTA').map(staff => {
+      const activeSession = this.activeSessions.find(b => b.prof === staff.name);
+      if (activeSession) {
+        const isEndingSoon = staff.name === 'Valentina Ross'; // Mock for demo
+        return {
+          ...staff,
+          availability: isEndingSoon ? 'PRÓXIMAMENTE LIBRE' : 'OCUPADO',
+          detail: isEndingSoon ? `Finalizando en ${activeSession.room}` : `En sesión (${activeSession.room})`
+        };
+      }
+
+      const waitingClient = this.waitingClients.find(b => b.prof === staff.name);
+      if (waitingClient) {
+        return {
+          ...staff,
+          availability: 'OCUPADO',
+          detail: `Por iniciar sesión`
+        };
+      }
+
+      return {
+        ...staff,
+        availability: 'LIBRE',
+        detail: `Disponible`
+      };
+    });
+  }
+
   get filteredBookings(): BookingAdminItem[] {
     const role = this.currentUser().role;
     let list = this.bookings;
@@ -711,7 +833,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     // Registrar evento de auditoría
     this.auditLogs.unshift({
       id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
-      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      timestamp: this.serverTimeService.getNowISOString().replace('T', ' ').substring(0, 19),
       actor: this.currentUser().name,
       role: this.currentUser().role,
       action: `Cambio de estado de reserva ${booking.id} a ${newStatus}`,
@@ -807,7 +929,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
     const note = {
       id: `NOTE-${Math.floor(100 + Math.random() * 900)}`,
-      date: new Date().toISOString().substring(0, 10),
+      date: this.serverTimeService.getNowISOString().substring(0, 10),
       specialistName: this.currentUser().name,
       treatment: this.newClinicalNote.treatment,
       findings: this.newClinicalNote.findings,
@@ -858,7 +980,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
     this.cashTransactions.unshift({
       id: `TRX-${Math.floor(100 + Math.random() * 900)}`,
-      time: new Date().toLocaleTimeString().substring(0, 5),
+      time: this.serverTimeService.getNowISOString().substring(11, 16),
       client: this.newPayment.client,
       service: this.newPayment.service,
       amount: this.newPayment.amount,
@@ -892,7 +1014,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   // OPERACIONES DE DEVOPS & INFRAESTRUCTURA
   // -------------------------------------------------------------
   triggerManualBackup(): void {
-    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const now = this.serverTimeService.getNowISOString().replace('T', ' ').substring(0, 19);
     this.auditLogs.unshift({
       id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
       timestamp: now,

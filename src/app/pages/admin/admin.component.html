@@ -7,6 +7,57 @@
     </div>
   }
 
+  <!-- Modal Editar Cliente -->
+  @if (editingClient) {
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); padding: 1rem;">
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; width: 420px; max-width: 100%; max-height: 90vh; overflow-y: auto; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+        
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <h1 style="font-family: var(--font-display); color: var(--color-text); font-size: 1.5rem; letter-spacing: var(--letter-spacing-wide); text-transform: uppercase; margin: 0;">
+            Gestión de Perfil
+          </h1>
+          <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-top: 0.5rem; font-family: var(--font-body);">
+            Editando datos de: <strong>{{ editingClient.id }}</strong>
+          </p>
+        </div>
+        
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.75rem; letter-spacing: 0.18em; color: var(--color-text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">[ NOMBRE Y APELLIDO ]</label>
+          <input type="text" [(ngModel)]="editingClient.name" style="width: 100%; padding: 0.85rem; background: var(--color-bg-alt); border: 1px solid var(--color-metal); color: var(--color-text); border-radius: 0; font-family: var(--font-body);">
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.75rem; letter-spacing: 0.18em; color: var(--color-text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">[ CORREO ELECTRÓNICO ]</label>
+          <input type="email" [(ngModel)]="editingClient.email" style="width: 100%; padding: 0.85rem; background: var(--color-bg-alt); border: 1px solid var(--color-metal); color: var(--color-text); border-radius: 0; font-family: var(--font-body);">
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.75rem; letter-spacing: 0.18em; color: var(--color-text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">[ TELÉFONO ]</label>
+          <input type="tel" [(ngModel)]="editingClient.phone" style="width: 100%; padding: 0.85rem; background: var(--color-bg-alt); border: 1px solid var(--color-metal); color: var(--color-text); border-radius: 0; font-family: var(--font-body);">
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.75rem; letter-spacing: 0.18em; color: var(--color-text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">[ NOTAS CLÍNICAS / ALERGIAS ]</label>
+          <textarea [(ngModel)]="editingClient.notes" placeholder="Ej: Alergia a ciertos aceites, lesiones lumbares..." rows="3" style="width: 100%; padding: 0.85rem; background: var(--color-bg-alt); border: 1px solid var(--color-metal); color: var(--color-text); border-radius: 0; font-family: var(--font-body); resize: vertical;"></textarea>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <label style="display: block; font-size: 0.75rem; letter-spacing: 0.18em; color: var(--color-text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">[ PUNTOS ACUMULADOS ]</label>
+          <input type="number" [(ngModel)]="editingClient.points" style="width: 100%; padding: 0.85rem; background: var(--color-bg-alt); border: 1px solid var(--color-metal); color: var(--color-text); font-weight: bold; border-radius: 0; font-family: var(--font-body);">
+        </div>
+
+        <div style="display: flex; gap: 1rem;">
+          <button style="flex: 1; padding: 0.85rem; background: transparent; border: 1px solid var(--color-metal); color: var(--color-text); cursor: pointer; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.2em; border-radius: 0; transition: all 0.3s;" (click)="closeEditModal()">
+            Cancelar
+          </button>
+          <button style="flex: 1; padding: 0.85rem; background: var(--color-accent); border: 1px solid var(--color-accent); color: var(--color-text); cursor: pointer; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.2em; font-weight: bold; border-radius: 0; transition: all 0.3s;" (click)="saveClientEdit()">
+            [ GUARDAR ]
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
   <!-- BARRA LATERAL (SIDEBAR) -->
   <aside class="admin-sidebar">
     <div class="sidebar-brand">
@@ -97,9 +148,9 @@
       </div>
 
       <!-- SELECTOR RÁPIDO DE ROL (EXCLUSIVO SUPER ADMIN / AUDITORÍA DEVOPS) -->
-      @if (currentUser().role === 'SUPER ADMIN') {
+      @if (currentUser().role === 'SUPER ADMIN' || originalUser()?.role === 'SUPER ADMIN') {
         <div class="header-role-switcher">
-          <span class="switcher-label">⚡ CONMUTAR ROL (DEVOPS AUDITORÍA):</span>
+          <span class="switcher-label">👁️ CONMUTAR ROL (DEVOPS AUDITORÍA):</span>
           <div class="role-pills-row">
             @for (r of allRoles; track r) {
               <button
@@ -110,17 +161,18 @@
                 {{ r }}
               </button>
             }
+            @if (originalUser()) {
+              <button
+                type="button"
+                class="role-pill-btn exit-role-btn"
+                (click)="restoreOriginalRole()">
+                SALIR / RESTAURAR ROL
+              </button>
+            }
           </div>
         </div>
       }
 
-      <!-- BARRA DE ESTADO DEL CLIENTE -->
-      @if (currentUser().role === 'CLIENTE') {
-        <div class="header-client-status">
-          <span class="client-points-badge">★ SALDO: {{ clientPoints }} PUNTOS SANCTUM</span>
-          <a routerLink="/reserva" class="client-book-quick-btn">+ Agendar Nueva Sesión</a>
-        </div>
-      }
     </header>
 
     <!-- ========================================================= -->
@@ -156,13 +208,21 @@
           <section class="stats-grid">
             <div class="stat-card highlight">
               <span class="stat-label">CLIENTES EN SALA DE ESPERA</span>
-              <h3 class="stat-value">1 PACIENTE</h3>
-              <span class="stat-change">Ignacio Silva (Podología)</span>
+              <h3 class="stat-value">{{ waitingClients.length }} PACIENTE{{ waitingClients.length === 1 ? '' : 'S' }}</h3>
+              @if (waitingClients.length > 0) {
+                <span class="stat-change">{{ waitingClients[0].client }} ({{ waitingClients[0].service }})</span>
+              } @else {
+                <span class="stat-change">Sala despejada</span>
+              }
             </div>
             <div class="stat-card">
               <span class="stat-label">SESIONES EN CURSO</span>
-              <h3 class="stat-value">1 ACTIVA</h3>
-              <span class="stat-change neutral">Sanctum 02 (Esteban Paz)</span>
+              <h3 class="stat-value">{{ activeSessions.length }} ACTIVA{{ activeSessions.length === 1 ? '' : 'S' }}</h3>
+              @if (activeSessions.length > 0) {
+                <span class="stat-change neutral">{{ activeSessions[0].room }} ({{ activeSessions[0].prof }})</span>
+              } @else {
+                <span class="stat-change neutral">Todas las salas libres</span>
+              }
             </div>
             <div class="stat-card">
               <span class="stat-label">CITAS PROGRAMADAS HOY</span>
@@ -202,25 +262,68 @@
           <section class="stats-grid">
             <div class="stat-card highlight">
               <span class="stat-label">TU PRÓXIMA SESIÓN</span>
-              <h3 class="stat-value">HOY 16:00</h3>
-              <span class="stat-change">Descompresión Miofascial</span>
+              @if (nextSession) {
+                <h3 class="stat-value">{{ nextSession.date | uppercase }} {{ nextSession.time }}</h3>
+                <span class="stat-change">{{ nextSession.service }}</span>
+              } @else {
+                <h3 class="stat-value">SIN RESERVAS</h3>
+                <span class="stat-change">Agenda tu próxima cita</span>
+              }
             </div>
-            <div class="stat-card">
-              <span class="stat-label">BONOS DISPONIBLES</span>
-              <h3 class="stat-value">3 / 5</h3>
-              <span class="stat-change positive">Pack Alto Rendimiento</span>
-            </div>
+            
+            @if (clientBonos) {
+              <div class="stat-card">
+                <span class="stat-label">BONOS DISPONIBLES</span>
+                <h3 class="stat-value">{{ clientBonos.remaining }} / {{ clientBonos.total }}</h3>
+                <span class="stat-change positive">{{ clientBonos.name }}</span>
+              </div>
+            }
+            
             <div class="stat-card">
               <span class="stat-label">ESPECIALISTA DESIGNADA</span>
-              <h3 class="stat-value">Valentina Ross</h3>
-              <span class="stat-change">Kinesióloga Sanctum</span>
+              @if (nextSession) {
+                <h3 class="stat-value">{{ nextSession.prof }}</h3>
+                <span class="stat-change">Especialista Sanctum</span>
+              } @else {
+                <h3 class="stat-value">POR ASIGNAR</h3>
+                <span class="stat-change">Dependerá de tu reserva</span>
+              }
             </div>
+            
             <div class="stat-card">
               <span class="stat-label">NIVEL DE MEMBRESÍA</span>
-              <h3 class="stat-value">SANCTUM ELITE</h3>
-              <span class="stat-change positive">Beneficios de recuperación</span>
+              <h3 class="stat-value">{{ clientMembershipLevel }}</h3>
+              <span class="stat-change positive">{{ clientMembershipDesc }}</span>
             </div>
           </section>
+        }
+
+        @if (currentUser().role === 'RECEPCIONISTA' || currentUser().role === 'SUPER ADMIN' || currentUser().role === 'ADMINISTRADOR') {
+          <!-- Disponibilidad de Especialistas -->
+          <div class="admin-section">
+            <div class="section-heading-row">
+              <h2 class="section-heading">[ DISPONIBILIDAD DE ESPECIALISTAS ]</h2>
+              <span class="live-tag">● ACTUALIZACIÓN EN VIVO</span>
+            </div>
+            
+            <div class="cabins-grid">
+              @for (staff of staffStatuses; track staff.id) {
+                <div class="cabin-card" [class.in-use]="staff.availability === 'OCUPADO'" [class.cleaning]="staff.availability === 'PRÓXIMAMENTE LIBRE'">
+                  <div class="cabin-top">
+                    <span class="cabin-code">{{ staff.name }}</span>
+                    <span class="cabin-status-badge" [class.busy]="staff.availability === 'OCUPADO'" [class.clean]="staff.availability === 'PRÓXIMAMENTE LIBRE'" [class.free]="staff.availability === 'LIBRE'">
+                      {{ staff.availability }}
+                    </span>
+                  </div>
+                  <p class="cabin-type">{{ staff.specialty }}</p>
+                  <div class="cabin-therapist">
+                    <span>Estado actual:</span>
+                    <strong>{{ staff.detail }}</strong>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
         }
 
         <!-- Panel de Estado Operativo de Salas -->
@@ -430,9 +533,9 @@
                   <div class="form-field">
                     <label>Especialista Asignada</label>
                     <select [(ngModel)]="newBooking.prof">
-                      <option value="Valentina Ross">Valentina Ross (Kinesióloga)</option>
-                      <option value="Elena Roth">Elena Roth (Podóloga)</option>
-                      <option value="Gabriel Vane">Gabriel Vane (Masoterapeuta)</option>
+                      @for (staff of staffStatuses; track staff.id) {
+                        <option [value]="staff.name">{{ staff.name }} ({{ staff.availability }})</option>
+                      }
                     </select>
                   </div>
                   <div class="form-field">
@@ -472,6 +575,66 @@
             </div>
           </div>
         }
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- VISTA NUEVA: DIRECTORIO DE PACIENTES                      -->
+    <!-- ========================================================= -->
+    @if (activeView === 'PACIENTES') {
+      <div class="view-content animate-fade">
+        <div class="table-container" style="background: var(--bg-card); padding: 1.5rem; border: 1px solid var(--border-color);">
+          <div class="table-header" style="margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <h3>[ DIRECTORIO DE PACIENTES REGISTRADOS ]</h3>
+            <span class="table-count" style="color: var(--color-gold);">{{ allRegisteredClients.length }} Pacientes Totales</span>
+          </div>
+          <table class="dark-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>PACIENTE</th>
+                <th>CONTACTO</th>
+                <th>PERFIL / PUNTOS</th>
+                <th>ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of allRegisteredClients; track c.id) {
+                <tr>
+                  <td><strong>{{ c.id }}</strong></td>
+                  <td>
+                    {{ c.name }}
+                    @if (c.notes) {
+                      <span style="color: #ff4d4d; font-size: 0.85rem; margin-left: 0.5rem;" title="Tiene notas clínicas o alergias">⚠️</span>
+                    }
+                  </td>
+                  <td>
+                    <div style="font-size: 0.85rem; color: #ccc;">{{ c.email }}</div>
+                    <div style="font-size: 0.8rem; color: #888;">{{ c.phone }}</div>
+                  </td>
+                  <td>
+                    <span class="method-tag">{{ c.points || 0 }} PTS</span>
+                  </td>
+                  <td>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                      <button style="background: rgba(255, 215, 0, 0.1); border: 1px solid var(--color-gold); color: var(--color-gold); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;" (click)="editClient(c.id)">
+                        [ Editar ]
+                      </button>
+                      <button style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;" (click)="deleteClient(c.id)">
+                        [ Eliminar ]
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+              @if (allRegisteredClients.length === 0) {
+                <tr>
+                  <td colspan="5" style="text-align: center; color: #888; padding: 2rem;">No hay clientes nuevos registrados dinámicamente.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
       </div>
     }
 
@@ -644,7 +807,12 @@
           <div class="quick-pos-box">
             <div class="pos-input-group">
               <label>Cliente</label>
-              <input type="text" [(ngModel)]="newPayment.client" placeholder="ej. Felipe Araneda">
+              <select [(ngModel)]="newPayment.client">
+                <option value="">-- Seleccione un cliente --</option>
+                @for (client of allRegisteredClients; track client.id) {
+                  <option [value]="client.name">{{ client.name }} ({{ client.id }})</option>
+                }
+              </select>
             </div>
             <div class="pos-input-group">
               <label>Servicio / Protocolo</label>
@@ -879,13 +1047,6 @@
             </p>
           </div>
           <div class="portal-header-right">
-            <div class="points-hero-badge">
-              <span class="pts-hero-star">★</span>
-              <div class="pts-hero-text">
-                <span class="pts-hero-number">{{ clientPoints }}</span>
-                <span class="pts-hero-label">PUNTOS SANCTUM</span>
-              </div>
-            </div>
             <a routerLink="/reserva" class="btn-primary btn-hero-book">+ Reservar Nueva Sesión</a>
           </div>
         </div>

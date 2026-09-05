@@ -15,11 +15,11 @@ export class SplashScreenComponent implements OnInit, AfterViewInit {
   @ViewChild('splashVideo') videoRef?: ElementRef<HTMLVideoElement>;
 
   ngOnInit(): void {
-    // const hasVisited = sessionStorage.getItem('recovr_visited');
-    // if (!hasVisited) {
+    const hasVisited = sessionStorage.getItem('recovr_visited');
+    if (!hasVisited) {
       this.showSplash = true;
-      // sessionStorage.setItem('recovr_visited', 'true');
-    // }
+      sessionStorage.setItem('recovr_visited', 'true');
+    }
   }
 
   ngAfterViewInit(): void {

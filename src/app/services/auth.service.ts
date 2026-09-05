@@ -1,10 +1,11 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
+import { ServerTimeService } from './server-time.service';
 import { CanActivateFn, Router } from '@angular/router';
 import { AdminRole, AdminUser, ClientBookingItem } from '../models/rbac.model';
 
 export type { AdminRole, AdminUser, ClientBookingItem };
 
-export const DEMO_USERS: Record<AdminRole, AdminUser & { password: string }> = {
+export const DEMO_USERS: Record<string, AdminUser & { password: string }> = {
   'SUPER ADMIN': {
     id: 'devops',
     name: 'Alexei Rivera',
@@ -49,6 +50,28 @@ export const DEMO_USERS: Record<AdminRole, AdminUser & { password: string }> = {
     avatar: 'VR',
     badgeTone: 'teal'
   },
+  'ESPECIALISTA_ELENA': {
+    id: 'elena',
+    name: 'Elena Roth',
+    email: 'elena@recovr.cl',
+    password: 'recovr2026',
+    role: 'ESPECIALISTA',
+    roleTitle: 'Podóloga Clínica Especialista',
+    roleScope: 'Ficha Clínica, Evolución de Paciente y Turnos Propios',
+    avatar: 'ER',
+    badgeTone: 'teal'
+  },
+  'ESPECIALISTA_ASTRID': {
+    id: 'astrid',
+    name: 'Astrid Vane',
+    email: 'astrid@recovr.cl',
+    password: 'recovr2026',
+    role: 'ESPECIALISTA',
+    roleTitle: 'Masoterapeuta & Recuperación Miofascial',
+    roleScope: 'Ficha Clínica, Evolución de Paciente y Turnos Propios',
+    avatar: 'AV',
+    badgeTone: 'teal'
+  },
   'CLIENTE': {
     id: 'cliente',
     name: 'Carlos Mendoza',
@@ -61,45 +84,64 @@ export const DEMO_USERS: Record<AdminRole, AdminUser & { password: string }> = {
     badgeTone: 'light',
     phone: '+56 9 8765 4321',
     points: 350,
-    cancellationsThisMonth: 0
+    cancellationsThisMonth: 0,
+    bonos: { remaining: 3, total: 5, name: 'Pack Alto Rendimiento' }
   }
 };
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
+  private serverTimeService = inject(ServerTimeService);
   private readonly storageKey = 'recovr-admin-session';
   private readonly clientsStorageKey = 'recovr-registered-clients';
   private readonly pointsStorageKey = 'recovr-points-history';
   private readonly bookingsStorageKey = 'recovr-client-bookings';
+  private readonly originalStorageKey = 'recovr-original-session';
 
   // Signal reactivo para el usuario activo
   currentUser = signal<AdminUser | null>(this.loadInitialUser());
+  originalUser = signal<AdminUser | null>(this.loadOriginalUser());
 
   private loadInitialUser(): AdminUser | null {
     const saved = localStorage.getItem(this.storageKey) ?? sessionStorage.getItem(this.storageKey);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed?.role && DEMO_USERS[parsed.role as AdminRole]) {
-          const base = DEMO_USERS[parsed.role as AdminRole];
+        const demoUser = DEMO_USERS[parsed.role as AdminRole];
+        if (parsed?.role && demoUser && demoUser.id === parsed.id) {
           const dynamicPoints = parsed.role === 'CLIENTE' ? this.getClientPointsFromStorage(parsed.id) : undefined;
           return {
-            ...base,
+            ...demoUser,
             ...parsed,
             ...(dynamicPoints !== undefined ? { points: dynamicPoints } : {})
           };
         }
-        // Verificar si es un cliente registrado dinámicamente
+        // Verificar si es un cliente registrado dinámicamente o staff no-demo
         const registered = this.getRegisteredClients().find(c => c.id === parsed?.id || c.email === parsed?.email);
         if (registered) {
           const dynamicPoints = this.getClientPointsFromStorage(registered.id);
           return {
             ...registered,
+            ...parsed,
             points: dynamicPoints
           };
         }
+        // Si no es demo ni registrado, devolvemos lo que hay
+        return parsed;
       } catch {
         // Formato anterior o inválido
+      }
+    }
+    return null;
+  }
+
+  private loadOriginalUser(): AdminUser | null {
+    const saved = localStorage.getItem(this.originalStorageKey);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return null;
       }
     }
     return null;
@@ -189,8 +231,11 @@ export class AuthService {
     const nameParts = trimmedName.split(' ');
     const avatar = (nameParts[0][0] + (nameParts[1] ? nameParts[1][0] : nameParts[0][1] || 'C')).toUpperCase();
 
+    const nextNum = registered.length + 1;
+    const formattedNum = nextNum < 10 ? `0${nextNum}` : `${nextNum}`;
+
     const newClient: AdminUser & { password: string } = {
-      id: 'cli-' + Math.floor(1000 + Math.random() * 9000),
+      id: `cli-${formattedNum}`,
       name: trimmedName,
       email: trimmedEmail,
       phone: trimmedPhone,
@@ -211,7 +256,7 @@ export class AuthService {
     this.saveClientPoints(newClient.id, 50);
     this.addPointTransaction({
       id: 'PT-' + Date.now(),
-      date: new Date().toISOString().substring(0, 10),
+      date: this.serverTimeService.getNowISOString().substring(0, 10),
       amount: 50,
       reason: 'Bono de Bienvenida por creación de cuenta',
       type: 'EARNED'
@@ -249,12 +294,29 @@ export class AuthService {
   }
 
   switchRole(role: AdminRole): void {
-    // Si el usuario actual es CLIENTE, impedir cambiar de rol a roles de staff
-    if (this.currentUser()?.role === 'CLIENTE' && role !== 'CLIENTE') {
+    const current = this.currentUser();
+    
+    // Save original role if it's SUPER ADMIN and we haven't saved it yet
+    if (current && current.role === 'SUPER ADMIN' && !this.originalUser()) {
+      localStorage.setItem(this.originalStorageKey, JSON.stringify(current));
+      this.originalUser.set(current);
+    }
+
+    // Si el usuario actual es CLIENTE (y no un super admin original), impedir cambiar de rol a roles de staff
+    if (current?.role === 'CLIENTE' && role !== 'CLIENTE' && !this.originalUser()) {
       console.warn('Acceso denegado: El cliente no puede cambiar su sesión a roles del staff.');
       return;
     }
     this.loginAsRole(role);
+  }
+
+  restoreOriginalRole(): void {
+    const original = this.originalUser();
+    if (original) {
+      this.persistUser(original);
+      localStorage.removeItem(this.originalStorageKey);
+      this.originalUser.set(null);
+    }
   }
 
   private persistUser(user: AdminUser, rememberMe = true): void {
@@ -266,8 +328,10 @@ export class AuthService {
   logout(): void {
     localStorage.removeItem(this.storageKey);
     sessionStorage.removeItem(this.storageKey);
+    localStorage.removeItem(this.originalStorageKey);
     // Asignar null o usuario demo por defecto para que la SPA responda
     this.currentUser.set(null);
+    this.originalUser.set(null);
   }
 
   isAuthenticated(): boolean {
@@ -317,7 +381,7 @@ export class AuthService {
     // Registrar en historial
     this.addPointTransaction({
       id: 'PT-' + Date.now(),
-      date: new Date().toISOString().substring(0, 10),
+      date: this.serverTimeService.getNowISOString().substring(0, 10),
       amount: points,
       reason: reason,
       type: 'EARNED'
@@ -345,7 +409,7 @@ export class AuthService {
 
     this.addPointTransaction({
       id: 'PT-' + Date.now(),
-      date: new Date().toISOString().substring(0, 10),
+      date: this.serverTimeService.getNowISOString().substring(0, 10),
       amount: pointsCost,
       reason: `Canje de beneficio: ${benefitTitle}`,
       type: 'REDEEMED'
@@ -419,7 +483,7 @@ export class AuthService {
     } catch {}
 
     // Cita por defecto para Carlos Mendoza / demo
-    const todayStr = new Date().toISOString().substring(0, 10);
+    const todayStr = this.serverTimeService.getNowISOString().substring(0, 10);
     const initialBookings: ClientBookingItem[] = [
       {
         id: 'REC-908123',
@@ -448,7 +512,7 @@ export class AuthService {
   canCancelWithoutIndemnity(booking: ClientBookingItem): { canCancelFree: boolean; hoursRemaining: number; deadlineTime: string } {
     try {
       const bookingDateTime = new Date(`${booking.date}T${booking.time}:00`);
-      const now = new Date();
+      const now = this.serverTimeService.getNow();
       const diffMs = bookingDateTime.getTime() - now.getTime();
       const diffHours = diffMs / (1000 * 60 * 60);
 
@@ -529,44 +593,51 @@ export class AuthService {
    * Valida si el rol actual tiene acceso a una vista/módulo administrativo específico
    * según la matriz oficial en roles_del_sistema_rbac.md
    */
+  deleteClient(clientId: string): void {
+    const clients = this.getRegisteredClients();
+    const updated = clients.filter(c => c.id !== clientId);
+    localStorage.setItem(this.clientsStorageKey, JSON.stringify(updated));
+  }
+
+  updateClient(clientToUpdate: any): void {
+    const clients = this.getRegisteredClients();
+    const updated = clients.map(c => c.id === clientToUpdate.id ? clientToUpdate : c);
+    localStorage.setItem(this.clientsStorageKey, JSON.stringify(updated));
+  }
+
   canAccess(viewKey: string, targetRole?: AdminRole): boolean {
     const role = targetRole || this.currentUser()?.role;
     if (!role) return false;
 
     switch (viewKey) {
       case 'RESUMEN':
-        return true; // Todos tienen su versión del resumen adaptada a su rol
+        return true;
 
       case 'AGENDA':
-        // Super Admin, Admin, Recepcionista y Especialista (solo sus turnos)
         return ['SUPER ADMIN', 'ADMINISTRADOR', 'RECEPCIONISTA', 'ESPECIALISTA'].includes(role);
 
+      case 'PACIENTES':
+        return ['SUPER ADMIN', 'ADMINISTRADOR', 'RECEPCIONISTA'].includes(role);
+
       case 'CLINICA':
-        // Exclusivo para Especialista por confidencialidad clínica (Super Admin y Admin denegado por privacidad)
         return role === 'ESPECIALISTA';
 
       case 'CAJA':
-        // Recepcionista (operación) y Administrador/Super Admin (supervisión)
         return ['SUPER ADMIN', 'ADMINISTRADOR', 'RECEPCIONISTA'].includes(role);
 
       case 'PERSONAL':
-        // Administrador y Super Admin
         return ['SUPER ADMIN', 'ADMINISTRADOR'].includes(role);
 
       case 'CATALOGO':
-        // Administrador y Super Admin
         return ['SUPER ADMIN', 'ADMINISTRADOR'].includes(role);
 
       case 'DEVOPS':
-        // Exclusivo Super Admin / DevOps
         return role === 'SUPER ADMIN';
 
       case 'MATRIZ_RBAC':
-        // Super Admin y Administrador
-        return ['SUPER ADMIN', 'ADMINISTRADOR'].includes(role);
+        return role === 'SUPER ADMIN';
 
       case 'MI_CUENTA':
-        // Cliente
         return role === 'CLIENTE';
 
       default:

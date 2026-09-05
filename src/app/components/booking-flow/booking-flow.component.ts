@@ -9,6 +9,7 @@ import { AuthService } from '../../services/auth.service';
 import { ServiceItem } from '../../models/service.model';
 import { Professional } from '../../models/professional.model';
 import { BookingResponse } from '../../models/booking.model';
+import { ServerTimeService } from '../../services/server-time.service';
 
 import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
 
@@ -29,6 +30,7 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
 
   auth = inject(AuthService);
   private router = inject(Router);
+  private serverTimeService = inject(ServerTimeService);
 
   currentStep = 1;
   isSubmitting = false;
@@ -88,7 +90,7 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
 
 
   private initForm(): void {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = this.serverTimeService.getNowISOString().split('T')[0];
     this.bookingForm = this.fb.group({
       serviceId: ['', Validators.required],
       professionalId: ['', Validators.required],

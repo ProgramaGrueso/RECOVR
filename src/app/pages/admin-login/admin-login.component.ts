@@ -17,8 +17,8 @@ export class AdminLoginComponent implements OnInit {
   clientTab: 'LOGIN' | 'REGISTER' = 'LOGIN';
 
   // Campos Login Cliente
-  clientEmail = 'carlos.mendoza@gmail.com';
-  clientPassword = 'recovr2026';
+  clientEmail = '';
+  clientPassword = '';
 
   // Campos Registro Cliente
   regName = '';
@@ -29,8 +29,8 @@ export class AdminLoginComponent implements OnInit {
 
   // Campos Login Staff
   selectedRole: AdminRole = 'SUPER ADMIN';
-  staffUserId = 'devops';
-  staffPassword = 'recovr2026';
+  staffUserId = '';
+  staffPassword = '';
 
   rememberMe = true;
   showPassword = false;
@@ -105,7 +105,7 @@ export class AdminLoginComponent implements OnInit {
     this.successMessage = '';
 
     if (!this.clientEmail || !this.clientPassword) {
-      this.error = 'Por favor ingresa tu correo y contraseña.';
+      this.error = 'Por favor ingresa tu correo o ID y contraseña.';
       return;
     }
 
@@ -117,7 +117,7 @@ export class AdminLoginComponent implements OnInit {
     } else if (success && currentUser?.role !== 'CLIENTE') {
       this.error = 'Esta cuenta pertenece al personal del spa. Usa la pestaña "Acceso Personal & Staff".';
     } else {
-      this.error = 'Correo o contraseña incorrectos. Si no tienes cuenta, regístrate en "Crear Cuenta".';
+      this.error = 'Correo/ID o contraseña incorrectos. Si no tienes cuenta, regístrate en "Crear Cuenta".';
     }
   }
 
@@ -199,5 +199,13 @@ export class AdminLoginComponent implements OnInit {
   forgotPassword(): void {
     this.error = '';
     this.infoMessage = 'Para restablecer tu clave, acércate a recepción o contacta al administrador.';
+  }
+
+  resetLocalData(): void {
+    if (confirm('¿Estás seguro de que deseas borrar todos los clientes registrados y sesiones locales de prueba? Esta acción no se puede deshacer.')) {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.reload();
+    }
   }
 }

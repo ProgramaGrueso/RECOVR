@@ -12,6 +12,8 @@ export interface AdminUser {
   phone?: string;
   points?: number;
   cancellationsThisMonth?: number;
+  bonos?: { remaining: number; total: number; name: string };
+  notes?: string;
 }
 
 export interface PointTransaction {
