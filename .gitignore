@@ -1,23 +1,45 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
-# Compiled output
+# Build & Compiled Output
 /dist
 /tmp
 /out-tsc
 /bazel-out
+target/
+**/target/
+build/
+**/build/
+*.jar
+*.war
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment Variables
+.env
+.env.*
+!.env.example
 
 # Node
 /node_modules
-npm-debug.log
-yarn-error.log
 
-# IDEs and editors
+# IDEs and Editors
 .idea/
+*.iml
+*.iws
+*.ipr
 .project
 .classpath
+.factorypath
+.settings/
+.springBeans
+.sts4-cache
 .c9/
 *.launch
-.settings/
 *.sublime-workspace
 
 # Visual Studio Code
