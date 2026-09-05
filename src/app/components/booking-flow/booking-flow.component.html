@@ -1,5 +1,133 @@
 <div class="booking-flow-container">
 
+  <!-- Modal Gatekeeper: Identificación / Creación de Cuenta Obligatoria -->
+  <div class="auth-gate-backdrop" *ngIf="showAuthGateModal">
+    <div class="auth-gate-modal animate-fade">
+      <div class="gate-header">
+        <div class="gate-brand">
+          <span class="gate-cross">✠</span>
+          <span class="gate-badge">[ IDENTIFICACIÓN OBLIGATORIA ]</span>
+        </div>
+        <button type="button" class="gate-close-btn" (click)="closeAuthGate()" title="Cerrar">✕</button>
+      </div>
+
+      <h3 class="gate-title">ACCESO REQUERIDO PARA RESERVAR</h3>
+      <p class="gate-subtitle">
+        Para garantizar la confidencialidad clínica, asegurar tu turno con la especialista seleccionada y acumular <strong>Puntos RECOVR Sanctum</strong> (canjeables por sesiones gratis), primero debes identificarte o crear tu cuenta.
+      </p>
+
+      <!-- Selector de Pestañas -->
+      <div class="gate-tabs">
+        <button
+          type="button"
+          class="gate-tab-btn"
+          [class.active]="authModalTab === 'LOGIN'"
+          (click)="authModalTab = 'LOGIN'; authModalError = ''">
+          [ INICIAR SESIÓN ]
+        </button>
+        <button
+          type="button"
+          class="gate-tab-btn"
+          [class.active]="authModalTab === 'REGISTER'"
+          (click)="authModalTab = 'REGISTER'; authModalError = ''">
+          [ CREAR CUENTA NUEVA (+50 PTS) ]
+        </button>
+      </div>
+
+      <!-- Alertas de Error / Éxito -->
+      <div class="gate-alert error" *ngIf="authModalError">
+        {{ authModalError }}
+      </div>
+      <div class="gate-alert success" *ngIf="authModalSuccess">
+        {{ authModalSuccess }}
+      </div>
+
+      <!-- Pestaña 1: Iniciar Sesión -->
+      <div class="gate-form-panel" *ngIf="authModalTab === 'LOGIN'">
+        <div class="form-group">
+          <label class="form-label">CORREO ELECTRÓNICO O USUARIO</label>
+          <input
+            type="text"
+            class="form-input"
+            placeholder="carlos.mendoza@gmail.com"
+            [(ngModel)]="authModalEmail"
+            name="gateEmail" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">CONTRASEÑA</label>
+          <input
+            type="password"
+            class="form-input"
+            placeholder="••••••••"
+            [(ngModel)]="authModalPassword"
+            name="gatePassword" />
+        </div>
+
+        <div class="gate-actions">
+          <button type="button" class="btn-primary" (click)="submitAuthModalLogin()">
+            Ingresar y Continuar Reserva
+          </button>
+          <button type="button" class="btn-secondary btn-demo-quick" (click)="quickLoginDemoClient()">
+            ⚡ Acceso 1-Clic como Carlos Mendoza (Demo)
+          </button>
+        </div>
+      </div>
+
+      <!-- Pestaña 2: Crear Cuenta Nueva -->
+      <div class="gate-form-panel" *ngIf="authModalTab === 'REGISTER'">
+        <div class="bonus-notice">
+          <span>🎁 <strong>Bono de Bienvenida:</strong> Recibe +50 Puntos Sanctum inmediatamente al registrarte.</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">NOMBRE Y APELLIDO COMPLETO *</label>
+          <input
+            type="text"
+            class="form-input"
+            placeholder="Ej. Roberto Soto"
+            [(ngModel)]="authModalName"
+            name="regName" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">CORREO ELECTRÓNICO *</label>
+          <input
+            type="email"
+            class="form-input"
+            placeholder="roberto@empresa.cl"
+            [(ngModel)]="authModalEmail"
+            name="regEmail" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">TELÉFONO CELULAR *</label>
+          <input
+            type="tel"
+            class="form-input"
+            placeholder="+56 9 1234 5678"
+            [(ngModel)]="authModalPhone"
+            name="regPhone" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">CONTRASEÑA (MÍNIMO 6 CARACTERES) *</label>
+          <input
+            type="password"
+            class="form-input"
+            placeholder="Mínimo 6 caracteres"
+            [(ngModel)]="authModalPassword"
+            name="regPassword" />
+        </div>
+
+        <div class="gate-actions">
+          <button type="button" class="btn-primary" (click)="submitAuthModalRegister()">
+            Crear Cuenta & Continuar Reserva (+50 Pts)
+          </button>
+        </div>
+      </div>
+
+      <div class="gate-footer">
+        <span>🔒 Resguardo confidencial bajo protocolos de privacidad médica RECOVR.</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Stepper Header -->
   <header class="flow-header" *ngIf="!bookingSuccess">
     <div class="stepper-bar">
@@ -65,6 +193,15 @@
     <h3 class="success-title">RESERVA CONFIRMADA CON ÉXITO</h3>
     <p class="success-code">CÓDIGO DE SEGUIMIENTO: <strong>{{ bookingSuccess.id }}</strong></p>
 
+    <!-- Tarjeta de Puntos Ganados -->
+    <div class="points-reward-box" *ngIf="earnedPoints > 0">
+      <div class="reward-star">✦</div>
+      <div class="reward-text">
+        <h4>¡HAS ACUMULADO +{{ earnedPoints }} PUNTOS RECOVR SANCTUM!</h4>
+        <p>Tu saldo actualizado es de <strong>{{ totalClientPoints }} Puntos</strong>. Acércate a los 500 puntos para canjear tu próxima sesión gratuita.</p>
+      </div>
+    </div>
+
     <div class="summary-box">
       <div class="summary-row">
         <span>Estado:</span>
@@ -93,7 +230,8 @@
     </p>
 
     <div class="success-actions">
-      <button class="btn-primary" (click)="resetFlow()">Reservar otra sesión</button>
+      <a routerLink="/admin" class="btn-primary">Ver Mi Cuenta, Citas y Puntos ↗</a>
+      <button class="btn-secondary" (click)="resetFlow()">Reservar otra sesión</button>
     </div>
   </div>
 
@@ -152,7 +290,7 @@
         <!-- Loaded Professionals List -->
         <div class="professionals-list" *ngIf="!isLoadingProfessionals">
           <div
-            *ngFor="let p of professionals"
+            *ngFor="let p of filteredProfessionals"
             class="prof-item-option"
             [class.selected]="bookingForm.get('professionalId')?.value === p.id"
             (click)="selectProfessional(p)">
@@ -211,6 +349,15 @@
       <!-- STEP 4: CLIENT DATA & CONFIRMATION -->
       <div class="step-content" *ngIf="currentStep === 4">
         <h3 class="step-heading">PASO 04 — DATOS DE CONTACTO Y CONFIRMACIÓN DE RESERVA</h3>
+
+        <!-- Insignia de Sesión Activa de Cliente y Puntos -->
+        <div class="client-active-badge" *ngIf="isClientLoggedIn">
+          <div class="client-badge-info">
+            <span class="badge-dot"></span>
+            <span>SESIÓN AUTENTICADA: <strong>{{ auth.currentUser()?.name }}</strong> ({{ auth.currentUser()?.email }})</span>
+          </div>
+          <span class="badge-points-reward">★ +100 PUNTOS RECOVR SANCTUM POR ESTA SESIÓN</span>
+        </div>
 
         <!-- Resumen de reserva -->
         <div class="booking-summary-preview" *ngIf="selectedService && selectedProfessional">

@@ -1,56 +1,1451 @@
-<main class="admin-page">
-  <div class="section-video-bg" aria-hidden="true">
-    <video class="section-bg-video" poster="assets/Krea2-194016_00002_.png" autoplay muted loop playsinline preload="auto">
-      <source src="assets/Video_00034.mp4" type="video/mp4" />
-    </video>
-    <div class="section-video-overlay"></div>
-  </div>
+<main class="admin-shell">
+  <!-- Toast flotante de notificación -->
+  @if (toastMessage) {
+    <div class="admin-toast" role="alert">
+      <span class="toast-dot"></span>
+      <span>{{ toastMessage }}</span>
+    </div>
+  }
 
-  <div class="admin-content">
+  <!-- Modal Editar Cliente -->
+  @if (editingClient) {
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); padding: 1rem;">
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; width: 420px; max-width: 100%; max-height: 90vh; overflow-y: auto; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+        
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <h1 style="font-family: var(--font-display); color: var(--color-text); font-size: 1.5rem; letter-spacing: var(--letter-spacing-wide); text-transform: uppercase; margin: 0;">
+            Gestión de Perfil
+          </h1>
+          <p style="color: var(--color-text-muted); font-size: 0.85rem; margin-top: 0.5rem; font-family: var(--font-body);">
+            Editando datos de: <strong>{{ editingClient.id }}</strong>
+          </p>
+        </div>
+        
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.75rem; letter-spacing: 0.18em; color: var(--color-text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">[ NOMBRE Y APELLIDO ]</label>
+          <input type="text" [(ngModel)]="editingClient.name" style="width: 100%; padding: 0.85rem; background: var(--color-bg-alt); border: 1px solid var(--color-metal); color: var(--color-text); border-radius: 0; font-family: var(--font-body);">
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.75rem; letter-spacing: 0.18em; color: var(--color-text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">[ CORREO ELECTRÓNICO ]</label>
+          <input type="email" [(ngModel)]="editingClient.email" style="width: 100%; padding: 0.85rem; background: var(--color-bg-alt); border: 1px solid var(--color-metal); color: var(--color-text); border-radius: 0; font-family: var(--font-body);">
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.75rem; letter-spacing: 0.18em; color: var(--color-text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">[ TELÉFONO ]</label>
+          <input type="tel" [(ngModel)]="editingClient.phone" style="width: 100%; padding: 0.85rem; background: var(--color-bg-alt); border: 1px solid var(--color-metal); color: var(--color-text); border-radius: 0; font-family: var(--font-body);">
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+          <label style="display: block; font-size: 0.75rem; letter-spacing: 0.18em; color: var(--color-text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">[ NOTAS CLÍNICAS / ALERGIAS ]</label>
+          <textarea [(ngModel)]="editingClient.notes" placeholder="Ej: Alergia a ciertos aceites, lesiones lumbares..." rows="3" style="width: 100%; padding: 0.85rem; background: var(--color-bg-alt); border: 1px solid var(--color-metal); color: var(--color-text); border-radius: 0; font-family: var(--font-body); resize: vertical;"></textarea>
+        </div>
+
+        <div style="margin-bottom: 2rem;">
+          <label style="display: block; font-size: 0.75rem; letter-spacing: 0.18em; color: var(--color-text-muted); margin-bottom: 0.5rem; text-transform: uppercase;">[ PUNTOS ACUMULADOS ]</label>
+          <input type="number" [(ngModel)]="editingClient.points" style="width: 100%; padding: 0.85rem; background: var(--color-bg-alt); border: 1px solid var(--color-metal); color: var(--color-text); font-weight: bold; border-radius: 0; font-family: var(--font-body);">
+        </div>
+
+        <div style="display: flex; gap: 1rem;">
+          <button style="flex: 1; padding: 0.85rem; background: transparent; border: 1px solid var(--color-metal); color: var(--color-text); cursor: pointer; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.2em; border-radius: 0; transition: all 0.3s;" (click)="closeEditModal()">
+            Cancelar
+          </button>
+          <button style="flex: 1; padding: 0.85rem; background: var(--color-accent); border: 1px solid var(--color-accent); color: var(--color-text); cursor: pointer; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.2em; font-weight: bold; border-radius: 0; transition: all 0.3s;" (click)="saveClientEdit()">
+            [ GUARDAR ]
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- BARRA LATERAL (SIDEBAR) -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-brand">
+      <span class="cross">✠</span>
+      <div class="brand-text-col">
+        <span class="brand-title">RECOVR</span>
+        <small class="brand-sub">CONTROL CENTER</small>
+      </div>
+    </div>
+
+    <!-- Perfil del Rol Actual en la Barra Lateral -->
+    <div class="sidebar-user-card" [attr.data-tone]="currentUser().badgeTone">
+      <div class="user-avatar">{{ currentUser().avatar }}</div>
+      <div class="user-info">
+        <div class="user-role-badge" [attr.data-tone]="currentUser().badgeTone">
+          {{ currentUser().role }}
+        </div>
+        <strong class="user-name">{{ currentUser().name }}</strong>
+        <span class="user-scope">{{ currentUser().roleTitle }}</span>
+      </div>
+    </div>
+
+    <p class="sidebar-label">[ MÓDULOS PERMITIDOS (RBAC) ]</p>
+
+    <nav class="sidebar-nav" aria-label="Navegación por roles">
+      @for (item of allowedNavItems; track item.key) {
+        <button
+          class="nav-item-btn"
+          [class.active]="activeView === item.key"
+          (click)="setView(item.key)">
+          <span class="nav-icon">{{ item.icon }}</span>
+          <span class="nav-text">{{ item.label }}</span>
+        </button>
+      }
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="sidebar-bottom-row">
+        <div class="system-status">
+          <span class="online-dot"></span>
+          <span>SISTEMA EN LÍNEA</span>
+        </div>
+        <button class="logout-btn" (click)="logout()" title="Cerrar sesión actual">
+          <span>SALIR</span>
+          <span class="logout-arrow">↗</span>
+        </button>
+      </div>
+      <a routerLink="/" class="public-site-btn" title="Volver al sitio público de clientes">
+        <span class="btn-arrow">←</span>
+        <span>VOLVER A LA WEB PÚBLICA</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <section class="admin-page">
+    <!-- HEADER SUPERIOR -->
     <header class="admin-header">
       <div class="header-title-box">
-        <span class="subhead">[ GESTIÓN DE SANCTUM ]</span>
-        <h1 class="title">PANEL DE ADMINISTRACIÓN</h1>
+        <div class="header-top-nav-row">
+          <div style="display:flex; gap:1.5rem; align-items:center;">
+            <span class="subhead">[ SANCTUM RECOVR / GESTIÓN OPERATIVA ]</span>
+            <span class="subhead" style="color:var(--accent); font-family:monospace; background:rgba(255,255,255,0.05); padding:0.2rem 0.6rem; border-radius:4px; font-size:0.85rem;">
+              🕒 SERVER TIME: {{ serverTime }}
+            </span>
+          </div>
+          <a routerLink="/" class="public-site-header-btn" title="Volver a la vista del cliente en el inicio público">
+            <span class="btn-arrow">←</span>
+            <span class="btn-text">VOLVER AL SITIO PÚBLICO (INICIO CLIENTE)</span>
+          </a>
+        </div>
+        <h1 class="title">
+          @switch (activeView) {
+            @case ('RESUMEN') { PANEL DE CONTROL GENERAL }
+            @case ('AGENDA') { AGENDA Y CONTROL DE SALAS }
+            @case ('CLINICA') { FICHA CLÍNICA CONFIDENCIAL }
+            @case ('CAJA') { PUNTO DE VENTA Y CAJA CHICA }
+            @case ('PERSONAL') { GESTIÓN DE PERSONAL Y TURNOS }
+            @case ('CATALOGO') { CATÁLOGO DE PROTOCOLOS Y CABINAS }
+            @case ('DEVOPS') { INFRAESTRUCTURA Y AUDITORÍA TI }
+            @case ('MATRIZ_RBAC') { MATRIZ OFICIAL DE PERMISOS (RBAC) }
+            @case ('MI_CUENTA') { PORTAL DEL PACIENTE / MI CUENTA }
+          }
+        </h1>
+        <p class="header-desc">
+          Sesión autorizada como <strong>{{ currentUser().role }}</strong> — {{ currentUser().roleScope }}.
+        </p>
       </div>
-      <div class="admin-status">[ SISTEMA OPERATIVO &bull; SPRING BOOT MOCK ]</div>
+
+      <!-- SELECTOR RÁPIDO DE ROL (EXCLUSIVO SUPER ADMIN / AUDITORÍA DEVOPS) -->
+      @if (currentUser().role === 'SUPER ADMIN' || originalUser()?.role === 'SUPER ADMIN') {
+        <div class="header-role-switcher">
+          <span class="switcher-label">👁️ CONMUTAR ROL (DEVOPS AUDITORÍA):</span>
+          <div class="role-pills-row">
+            @for (r of allRoles; track r) {
+              <button
+                type="button"
+                class="role-pill-btn"
+                [class.active-role]="r === currentUser().role"
+                (click)="onRoleChange(r)">
+                {{ r }}
+              </button>
+            }
+            @if (originalUser()) {
+              <button
+                type="button"
+                class="role-pill-btn exit-role-btn"
+                (click)="restoreOriginalRole()">
+                SALIR / RESTAURAR ROL
+              </button>
+            }
+          </div>
+        </div>
+      }
+
     </header>
 
-    <!-- Metric Cards -->
-    <section class="stats-grid">
-      <div class="stat-card" *ngFor="let s of stats">
-        <span class="stat-label">{{ s.label }}</span>
-        <h3 class="stat-value">{{ s.value }}</h3>
-        <span class="stat-change">{{ s.change }} vs mes anterior</span>
-      </div>
-    </section>
+    <!-- ========================================================= -->
+    <!-- VISTA 1: RESUMEN / DASHBOARD GENERAL                      -->
+    <!-- ========================================================= -->
+    @if (activeView === 'RESUMEN') {
+      <div class="view-content animate-fade">
+        <!-- Tarjetas de métricas diferenciadas por rol -->
+        @if (currentUser().role === 'SUPER ADMIN' || currentUser().role === 'ADMINISTRADOR') {
+          <section class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-label">INGRESOS DEL MES</span>
+              <h3 class="stat-value">$14,850 USD</h3>
+              <span class="stat-change positive">+12.4% vs mes anterior</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">TASA DE OCUPACIÓN</span>
+              <h3 class="stat-value">91.2%</h3>
+              <span class="stat-change positive">+4.5% salas Sanctum</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">SESIONES COMPLETADAS</span>
+              <h3 class="stat-value">184</h3>
+              <span class="stat-change neutral">8 agendadas para hoy</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">TASA DE CANCELACIÓN</span>
+              <h3 class="stat-value">2.1%</h3>
+              <span class="stat-change positive">-0.8% margen seguro</span>
+            </div>
+          </section>
+        } @else if (currentUser().role === 'RECEPCIONISTA') {
+          <section class="stats-grid">
+            <div class="stat-card highlight">
+              <span class="stat-label">CLIENTES EN SALA DE ESPERA</span>
+              <h3 class="stat-value">{{ waitingClients.length }} PACIENTE{{ waitingClients.length === 1 ? '' : 'S' }}</h3>
+              @if (waitingClients.length > 0) {
+                <span class="stat-change">{{ waitingClients[0].client }} ({{ waitingClients[0].service }})</span>
+              } @else {
+                <span class="stat-change">Sala despejada</span>
+              }
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">SESIONES EN CURSO</span>
+              <h3 class="stat-value">{{ activeSessions.length }} ACTIVA{{ activeSessions.length === 1 ? '' : 'S' }}</h3>
+              @if (activeSessions.length > 0) {
+                <span class="stat-change neutral">{{ activeSessions[0].room }} ({{ activeSessions[0].prof }})</span>
+              } @else {
+                <span class="stat-change neutral">Todas las salas libres</span>
+              }
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">CITAS PROGRAMADAS HOY</span>
+              <h3 class="stat-value">5 CITAS</h3>
+              <span class="stat-change positive">100% salas asignadas</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">TOTAL EN CAJA HOY</span>
+              <h3 class="stat-value">${{ totalCollectedToday | number:'1.0-0' }} CLP</h3>
+              <span class="stat-change positive">Arqueo al día</span>
+            </div>
+          </section>
+        } @else if (currentUser().role === 'ESPECIALISTA') {
+          <section class="stats-grid">
+            <div class="stat-card highlight">
+              <span class="stat-label">PRÓXIMO PACIENTE CITADO</span>
+              <h3 class="stat-value">16:00 HRS</h3>
+              <span class="stat-change">Carlos Mendoza (Sanctum 01)</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">MIS TURNOS HOY</span>
+              <h3 class="stat-value">3 SESIONES</h3>
+              <span class="stat-change neutral">1 completada, 2 pendientes</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">FICHAS CLÍNICAS PENDIENTES</span>
+              <h3 class="stat-value">0 AL DÍA</h3>
+              <span class="stat-change positive">Evoluciones registradas</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">COMISIÓN ESTIMADA MES</span>
+              <h3 class="stat-value">$1,240,000 CLP</h3>
+              <span class="stat-change positive">35% de factor base</span>
+            </div>
+          </section>
+        } @else if (currentUser().role === 'CLIENTE') {
+          <section class="stats-grid">
+            <div class="stat-card highlight">
+              <span class="stat-label">TU PRÓXIMA SESIÓN</span>
+              @if (nextSession) {
+                <h3 class="stat-value">{{ nextSession.date | uppercase }} {{ nextSession.time }}</h3>
+                <span class="stat-change">{{ nextSession.service }}</span>
+              } @else {
+                <h3 class="stat-value">SIN RESERVAS</h3>
+                <span class="stat-change">Agenda tu próxima cita</span>
+              }
+            </div>
+            
+            @if (clientBonos) {
+              <div class="stat-card">
+                <span class="stat-label">BONOS DISPONIBLES</span>
+                <h3 class="stat-value">{{ clientBonos.remaining }} / {{ clientBonos.total }}</h3>
+                <span class="stat-change positive">{{ clientBonos.name }}</span>
+              </div>
+            }
+            
+            <div class="stat-card">
+              <span class="stat-label">ESPECIALISTA DESIGNADA</span>
+              @if (nextSession) {
+                <h3 class="stat-value">{{ nextSession.prof }}</h3>
+                <span class="stat-change">Especialista Sanctum</span>
+              } @else {
+                <h3 class="stat-value">POR ASIGNAR</h3>
+                <span class="stat-change">Dependerá de tu reserva</span>
+              }
+            </div>
+            
+            <div class="stat-card">
+              <span class="stat-label">NIVEL DE MEMBRESÍA</span>
+              <h3 class="stat-value">{{ clientMembershipLevel }}</h3>
+              <span class="stat-change positive">{{ clientMembershipDesc }}</span>
+            </div>
+          </section>
+        }
 
-    <!-- Occupancy Calendar / Bookings Table -->
-    <section class="admin-section">
-      <h2 class="section-heading">[ PRÓXIMAS RESERVAS DE SESIÓN ]</h2>
-      <div class="table-container">
-        <table class="dark-table">
-          <thead>
-            <tr>
-              <th>CÓDIGO</th>
-              <th>CLIENTE</th>
-              <th>PROTOCOLO</th>
-              <th>ESPECIALISTA</th>
-              <th>FECHA & HORA</th>
-              <th>ESTADO</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let b of bookings">
-              <td class="code-cell">{{ b.id }}</td>
-              <td>{{ b.client }}</td>
-              <td>{{ b.service }}</td>
-              <td>{{ b.prof }}</td>
-              <td>{{ b.date }}</td>
-              <td><span class="status-badge" [class.confirmed]="b.status === 'CONFIRMADA'" [class.completed]="b.status === 'COMPLETADA'">{{ b.status }}</span></td>
-            </tr>
-          </tbody>
-        </table>
+        @if (currentUser().role === 'RECEPCIONISTA' || currentUser().role === 'SUPER ADMIN' || currentUser().role === 'ADMINISTRADOR') {
+          <!-- Disponibilidad de Especialistas -->
+          <div class="admin-section">
+            <div class="section-heading-row">
+              <h2 class="section-heading">[ DISPONIBILIDAD DE ESPECIALISTAS ]</h2>
+              <span class="live-tag">● ACTUALIZACIÓN EN VIVO</span>
+            </div>
+            
+            <div class="cabins-grid">
+              @for (staff of staffStatuses; track staff.id) {
+                <div class="cabin-card" [class.in-use]="staff.availability === 'OCUPADO'" [class.cleaning]="staff.availability === 'PRÓXIMAMENTE LIBRE'">
+                  <div class="cabin-top">
+                    <span class="cabin-code">{{ staff.name }}</span>
+                    <span class="cabin-status-badge" [class.busy]="staff.availability === 'OCUPADO'" [class.clean]="staff.availability === 'PRÓXIMAMENTE LIBRE'" [class.free]="staff.availability === 'LIBRE'">
+                      {{ staff.availability }}
+                    </span>
+                  </div>
+                  <p class="cabin-type">{{ staff.specialty }}</p>
+                  <div class="cabin-therapist">
+                    <span>Estado actual:</span>
+                    <strong>{{ staff.detail }}</strong>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Panel de Estado Operativo de Salas -->
+        <div class="admin-section">
+          <div class="section-heading-row">
+            <h2 class="section-heading">[ ESTADO EN TIEMPO REAL DE CABINAS SANCTUM ]</h2>
+            <span class="live-tag">● MONITOREO EN VIVO</span>
+          </div>
+
+          <div class="cabins-grid">
+            @for (c of cabins; track c.id) {
+              <div class="cabin-card" [class.in-use]="c.status === 'OCUPADA'" [class.cleaning]="c.status === 'EN SANITIZACIÓN'">
+                <div class="cabin-top">
+                  <span class="cabin-code">{{ c.code }}</span>
+                  <span class="cabin-status-badge" [class.busy]="c.status === 'OCUPADA'" [class.clean]="c.status === 'EN SANITIZACIÓN'" [class.free]="c.status === 'DISPONIBLE'">
+                    {{ c.status }}
+                  </span>
+                </div>
+                <h3 class="cabin-name">{{ c.name }}</h3>
+                <p class="cabin-type">{{ c.type }}</p>
+                @if (c.currentTherapist) {
+                  <div class="cabin-therapist">
+                    <span>Terapeuta en sesión:</span>
+                    <strong>{{ c.currentTherapist }}</strong>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Próximas Citas Destacadas -->
+        <div class="admin-section">
+          <div class="section-heading-row">
+            <h2 class="section-heading">[ FLUJO DE ATENCIÓN INMEDIATO ]</h2>
+            <button class="btn-action-outline" (click)="setView('AGENDA')">Ver Agenda Completa ↗</button>
+          </div>
+
+          <div class="table-container">
+            <table class="dark-table">
+              <thead>
+                <tr>
+                  <th>CÓDIGO</th>
+                  <th>CLIENTE</th>
+                  <th>PROTOCOLO</th>
+                  <th>ESPECIALISTA</th>
+                  <th>SALA</th>
+                  <th>HORARIO</th>
+                  <th>ESTADO</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (b of filteredBookings.slice(0, 4); track b.id) {
+                  <tr>
+                    <td class="code-cell">{{ b.id }}</td>
+                    <td><strong>{{ b.client }}</strong></td>
+                    <td>{{ b.service }}</td>
+                    <td>{{ b.prof }}</td>
+                    <td class="room-cell">{{ b.room }}</td>
+                    <td>{{ b.date }} {{ b.time }}</td>
+                    <td>
+                      <span class="status-badge" [attr.data-status]="b.status">
+                        {{ b.status }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </section>
-  </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- VISTA 2: AGENDA Y CONTROL DE SALAS                        -->
+    <!-- ========================================================= -->
+    @if (activeView === 'AGENDA') {
+      <div class="view-content animate-fade">
+        <div class="agenda-toolbar">
+          <div class="filter-group">
+            <span class="filter-label">Filtrar por Sala:</span>
+            <button class="filter-chip" [class.active]="selectedRoomFilter === 'TODAS'" (click)="selectedRoomFilter = 'TODAS'">TODAS</button>
+            <button class="filter-chip" [class.active]="selectedRoomFilter === 'Sanctum 01'" (click)="selectedRoomFilter = 'Sanctum 01'">Sanctum 01</button>
+            <button class="filter-chip" [class.active]="selectedRoomFilter === 'Sanctum 02'" (click)="selectedRoomFilter = 'Sanctum 02'">Sanctum 02</button>
+            <button class="filter-chip" [class.active]="selectedRoomFilter === 'Podología'" (click)="selectedRoomFilter = 'Podología'">Podología</button>
+          </div>
+
+          <!-- Acción exclusiva de Recepcionista y Administrador -->
+          @if (currentUser().role === 'RECEPCIONISTA' || currentUser().role === 'ADMINISTRADOR') {
+            <button class="btn-primary-action" (click)="showManualBookingModal = true">
+              <span>+ AGENDAR MANUAL (WALK-IN / TELÉFONO)</span>
+            </button>
+          }
+        </div>
+
+        <div class="table-container">
+          <table class="dark-table">
+            <thead>
+              <tr>
+                <th>CÓDIGO</th>
+                <th>CLIENTE / CONTACTO</th>
+                <th>SERVICIO</th>
+                <th>ESPECIALISTA</th>
+                <th>CABINA ASIGNADA</th>
+                <th>HORA</th>
+                <th>PAGO</th>
+                <th>ESTADO</th>
+                <th>ACCIONES OPERATIVAS</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (b of filteredBookings; track b.id) {
+                <tr>
+                  <td class="code-cell">{{ b.id }}</td>
+                  <td>
+                    <strong>{{ b.client }}</strong>
+                    <div class="sub-contact">{{ b.clientPhone }}</div>
+                  </td>
+                  <td>
+                    <span>{{ b.service }}</span>
+                    <small class="category-badge">{{ b.serviceCategory }}</small>
+                  </td>
+                  <td>{{ b.prof }}</td>
+                  <td class="room-cell">{{ b.room }}</td>
+                  <td><strong>{{ b.time }}</strong> ({{ b.date }})</td>
+                  <td>
+                    <span class="payment-badge" [class.paid]="b.paymentStatus === 'PAGADO'" [class.pending]="b.paymentStatus === 'PENDIENTE'">
+                      {{ b.paymentStatus }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="status-badge" [attr.data-status]="b.status">
+                      {{ b.status }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="row-actions">
+                      @if (b.status === 'CONFIRMADA') {
+                        <button class="action-btn checkin" (click)="updateBookingStatus(b, 'EN ESPERA')">
+                          Check-in
+                        </button>
+                      }
+                      @if (b.status === 'EN ESPERA') {
+                        <button class="action-btn start" (click)="updateBookingStatus(b, 'EN SESIÓN')">
+                          Iniciar Sesión
+                        </button>
+                      }
+                      @if (b.status === 'EN SESIÓN') {
+                        <button class="action-btn finish" (click)="updateBookingStatus(b, 'COMPLETADA')">
+                          Finalizar
+                        </button>
+                      }
+                      @if (b.status !== 'COMPLETADA' && b.status !== 'CANCELADA') {
+                        <button class="action-btn cancel" (click)="updateBookingStatus(b, 'CANCELADA')">
+                          Cancelar
+                        </button>
+                      }
+                      @if (currentUser().role === 'SUPER ADMIN' || currentUser().role === 'ADMINISTRADOR') {
+                        <button class="action-btn cancel" style="color: #ff4444; border-color: #ff4444;" (click)="deleteBooking(b)">
+                          Borrar
+                        </button>
+                      }
+                      @if (currentUser().role === 'ESPECIALISTA' && (b.status === 'EN SESIÓN' || b.status === 'COMPLETADA')) {
+                        <button class="action-btn clinical" (click)="setView('CLINICA')">
+                          Ficha ✚
+                        </button>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- MODAL PARA NUEVA RESERVA MANUAL (WALK-IN) -->
+        @if (showManualBookingModal) {
+          <div class="modal-backdrop" (click)="showManualBookingModal = false">
+            <div class="modal-dialog" (click)="$event.stopPropagation()">
+              <div class="modal-header">
+                <h3>[ AGENDAR NUEVA CITA MANUAL ]</h3>
+                <button class="close-modal-btn" (click)="showManualBookingModal = false">✕</button>
+              </div>
+
+              <div class="modal-body">
+                <p class="modal-hint">Recepción de cliente presencial (Walk-in) o reserva telefónica directa.</p>
+
+                <div class="form-grid">
+                  <div class="form-field">
+                    <label>Nombre del Paciente</label>
+                    <input type="text" [(ngModel)]="newBooking.client" placeholder="ej. Marcelo Andrade">
+                  </div>
+                  <div class="form-field">
+                    <label>Teléfono de Contacto</label>
+                    <input type="text" [(ngModel)]="newBooking.clientPhone" placeholder="+56 9 9988 7766">
+                  </div>
+                  <div class="form-field">
+                    <label>Protocolo de Spa</label>
+                    <select [(ngModel)]="newBooking.service">
+                      <option value="Descompresión Miofascial">Descompresión Miofascial (60 min)</option>
+                      <option value="Masaje Terapéutico Deportivo">Masaje Terapéutico Deportivo (60 min)</option>
+                      <option value="Podología Clínica Deportiva">Podología Clínica Deportiva (45 min)</option>
+                      <option value="Ritual Sanctum Completo">Ritual Sanctum Completo (90 min)</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label>Especialista Asignada</label>
+                    <select [(ngModel)]="newBooking.prof">
+                      @for (staff of staffStatuses; track staff.id) {
+                        <option [value]="staff.name">{{ staff.name }} ({{ staff.availability }})</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label>Cabina / Sala</label>
+                    <select [(ngModel)]="newBooking.room">
+                      <option value="Sanctum 01 (Descompresión)">Sanctum 01 (Descompresión)</option>
+                      <option value="Sanctum 02 (Masoterapia)">Sanctum 02 (Masoterapia)</option>
+                      <option value="Sala Podología Clínica">Sala Podología Clínica</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label>Hora de Atención</label>
+                    <input type="time" [(ngModel)]="newBooking.time">
+                  </div>
+                  <div class="form-field">
+                    <label>Estado de Pago</label>
+                    <select [(ngModel)]="newBooking.paymentStatus">
+                      <option value="PAGADO">PAGADO (Caja inmediata)</option>
+                      <option value="PENDIENTE">PENDIENTE (Cobrar al término)</option>
+                    </select>
+                  </div>
+                  <div class="form-field">
+                    <label>Método de Pago</label>
+                    <select [(ngModel)]="newBooking.paymentMethod">
+                      <option value="POS TRANSBANK">POS Transbank (Tarjeta)</option>
+                      <option value="EFECTIVO">Efectivo</option>
+                      <option value="STRIPE WEB">Transferencia / Web</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn-cancel" (click)="showManualBookingModal = false">Cancelar</button>
+                <button class="btn-confirm" (click)="saveManualBooking()">Confirmar y Agendar Cita</button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- VISTA NUEVA: DIRECTORIO DE PACIENTES                      -->
+    <!-- ========================================================= -->
+    @if (activeView === 'PACIENTES') {
+      <div class="view-content animate-fade">
+        <div class="table-container" style="background: var(--bg-card); padding: 1.5rem; border: 1px solid var(--border-color);">
+          <div class="table-header" style="margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+            <h3>[ DIRECTORIO DE PACIENTES REGISTRADOS ]</h3>
+            <span class="table-count" style="color: var(--color-gold);">{{ allRegisteredClients.length }} Pacientes Totales</span>
+          </div>
+          <table class="dark-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>PACIENTE</th>
+                <th>CONTACTO</th>
+                <th>PERFIL / PUNTOS</th>
+                <th>ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of allRegisteredClients; track c.id) {
+                <tr>
+                  <td><strong>{{ c.id }}</strong></td>
+                  <td>
+                    {{ c.name }}
+                    @if (c.notes) {
+                      <span style="color: #ff4d4d; font-size: 0.85rem; margin-left: 0.5rem;" title="Tiene notas clínicas o alergias">⚠️</span>
+                    }
+                  </td>
+                  <td>
+                    <div style="font-size: 0.85rem; color: #ccc;">{{ c.email }}</div>
+                    <div style="font-size: 0.8rem; color: #888;">{{ c.phone }}</div>
+                  </td>
+                  <td>
+                    <span class="method-tag">{{ c.points || 0 }} PTS</span>
+                  </td>
+                  <td>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                      <button style="background: rgba(255, 215, 0, 0.1); border: 1px solid var(--color-gold); color: var(--color-gold); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;" (click)="editClient(c.id)">
+                        [ Editar ]
+                      </button>
+                      <button style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;" (click)="deleteClient(c.id)">
+                        [ Eliminar ]
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+              @if (allRegisteredClients.length === 0) {
+                <tr>
+                  <td colspan="5" style="text-align: center; color: #888; padding: 2rem;">No hay clientes nuevos registrados dinámicamente.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- VISTA 3: FICHA CLÍNICA CONFIDENCIAL (ESPECIALISTAS)       -->
+    <!-- ========================================================= -->
+    @if (activeView === 'CLINICA') {
+      <div class="view-content animate-fade">
+        <div class="clinical-layout">
+          <!-- Lista de Pacientes -->
+          <aside class="patient-selector-col">
+            <span class="col-title">[ PACIENTES ACTIVOS ]</span>
+            <div class="patient-cards-list">
+              @for (p of clinicalRecords; track p.patientId; let idx = $index) {
+                <div
+                  class="patient-nav-card"
+                  [class.selected]="selectedPatientIndex === idx"
+                  (click)="selectPatient(idx)">
+                  <div class="patient-avatar">{{ p.patientName.charAt(0) }}</div>
+                  <div class="patient-mini-meta">
+                    <strong>{{ p.patientName }}</strong>
+                    <span>{{ p.patientId }} · {{ p.age }} años</span>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="confidentiality-notice">
+              <span class="lock-icon">🔒</span>
+              <p>Módulo de acceso restringido bajo secreto profesional terapéutico (Kinesiología &amp; Podología). Denegado a personal no clínico.</p>
+            </div>
+          </aside>
+
+          <!-- Detalle de Ficha y Evolución -->
+          <main class="clinical-main-col">
+            <div class="clinical-header-box">
+              <div class="patient-title-row">
+                <h2>{{ currentPatient.patientName }}</h2>
+                <span class="patient-code-tag">{{ currentPatient.patientId }}</span>
+              </div>
+              <p class="patient-emergency">Contacto de Emergencia: {{ currentPatient.emergencyContact }}</p>
+            </div>
+
+            <!-- Ficha Terapéutica y Preferencias -->
+            <div class="clinical-details-grid">
+              <div class="clinical-card">
+                <h3>[ ANAMNESIS &amp; MOTIVO ]</h3>
+                <p class="detail-text">{{ currentPatient.anamnesis }}</p>
+
+                <h4>Condiciones y Lesiones:</h4>
+                <ul class="tag-list">
+                  @for (c of currentPatient.medicalConditions; track c) {
+                    <li>{{ c }}</li>
+                  }
+                </ul>
+              </div>
+
+              <div class="clinical-card">
+                <h3>[ PREFERENCIAS TERAPÉUTICAS ]</h3>
+                <div class="pref-row">
+                  <span>Presión Recomendada:</span>
+                  <strong class="pref-highlight">{{ currentPatient.preferredPressure }}</strong>
+                </div>
+                <div class="pref-row">
+                  <span>Aceite / Emulsión:</span>
+                  <span>{{ currentPatient.oilPreference }}</span>
+                </div>
+                <div class="pref-row">
+                  <span>Alergias Conocidas:</span>
+                  <span class="allergy-tag">{{ currentPatient.allergies.join(', ') }}</span>
+                </div>
+                <div class="pref-row">
+                  <span>Zonas a Evitar:</span>
+                  <span class="restricted-tag">{{ currentPatient.restrictedAreas.join(', ') }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Formulario: Nueva Evolución Clínica -->
+            <div class="new-evolution-box">
+              <h3>[ REGISTRAR EVOLUCIÓN CLÍNICA DE SESIÓN ]</h3>
+              <div class="evolution-form-grid">
+                <div class="form-field full-width">
+                  <label>Tratamiento y Protocolo Aplicado</label>
+                  <input type="text" [(ngModel)]="newClinicalNote.treatment" placeholder="ej. Liberación de cadena posterior y descompresión miofascial con ventosas">
+                </div>
+                <div class="form-field full-width">
+                  <label>Hallazgos Clínicos y Respuesta del Paciente</label>
+                  <textarea rows="2" [(ngModel)]="newClinicalNote.findings" placeholder="ej. Reducción evidente de espasmo muscular, buena respuesta vasomotora."></textarea>
+                </div>
+                <div class="form-field">
+                  <label>Escala de Dolor Post-Sesión (EVA 1 - 10): <strong>{{ newClinicalNote.painScale }}/10</strong></label>
+                  <input type="range" min="1" max="10" [(ngModel)]="newClinicalNote.painScale">
+                </div>
+                <div class="form-field">
+                  <label>Indicaciones y Tareas para Casa</label>
+                  <input type="text" [(ngModel)]="newClinicalNote.recommendations" placeholder="ej. Estiramientos activos y calor local 20 min">
+                </div>
+              </div>
+              <button class="btn-save-note" (click)="addClinicalEvolution()">GUARDAR EN HISTORIAL CLÍNICO ✚</button>
+            </div>
+
+            <!-- Historial de Sesiones Anteriores -->
+            <div class="history-section">
+              <h3>[ HISTORIAL DE EVOLUCIONES PREVIAS ]</h3>
+              <div class="history-timeline">
+                @for (note of currentPatient.notesHistory; track note.id) {
+                  <div class="history-item">
+                    <div class="history-date" style="display:flex; justify-content:space-between;">
+                      <div>
+                        <span>{{ note.date }}</span>
+                        <small>Por: {{ note.specialistName }}</small>
+                      </div>
+                      @if (currentUser().role === 'SUPER ADMIN' || currentUser().role === 'ESPECIALISTA') {
+                        <button style="background:transparent; border:none; color:#ff4444; cursor:pointer;" (click)="deleteClinicalNote(note.id)">[x] Borrar</button>
+                      }
+                    </div>
+                    <div class="history-body">
+                      <strong>{{ note.treatment }}</strong>
+                      <p>{{ note.findings }}</p>
+                      <div class="history-meta">
+                        <span class="pain-badge">Dolor EVA: {{ note.painScale }}/10</span>
+                        <span class="recom-text">Recomendación: {{ note.recommendations }}</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- VISTA 4: PUNTO DE VENTA Y CAJA CHICA                      -->
+    <!-- ========================================================= -->
+    @if (activeView === 'CAJA') {
+      <div class="view-content animate-fade">
+        <section class="stats-grid">
+          <div class="stat-card highlight">
+            <span class="stat-label">TOTAL RECAUDADO HOY</span>
+            <h3 class="stat-value">${{ totalCollectedToday | number:'1.0-0' }} CLP</h3>
+            <span class="stat-change positive">{{ cashTransactions.length }} pagos registrados</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">POS TRANSBANK (TARJETAS)</span>
+            <h3 class="stat-value">${{ totalTransbank | number:'1.0-0' }} CLP</h3>
+            <span class="stat-change">Comprobantes validados</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">EFECTIVO EN CAJA</span>
+            <h3 class="stat-value">${{ totalCash | number:'1.0-0' }} CLP</h3>
+            <span class="stat-change">+ Base inicial ${{ cashRegisterInitial | number:'1.0-0' }}</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">STRIPE (PAGOS ONLINE)</span>
+            <h3 class="stat-value">${{ totalStripe | number:'1.0-0' }} CLP</h3>
+            <span class="stat-change positive">Depósito automático</span>
+          </div>
+        </section>
+
+        <!-- Registro de Cobro Rápido -->
+        <div class="admin-section">
+          <div class="section-heading-row">
+            <h2 class="section-heading">[ REGISTRAR COBRO EN MOSTRADOR ]</h2>
+            <button class="btn-primary-action" (click)="closeDailyCashRegister()">🔒 CIERRE DE CAJA DIARIO</button>
+          </div>
+
+          <div class="quick-pos-box">
+            <div class="pos-input-group">
+              <label>Cliente</label>
+              <select [(ngModel)]="newPayment.client">
+                <option value="">-- Seleccione un cliente --</option>
+                @for (client of allRegisteredClients; track client.id) {
+                  <option [value]="client.name">{{ client.name }} ({{ client.id }})</option>
+                }
+              </select>
+            </div>
+            <div class="pos-input-group">
+              <label>Servicio / Protocolo</label>
+              <select [(ngModel)]="newPayment.service">
+                <option value="Descompresión Miofascial">Descompresión Miofascial ($65.000)</option>
+                <option value="Masaje Deportivo">Masaje Deportivo ($58.000)</option>
+                <option value="Podología Clínica">Podología Clínica ($45.000)</option>
+                <option value="Pack 4 Sesiones">Pack 4 Sesiones ($220.000)</option>
+              </select>
+            </div>
+            <div class="pos-input-group">
+              <label>Monto a Cobrar (CLP)</label>
+              <input type="number" [(ngModel)]="newPayment.amount">
+            </div>
+            <div class="pos-input-group">
+              <label>Medio de Pago</label>
+              <select [(ngModel)]="newPayment.method">
+                <option value="POS TRANSBANK">POS Transbank (Débito/Crédito)</option>
+                <option value="EFECTIVO">Efectivo en Caja</option>
+                <option value="STRIPE WEB">Stripe Web / Transferencia</option>
+              </select>
+            </div>
+            <button class="btn-charge" (click)="registerQuickPayment()">EMITIR COBRO ↗</button>
+          </div>
+        </div>
+
+        <!-- Tabla de Transacciones del Día -->
+        <div class="admin-section">
+          <h2 class="section-heading">[ REGISTRO DE TRANSACCIONES DEL DÍA ]</h2>
+          <div class="table-container">
+            <table class="dark-table">
+              <thead>
+                <tr>
+                  <th>N° COMPROBANTE</th>
+                  <th>HORA</th>
+                  <th>CLIENTE</th>
+                  <th>CONCEPTO</th>
+                  <th>MÉTODO DE PAGO</th>
+                  <th>MONTO</th>
+                  <th>ATENDIDO POR</th>
+                  @if (currentUser().role === 'SUPER ADMIN' || currentUser().role === 'ADMINISTRADOR') {
+                    <th>ACCIONES</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (t of cashTransactions; track t.id) {
+                  <tr>
+                    <td class="code-cell">{{ t.voucherCode }}</td>
+                    <td>{{ t.time }}</td>
+                    <td><strong>{{ t.client }}</strong></td>
+                    <td>{{ t.service }}</td>
+                    <td>
+                      <span class="method-tag">{{ t.method }}</span>
+                    </td>
+                    <td class="amount-cell">${{ t.amount | number:'1.0-0' }} CLP</td>
+                    <td>{{ t.processedBy }}</td>
+                    @if (currentUser().role === 'SUPER ADMIN' || currentUser().role === 'ADMINISTRADOR') {
+                      <td>
+                        <button class="action-btn cancel" style="color:#ff4444; border-color:#ff4444;" (click)="deleteTransaction(t.id)">Anular</button>
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- VISTA 5: PERSONAL Y TURNOS                                -->
+    <!-- ========================================================= -->
+    @if (activeView === 'PERSONAL') {
+      <div class="view-content animate-fade">
+        <div class="admin-section">
+          <div class="section-heading-row">
+            <h2 class="section-heading">[ EQUIPO PROFESIONAL, TURNOS Y COMISIONES ]</h2>
+            <div class="section-actions"><span class="role-note">GESTIÓN GERENCIAL</span><button class="btn-primary-action" (click)="showToast('Formulario de nuevo colaborador listo para conectar con usuarios RBAC.')">+ NUEVO COLABORADOR</button></div>
+          </div>
+
+          <div class="table-container">
+            <table class="dark-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>PROFESIONAL</th>
+                  <th>ESPECIALIDAD</th>
+                  <th>TURNO ASIGNADO</th>
+                  <th>COMISIÓN BASE</th>
+                  <th>SESIONES ESTE MES</th>
+                  <th>ESTADO</th>
+                  <th>ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (s of staffList; track s.id) {
+                  <tr>
+                    <td class="code-cell">{{ s.id }}</td>
+                    <td>
+                      <strong>{{ s.name }}</strong>
+                      <div class="sub-contact">{{ s.email }} · {{ s.phone }}</div>
+                    </td>
+                    <td>{{ s.specialty }}</td>
+                    <td>{{ s.shift }}</td>
+                    <td>
+                      <div class="commission-adjuster">
+                        <input type="number" [(ngModel)]="s.commissionRate" min="0" max="60" class="comm-input">
+                        <span>%</span>
+                      </div>
+                    </td>
+                    <td><strong>{{ s.monthlySessions }}</strong> sesiones</td>
+                    <td>
+                      <span class="status-badge" [class.confirmed]="s.status === 'ACTIVO'">
+                        {{ s.status }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="row-actions">
+                        <button class="action-btn start" (click)="saveStaffMember(s)">Guardar</button>
+                        <button class="action-btn cancel" (click)="toggleStaffStatus(s)">{{ s.status === 'ACTIVO' ? 'Pausar' : 'Activar' }}</button>
+                        @if (currentUser().role === 'SUPER ADMIN' || currentUser().role === 'ADMINISTRADOR') {
+                          <button class="action-btn cancel" style="color:#ff4444; border-color:#ff4444;" (click)="deleteStaff(s.id)">Baja</button>
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- VISTA 6: CATÁLOGO Y CABINAS                               -->
+    <!-- ========================================================= -->
+    @if (activeView === 'CATALOGO') {
+      <div class="view-content animate-fade">
+        <div class="admin-section">
+          <div class="section-heading-row">
+            <h2 class="section-heading">[ PROTOCOLOS TERAPÉUTICOS Y TARIFAS ]</h2>
+            <button class="btn-primary-action" (click)="addProtocolDemo()">+ NUEVO PROTOCOLO</button>
+          </div>
+
+          <div class="cabins-grid">
+            @for (p of protocols; track p.name) {
+              <div class="protocol-card">
+                <div class="protocol-header">
+                  <span class="protocol-cat">{{ p.category }}</span>
+                  <span class="protocol-price">${{ p.price | number:'1.0-0' }} CLP</span>
+                </div>
+                <h3>{{ p.name }}</h3>
+                <p>{{ p.desc }}</p>
+                <div class="protocol-footer">
+                  <span>Duración: {{ p.duration }} min</span>
+                  <button class="active-badge protocol-action" (click)="toggleProtocol(p.name)">{{ protocolStatuses[p.name] ? 'ACTIVO' : 'INACTIVO' }}</button>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.05);">
+                  <button class="protocol-edit" (click)="showToast('Edición lista para backend.')">Editar protocolo ↗</button>
+                  @if (currentUser().role === 'SUPER ADMIN' || currentUser().role === 'ADMINISTRADOR') {
+                    <button style="color:#ff4444; background:transparent; border:none; cursor:pointer;" (click)="deleteProtocol(p.name)">Eliminar ✕</button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- VISTA 7: DEVOPS E INFRAESTRUCTURA TI (SUPER ADMIN)        -->
+    <!-- ========================================================= -->
+    @if (activeView === 'DEVOPS') {
+      <div class="view-content animate-fade">
+        <section class="stats-grid">
+          @for (m of devopsMetrics; track m.name) {
+            <div class="stat-card">
+              <span class="stat-label">{{ m.name }}</span>
+              <h3 class="stat-value">{{ m.status }}</h3>
+              <span class="stat-change positive">Latencia: {{ m.latency }}</span>
+            </div>
+          }
+        </section>
+
+        <div class="admin-section">
+          <div class="section-heading-row">
+            <h2 class="section-heading">[ LOGS DE AUDITORÍA Y TRAZABILIDAD DE SEGURIDAD ]</h2>
+            <button class="btn-primary-action" (click)="triggerManualBackup()">
+              💾 EJECUTAR BACKUP MANUAL SQL (GCS)
+            </button>
+          </div>
+
+          <div class="terminal-logs-window">
+            <div class="terminal-header">
+              <span class="term-dot red"></span>
+              <span class="term-dot yellow"></span>
+              <span class="term-dot green"></span>
+              <span class="term-title">recovr-audit-service@production ~ /var/log/audit.log</span>
+            </div>
+
+            <div class="terminal-body">
+              @for (log of auditLogs; track log.id) {
+                <div class="log-line">
+                  <span class="log-time">{{ log.timestamp }}</span>
+                  <span class="log-severity" [attr.data-severity]="log.severity">[{{ log.severity }}]</span>
+                  <span class="log-actor">{{ log.actor }} ({{ log.role }})</span>
+                  <span class="log-action">{{ log.action }}</span>
+                  <span class="log-ip">[{{ log.ip }}]</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- VISTA 8: PORTAL DEL PACIENTE / MI CUENTA (CLIENTE)        -->
+    <!-- ========================================================= -->
+    @if (activeView === 'MI_CUENTA') {
+      <div class="view-content animate-fade">
+        <div class="client-portal-header">
+          <div class="portal-header-left">
+            <span class="sanctum-member-eyebrow">[ PERFIL OFICIAL DE CLIENTE SANCTUM ]</span>
+            <h2>Bienvenido, {{ currentUser().name }}</h2>
+            <p class="portal-header-sub">
+              ID: <strong>{{ currentUser().id }}</strong> &bull; Correo: <strong>{{ currentUser().email }}</strong> &bull; Tel: <strong>{{ currentUser().phone || '+56 9 8765 4321' }}</strong>
+            </p>
+          </div>
+          <div class="portal-header-right">
+            <a routerLink="/reserva" class="btn-primary btn-hero-book">+ Reservar Nueva Sesión</a>
+          </div>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- SECCIÓN 1: ALARMA DE PRÓXIMO TURNO Y TIEMPO LÍMITE       -->
+        <!-- ======================================================= -->
+        <div class="client-alarm-section" [class.critical-alarm]="nextBookingCountdown.isCritical && activeNextBooking">
+          <div class="alarm-header-bar">
+            <div class="alarm-title-group">
+              <span class="alarm-icon">{{ nextBookingCountdown.isCritical && activeNextBooking ? '🚨' : '⏰' }}</span>
+              <h3 class="alarm-title">[ ALARMA EN VIVO: PRÓXIMA SESIÓN & LÍMITE DE CANCELACIÓN ]</h3>
+            </div>
+            <span class="alarm-badge" [class.urgent]="nextBookingCountdown.isCritical && activeNextBooking">
+              {{ nextBookingCountdown.isCritical && activeNextBooking ? 'VENTANA CRÍTICA DE INDEMNIZACIÓN' : 'ESTADO REGULAR' }}
+            </span>
+          </div>
+
+          @if (activeNextBooking) {
+            <div class="alarm-content-grid">
+              <div class="alarm-time-box">
+                <span class="countdown-label">TIEMPO ESTIMADO HASTA TU TURNO:</span>
+                <div class="countdown-timer">{{ nextBookingCountdown.label }}</div>
+                <span class="countdown-session-info">
+                  {{ activeNextBooking.date }} a las {{ activeNextBooking.time }} HS
+                </span>
+              </div>
+
+              <div class="alarm-details-box">
+                <div class="alarm-detail-row">
+                  <span>Protocolo:</span>
+                  <strong>{{ activeNextBooking.service }}</strong>
+                </div>
+                <div class="alarm-detail-row">
+                  <span>Especialista a cargo:</span>
+                  <strong>{{ activeNextBooking.prof }}</strong>
+                </div>
+                <div class="alarm-detail-row">
+                  <span>Suite / Sala:</span>
+                  <strong>{{ activeNextBooking.room }}</strong>
+                </div>
+                <div class="alarm-detail-row">
+                  <span>Valor Reservado:</span>
+                  <strong>${{ activeNextBooking.price.toLocaleString('es-CL') }} CLP</strong>
+                </div>
+
+                <!-- Aviso de Límite de Cancelación / Indemnización -->
+                @if (nextBookingCountdown.isCritical) {
+                  <div class="indemnity-alert-box">
+                    <span class="indemnity-icon">⚠️</span>
+                    <div class="indemnity-text">
+                      <strong>ALERTA DE INDEMNIZACIÓN POR CANCELACIÓN TARDÍA:</strong>
+                      <p>Faltan menos de 4 horas para tu turno. Si cancelas ahora o no te presentas a la sesión, se aplicará el cobro obligatorio de indemnización del <strong>50% ($32.500 CLP)</strong> por la reserva exclusiva de la kinesióloga y la cabina.</p>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="safe-deadline-box">
+                    <span class="safe-icon">✓</span>
+                    <div class="safe-text">
+                      <strong>CANCELACIÓN SEGURA SIN COSTO:</strong>
+                      <p>Tienes hasta las <strong>{{ nextBookingCountdown.deadline }}</strong> para cancelar de forma gratuita (mínimo 4 horas de anticipación). Has utilizado <strong>{{ clientCancellations }} de 2</strong> cancelaciones permitidas este mes.</p>
+                    </div>
+                  </div>
+                }
+
+                <div class="alarm-actions-row">
+                  <button type="button" class="btn-secondary btn-sm" (click)="showToast('¡Asistencia confirmada! Te esperamos 10 minutos antes en recepción.')">
+                    ✓ Confirmar Asistencia Puntual
+                  </button>
+                  <button type="button" class="btn-cancel-session" (click)="openCancelModal(activeNextBooking)">
+                    Cancelar Sesión ✕
+                  </button>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="no-booking-banner">
+              <p>No tienes sesiones activas programadas en este momento.</p>
+              <a routerLink="/reserva" class="btn-secondary btn-sm">[ VER PROTOCOLOS Y AGENDAR ]</a>
+            </div>
+          }
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- SECCIÓN 2: PUNTOS ACUMULADOS & CATÁLOGO DE BENEFICIOS    -->
+        <!-- ======================================================= -->
+        <div class="admin-section points-section">
+          <div class="section-heading-row">
+            <h2 class="section-heading">[ TUS PUNTOS RECOVR SANCTUM & BENEFICIOS ]</h2>
+            <span class="role-note">Acumulas +100 puntos por cada sesión completada</span>
+          </div>
+
+          <!-- Barra de Progreso hacia la Meta (500 pts = Sesión Gratis) -->
+          <div class="points-progress-card">
+            <div class="progress-info-row">
+              <div class="progress-badge">
+                <span class="badge-tag">NIVEL:</span>
+                <strong>{{ clientPoints >= 500 ? 'ORO SANCTUM' : (clientPoints >= 200 ? 'PLATA SANCTUM' : 'BRONCE SANCTUM') }}</strong>
+              </div>
+              <span class="progress-ratio"><strong>{{ clientPoints }}</strong> / 500 PUNTOS (META SESIÓN GRATUITA)</span>
+            </div>
+
+            <div class="points-track">
+              <div class="points-fill" [style.width.%]="(clientPoints / 500) * 100 > 100 ? 100 : (clientPoints / 500) * 100"></div>
+            </div>
+
+            <p class="progress-status-msg">
+              @if (clientPoints >= 500) {
+                🎉 <strong>¡Felicidades!</strong> Has alcanzado la meta. Ya puedes canjear tu <strong>Sesión de Descompresión Miofascial 100% Gratuita</strong> en el catálogo inferior.
+              } @else {
+                Te faltan <strong>{{ 500 - clientPoints }} Puntos</strong> para desbloquear tu próxima sesión de descompresión 100% gratuita. ¡Agenda tu siguiente turno para sumar +100 pts!
+              }
+            </p>
+          </div>
+
+          <!-- Catálogo de Beneficios Canjeables -->
+          <h3 class="sub-heading-clean">[ BENEFICIOS DISPONIBLES PARA CANJEAR ]</h3>
+          <div class="benefits-grid">
+            @for (b of redeemableBenefits; track b.id) {
+              <div class="benefit-card" [class.unlocked]="clientPoints >= b.pointsCost">
+                <div class="benefit-top">
+                  <span class="benefit-icon">{{ b.icon }}</span>
+                  <span class="benefit-cost-tag" [class.can-afford]="clientPoints >= b.pointsCost">
+                    {{ b.pointsCost }} PTS
+                  </span>
+                </div>
+                <h4 class="benefit-title">{{ b.title }}</h4>
+                <p class="benefit-desc">{{ b.description }}</p>
+                <div class="benefit-action">
+                  @if (clientPoints >= b.pointsCost) {
+                    <button type="button" class="btn-redeem-active" (click)="redeemBenefit(b)">
+                      Canjear Beneficio Ahora
+                    </button>
+                  } @else {
+                    <span class="btn-redeem-locked">
+                      Faltan {{ b.pointsCost - clientPoints }} pts
+                    </span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Historial de Movimientos de Puntos -->
+          <div class="points-history-box">
+            <h3 class="sub-heading-clean">[ HISTORIAL DE TRANSACCIONES DE PUNTOS ]</h3>
+            <div class="history-list">
+              @for (tx of pointsHistory; track tx.id) {
+                <div class="history-item">
+                  <div class="hist-left">
+                    <span class="hist-date">{{ tx.date }}</span>
+                    <span class="hist-reason">{{ tx.reason }}</span>
+                  </div>
+                  <span class="hist-amount" [class.earned]="tx.type === 'EARNED'" [class.redeemed]="tx.type === 'REDEEMED'">
+                    {{ tx.type === 'EARNED' ? '+' : '-' }}{{ tx.amount }} PTS
+                  </span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- SECCIÓN 3: HISTORIAL DE CITAS Y RESERVAS DEL CLIENTE    -->
+        <!-- ======================================================= -->
+        <div class="admin-section client-bookings-section">
+          <div class="section-heading-row">
+            <h2 class="section-heading">[ HISTORIAL Y GESTIÓN DE TUS CITAS ]</h2>
+            <span class="role-note">Límite mensual: {{ clientCancellations }} de 2 cancelaciones utilizadas</span>
+          </div>
+
+          <div class="client-bookings-table-wrap">
+            <table class="client-table">
+              <thead>
+                <tr>
+                  <th>CÓDIGO</th>
+                  <th>PROTOCOLO</th>
+                  <th>ESPECIALISTA</th>
+                  <th>FECHA &amp; HORA</th>
+                  <th>VALOR</th>
+                  <th>ESTADO</th>
+                  <th>ACCIÓN</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (b of clientBookings; track b.id) {
+                  <tr>
+                    <td><strong>{{ b.id }}</strong></td>
+                    <td>{{ b.service }}</td>
+                    <td>{{ b.prof }}</td>
+                    <td>{{ b.date }} &bull; {{ b.time }} HS</td>
+                    <td>${{ b.price.toLocaleString('es-CL') }} CLP</td>
+                    <td>
+                      <span class="booking-status-tag" [attr.data-status]="b.status">
+                        {{ b.status }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (b.status === 'CONFIRMADA' || b.status === 'EN ESPERA') {
+                        <button
+                          type="button"
+                          class="table-cancel-btn"
+                          (click)="openCancelModal(b)">
+                          Cancelar ✕
+                        </button>
+                      } @else {
+                        <span class="table-muted-text">—</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- SECCIÓN 4: PREFERENCIAS TERAPÉUTICAS DE CONFORT         -->
+        <!-- ======================================================= -->
+        <div class="client-card" style="margin-top: 2rem;">
+          <span class="card-eyebrow">[ TUS PREFERENCIAS TERAPÉUTICAS ]</span>
+          <h3>Perfil de Confort y Cuidados Físicos</h3>
+          <div class="pref-list">
+            <div class="pref-item">
+              <span>Intensidad de Masaje:</span>
+              <strong>{{ clientPortalData.preferences.pressure }}</strong>
+            </div>
+            <div class="pref-item">
+              <span>Música de Fondo:</span>
+              <strong>{{ clientPortalData.preferences.music }}</strong>
+            </div>
+            <div class="pref-item">
+              <span>Aromaterapia:</span>
+              <strong>{{ clientPortalData.preferences.aroma }}</strong>
+            </div>
+            <div class="pref-item">
+              <span>Zonas de Cuidado:</span>
+              <strong>{{ clientPortalData.preferences.sensitiveAreas }}</strong>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- MODAL DE CANCELACIÓN CON ADVERTENCIA DE INDEMNIZACIÓN     -->
+    <!-- ========================================================= -->
+    @if (showCancelModal && selectedBookingToCancel) {
+      <div class="cancel-modal-backdrop">
+        <div class="cancel-modal-box animate-fade">
+          <div class="cancel-modal-header">
+            <div class="cancel-brand-row">
+              <span class="cancel-cross">✠</span>
+              <span class="cancel-badge">[ POLÍTICA DE CANCELACIÓN SANCTUM ]</span>
+            </div>
+            <button type="button" class="cancel-modal-close" (click)="closeCancelModal()">✕</button>
+          </div>
+
+          <!-- Caso 1: Ha superado el límite mensual de 2 cancelaciones -->
+          @if (cancelWarningData.isMaxReached) {
+            <h3 class="cancel-modal-title">LÍMITE MENSUAL ALCANZADO</h3>
+            <div class="cancel-modal-body">
+              <div class="cancel-alert-banner critical">
+                <p>
+                  Has utilizado <strong>2 de 2 cancelaciones permitidas este mes</strong>. De acuerdo a las normas operativas de RECOVR, no es posible cancelar más turnos mediante la plataforma web.
+                </p>
+              </div>
+              <p class="cancel-expl">
+                Para emergencias médicas o fuerza mayor justificada, por favor comunícate directamente con la recepción del Sanctum al <strong>+56 9 8765 4321</strong>.
+              </p>
+            </div>
+            <div class="cancel-modal-actions">
+              <button type="button" class="btn-secondary" (click)="closeCancelModal()">
+                Entendido / Mantener Cita
+              </button>
+            </div>
+          }
+
+          <!-- Caso 2: Ventana Crítica (< 4 Horas) -> Cobro de Indemnización -->
+          @if (!cancelWarningData.isMaxReached && cancelWarningData.isCritical) {
+            <h3 class="cancel-modal-title" style="color:#ff8a80;">
+              ⚠️ ADVERTENCIA CRÍTICA: COBRO DE INDEMNIZACIÓN (50%)
+            </h3>
+            <div class="cancel-modal-body">
+              <div class="cancel-alert-banner critical">
+                <p>
+                  <strong>ATENCIÓN:</strong> Faltan menos de 4 horas para tu sesión con <strong>{{ selectedBookingToCancel.prof }}</strong>.
+                </p>
+                <p>
+                  Al cancelar fuera de la ventana de anticipación obligatoria o no presentarte, se aplicará el cobro de una <strong>indemnización del 50% (${{ cancelWarningData.fee.toLocaleString('es-CL') }} CLP)</strong> para compensar los honorarios reservados de la especialista y la higienización de la suite.
+                </p>
+                <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #ffcdd2;">
+                  * Consumirás 1 de tus 2 cancelaciones mensuales y no se reembolsará el cargo de indemnización.
+                </p>
+              </div>
+
+              <div class="cancel-booking-summary">
+                <div><strong>Protocolo:</strong> {{ selectedBookingToCancel.service }}</div>
+                <div><strong>Fecha y Hora:</strong> {{ selectedBookingToCancel.date }} a las {{ selectedBookingToCancel.time }} HS</div>
+                <div><strong>Monto de Indemnización:</strong> ${{ cancelWarningData.fee.toLocaleString('es-CL') }} CLP</div>
+              </div>
+
+              <p class="cancel-confirm-question">
+                ¿Aceptas el cobro de indemnización y confirmas la cancelación definitiva de tu turno?
+              </p>
+            </div>
+
+            <div class="cancel-modal-actions">
+              <button type="button" class="btn-danger-confirm" (click)="confirmCancellation()">
+                Aceptar Indemnización y Cancelar Sesión
+              </button>
+              <button type="button" class="btn-primary" (click)="closeCancelModal()">
+                Mantener mi Cita (Sin Costo)
+              </button>
+            </div>
+          }
+
+          <!-- Caso 3: Plazo Seguro (> 4 Horas) -> Cancelación Gratuita -->
+          @if (!cancelWarningData.isMaxReached && !cancelWarningData.isCritical) {
+            <h3 class="cancel-modal-title">CANCELACIÓN DENTRO DEL PLAZO SEGURO</h3>
+            <div class="cancel-modal-body">
+              <div class="cancel-alert-banner safe">
+                <p>
+                  Estás cancelando con más de 4 horas de anticipación. Esta cancelación es <strong>100% gratuita y no incurre en indemnización</strong>.
+                </p>
+              </div>
+
+              <p class="cancel-expl">
+                Consumirás <strong>1 de tus 2 cancelaciones</strong> permitidas durante este mes (has utilizado {{ cancelWarningData.cancellationsUsed }} de 2).
+              </p>
+
+              <div class="cancel-booking-summary">
+                <div><strong>Protocolo:</strong> {{ selectedBookingToCancel.service }}</div>
+                <div><strong>Fecha y Turno:</strong> {{ selectedBookingToCancel.date }} &bull; {{ selectedBookingToCancel.time }} HS</div>
+                <div><strong>Especialista:</strong> {{ selectedBookingToCancel.prof }}</div>
+              </div>
+            </div>
+
+            <div class="cancel-modal-actions">
+              <button type="button" class="btn-danger-confirm" (click)="confirmCancellation()">
+                Confirmar Cancelación Gratuita
+              </button>
+              <button type="button" class="btn-secondary" (click)="closeCancelModal()">
+                Volver / Mantener Cita
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- VISTA 9: MATRIZ OFICIAL DE PERMISOS (RBAC)                -->
+    <!-- ========================================================= -->
+    @if (activeView === 'MATRIZ_RBAC') {
+      <div class="view-content animate-fade">
+        <div class="admin-section roles-section">
+          <div class="section-heading-row">
+            <h2 class="section-heading">[ MATRIZ DE CONTROL DE ACCESO BASADO EN ROLES (RBAC) ]</h2>
+            <span class="role-note">ESPECIFICACIÓN OFICIAL DE EXPOSICIÓN</span>
+          </div>
+
+          <div class="permission-table-wrap">
+            <table class="permission-table">
+              <thead>
+                <tr>
+                  <th>MÓDULO / CAPACIDAD DEL SISTEMA</th>
+                  @for (role of rbacRolesList; track role.name) {
+                    <th [class.highlight]="role.name === currentUser().role">
+                      <span>{{ role.name }}</span>
+                      <small>{{ role.detail }}</small>
+                    </th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (p of rbacMatrix; track p.action) {
+                  <tr>
+                    <td>{{ p.action }}</td>
+                    @for (v of p.values; track $index) {
+                      <td [class]="v.toLowerCase().replace(' ', '-')">
+                        <span>{{ v === '—' ? '—' : (v === 'DENEGADO' ? '× ' : '✓ ') + v }}</span>
+                      </td>
+                    }
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="legend">
+            <span class="legend-item allow">✓ HABILITADO <small>Permiso total o autorizado</small></span>
+            <span class="legend-item restricted">✓ RESTRINGIDO <small>Alcance administrativo parcial</small></span>
+            <span class="legend-item private">◉ LECTURA <small>Acceso exclusivo a datos propios</small></span>
+            <span class="legend-item denied">× DENEGADO <small>Sin acceso / resguardo ético y legal</small></span>
+          </div>
+        </div>
+      </div>
+    }
+  </section>
 </main>

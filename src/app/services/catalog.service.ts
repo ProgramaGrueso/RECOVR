@@ -66,7 +66,8 @@ export class CatalogService {
       photoUrl: 'assets/Krea2-154110_00001_.png',
       bio: 'Especialista en descompresión neuromuscular y regeneración de alto rendimiento con 8 años de trayectoria asistiendo a atletas de élite.',
       duties: 'Maniobras miofasciales de alta presión, termoterapia de contraste y alineación vertebral activa.',
-      availability: 'Disponible hoy'
+      availability: 'Disponible hoy',
+      category: 'MASAJE'
     },
     {
       id: 'prof-02',
@@ -76,7 +77,8 @@ export class CatalogService {
       photoUrl: 'assets/Krea2-193952_00001_.png',
       bio: 'Formada en centros escandinavos de medicina deportiva, experta en acondicionamiento articular y liberación de fascias profundas.',
       duties: 'Ajustes posturales, protocolos de flexibilidad asistida y masajes de descarga post-entrenamiento.',
-      availability: 'Disponible hoy'
+      availability: 'Disponible hoy',
+      category: 'MASAJE'
     },
     {
       id: 'prof-03',
@@ -86,7 +88,8 @@ export class CatalogService {
       photoUrl: 'assets/Krea2-194000_00001_.png',
       bio: 'Pionera en técnicas de ventosaterapia fría-térmica para la desinflamación y reactivación del flujo vascular y drenaje profundo.',
       duties: 'Ventosaterapia de vacío graduado, punción seca preventiva y relajación miofascial dorsal.',
-      availability: 'Turnos esta semana'
+      availability: 'Turnos esta semana',
+      category: 'MASAJE'
     },
     {
       id: 'prof-04',
@@ -96,7 +99,8 @@ export class CatalogService {
       photoUrl: 'assets/Krea2-194009_00001_.png',
       bio: 'Líder en podología clínica y tratamiento biomecánico para pies expuestos a alta carga calzada e impacto de entrenamiento.',
       duties: 'Cirugía menor podológica, tratamiento de uñas encarnadas, quiropodología y reconstrucción ungueal.',
-      availability: 'Disponible hoy'
+      availability: 'Disponible hoy',
+      category: 'PODOLOGÍA'
     },
     {
       id: 'prof-05',
@@ -106,7 +110,8 @@ export class CatalogService {
       photoUrl: 'assets/Krea2-194016_00002_.png',
       bio: 'Especializada en aseo podológico de grado quirúrgico y rejuvenecimiento de la lámina plantar mediante activos minerales.',
       duties: 'Exfoliación volcánica profunda, perfilado de hiperqueratosis e hidratación sellada de alta dermis.',
-      availability: 'Turnos esta semana'
+      availability: 'Turnos esta semana',
+      category: 'PODOLOGÍA'
     }
   ];
 

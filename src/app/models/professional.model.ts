@@ -7,5 +7,6 @@ export interface Professional {
   bio: string;
   duties: string;
   availability: 'Disponible hoy' | 'Turnos esta semana' | 'Consulta previa';
+  category?: 'MASAJE' | 'PODOLOGÍA';
 }
 

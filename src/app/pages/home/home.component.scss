@@ -4,14 +4,6 @@
   width: 100%;
   overflow-x: hidden;
 
-  .section-content-wrapper {
-    position: relative;
-    z-index: 1;
-    max-width: 1350px;
-    margin: 0 auto;
-    width: 100%;
-  }
-
   .section-header {
     text-align: center;
     max-width: 750px;
@@ -47,10 +39,9 @@
 
   // 2. SECCIÓN CATEGORÍAS (Corchetes Serotoninn 1:1)
   .categories-section {
-    position: relative;
-    overflow: hidden;
-    padding: 6rem 2rem 3.5rem;
-    width: 100%;
+    padding: 5.5rem 2rem 2.5rem;
+    max-width: 1350px;
+    margin: 0 auto;
 
     .categories-brackets-grid {
       display: grid;
@@ -58,10 +49,8 @@
       gap: 1.6rem;
 
       .bracket-card {
-        background: rgba(20, 16, 20, 0.78);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(184, 180, 176, 0.16);
+        background: var(--color-bg-alt);
+        border: 1px solid rgba(184, 180, 176, 0.14);
         padding: 2.2rem 2rem;
         display: flex;
         flex-direction: column;
@@ -73,7 +62,7 @@
 
         &:hover, &.active {
           border-color: var(--color-accent-soft);
-          background: rgba(20, 16, 20, 0.94);
+          background: rgba(20, 16, 20, 0.98);
           box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(92, 26, 43, 0.25);
 
           .bracket-code {
@@ -115,10 +104,9 @@
 
   // 3. SECCIÓN PROTOCOLOS
   .protocols-section {
-    position: relative;
-    overflow: hidden;
-    padding: 3.5rem 2rem 5.5rem;
-    width: 100%;
+    padding: 2.5rem 2rem 4.5rem;
+    max-width: 1350px;
+    margin: 0 auto;
 
     .services-grid {
       display: grid;
@@ -129,10 +117,9 @@
 
   // 4. SECCIÓN EL ESPACIO (8 SUITES RECOVR)
   .space-section {
-    position: relative;
-    overflow: hidden;
-    padding: 5.5rem 2rem;
-    width: 100%;
+    padding: 4.5rem 2rem;
+    max-width: 1350px;
+    margin: 0 auto;
 
     .space-container {
       display: grid;
@@ -146,7 +133,6 @@
         height: 520px;
         overflow: hidden;
         border: 1px solid rgba(184, 180, 176, 0.18);
-        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
 
         .space-img {
           width: 100%;
@@ -254,9 +240,7 @@
         gap: 1.6rem;
 
         .space-card {
-          background: rgba(20, 16, 20, 0.78);
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
+          background: var(--color-bg-alt);
           border: 1px solid rgba(184, 180, 176, 0.14);
           padding: 1.9rem;
           display: flex;
@@ -267,7 +251,6 @@
             border-color: var(--color-metal);
             transform: translateY(-4px);
             box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65);
-            background: rgba(20, 16, 20, 0.92);
           }
 
           .space-card-header {
@@ -349,10 +332,9 @@
 
   // 5. SECCIÓN EQUIPO
   .team-section {
-    position: relative;
-    overflow: hidden;
-    padding: 3.5rem 2rem 5.5rem;
-    width: 100%;
+    padding: 2.5rem 2rem 4.5rem;
+    max-width: 1350px;
+    margin: 0 auto;
 
     .team-grid {
       display: grid;
@@ -374,4 +356,3 @@
     }
   }
 }
-

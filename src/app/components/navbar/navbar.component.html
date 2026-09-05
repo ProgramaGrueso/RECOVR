@@ -5,17 +5,21 @@
       <span class="brand-text">RECOVR</span>
     </a>
 
-    <!-- Botón único de apertura/cierre de menú tipo Serotoninn -->
-    <button
-      class="menu-toggle-btn"
-      (click)="toggleMobileMenu()"
-      (mouseenter)="setCursor('[ MENÚ ]')"
-      (mouseleave)="resetCursor()"
-      [attr.aria-expanded]="isMobileMenuOpen"
-      aria-label="Menú principal">
-      <span *ngIf="!isMobileMenuOpen">[ MENU + ]</span>
-      <span *ngIf="isMobileMenuOpen">[ CERRAR &times; ]</span>
-    </button>
+    <div class="navbar-actions">
+
+
+      <!-- Botón de menú tipo Serotoninn -->
+      <button
+        class="menu-toggle-btn"
+        (click)="toggleMobileMenu()"
+        (mouseenter)="setCursor('[ MENÚ ]')"
+        (mouseleave)="resetCursor()"
+        [attr.aria-expanded]="isMobileMenuOpen"
+        aria-label="Menú principal">
+        <span *ngIf="!isMobileMenuOpen">[ MENU + ]</span>
+        <span *ngIf="isMobileMenuOpen">[ CERRAR &times; ]</span>
+      </button>
+    </div>
   </div>
 </header>
 
@@ -45,6 +49,12 @@
       </a>
       <a (click)="onReserve()" class="overlay-link overlay-cta">
         [ RESERVAR SESIÓN ]
+      </a>
+      <a routerLink="/admin/login" class="overlay-link overlay-login-link" (click)="closeMobileMenu()">
+        [ INICIAR SESIÓN PACIENTE ↗ ]
+      </a>
+      <a routerLink="/admin/login" [queryParams]="{ mode: 'staff' }" class="overlay-link overlay-login-link" (click)="closeMobileMenu()">
+        [ ACCESO PERSONAL STAFF ↗ ]
       </a>
     </nav>
 

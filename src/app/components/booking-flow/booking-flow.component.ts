@@ -1,19 +1,22 @@
-import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { BookingService } from '../../services/booking.service';
 import { CatalogService } from '../../services/catalog.service';
+import { AuthService } from '../../services/auth.service';
 import { ServiceItem } from '../../models/service.model';
 import { Professional } from '../../models/professional.model';
 import { BookingResponse } from '../../models/booking.model';
+import { ServerTimeService } from '../../services/server-time.service';
 
 import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
 
 @Component({
   selector: 'app-booking-flow',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, BrandMarkComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, BrandMarkComponent],
   templateUrl: './booking-flow.component.html',
   styleUrls: ['./booking-flow.component.scss']
 })
@@ -25,6 +28,10 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     }
   }
 
+  auth = inject(AuthService);
+  private router = inject(Router);
+  private serverTimeService = inject(ServerTimeService);
+
   currentStep = 1;
   isSubmitting = false;
   isLoadingServices = true;
@@ -32,6 +39,18 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
   hasError = false;
   errorMessage = '';
   bookingSuccess: BookingResponse | null = null;
+  earnedPoints = 0;
+  totalClientPoints = 0;
+
+  // Modal Gatekeeper de Autenticación Requerida
+  showAuthGateModal = false;
+  authModalTab: 'LOGIN' | 'REGISTER' = 'LOGIN';
+  authModalEmail = '';
+  authModalPassword = '';
+  authModalName = '';
+  authModalPhone = '';
+  authModalError = '';
+  authModalSuccess = '';
 
   services: ServiceItem[] = [];
   professionals: Professional[] = [];
@@ -71,7 +90,7 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
 
 
   private initForm(): void {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = this.serverTimeService.getNowISOString().split('T')[0];
     this.bookingForm = this.fb.group({
       serviceId: ['', Validators.required],
       professionalId: ['', Validators.required],
@@ -149,6 +168,12 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     return this.professionals.find(p => p.id === id);
   }
 
+  get filteredProfessionals(): Professional[] {
+    const srv = this.selectedService;
+    if (!srv) return this.professionals;
+    return this.professionals.filter(p => p.category === srv.category);
+  }
+
   selectService(service: ServiceItem): void {
     this.bookingForm.patchValue({ serviceId: service.id });
     this.currentStep = 2;
@@ -163,11 +188,45 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     this.bookingForm.patchValue({ timeSlot: slot });
   }
 
+  get isClientLoggedIn(): boolean {
+    return this.auth.isAuthenticated() && this.auth.currentUser()?.role === 'CLIENTE';
+  }
+
+  private fillClientDataIfLoggedIn(): void {
+    if (this.isClientLoggedIn) {
+      const u = this.auth.currentUser();
+      if (u) {
+        this.bookingForm.patchValue({
+          clientName: u.name,
+          clientEmail: u.email,
+          clientPhone: u.phone || '+56 9 8765 4321'
+        });
+      }
+    }
+  }
+
   goToStep(step: number): void {
+    if (step === 4 && !this.isClientLoggedIn) {
+      this.openAuthGate('LOGIN');
+      return;
+    }
     this.currentStep = step;
+    if (step === 4) {
+      this.fillClientDataIfLoggedIn();
+    }
   }
 
   nextStep(): void {
+    if (this.currentStep === 3) {
+      if (!this.isClientLoggedIn) {
+        this.openAuthGate('LOGIN');
+        return;
+      }
+      this.fillClientDataIfLoggedIn();
+      this.currentStep = 4;
+      return;
+    }
+
     if (this.currentStep < 4) {
       this.currentStep++;
     }
@@ -179,7 +238,68 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     }
   }
 
+  openAuthGate(tab: 'LOGIN' | 'REGISTER' = 'LOGIN'): void {
+    this.authModalTab = tab;
+    this.authModalError = '';
+    this.authModalSuccess = '';
+    this.showAuthGateModal = true;
+  }
+
+  closeAuthGate(): void {
+    this.showAuthGateModal = false;
+    this.authModalError = '';
+    this.authModalSuccess = '';
+  }
+
+  quickLoginDemoClient(): void {
+    this.auth.loginAsRole('CLIENTE');
+    this.fillClientDataIfLoggedIn();
+    this.showAuthGateModal = false;
+    this.currentStep = 4;
+  }
+
+  submitAuthModalLogin(): void {
+    this.authModalError = '';
+    if (!this.authModalEmail || !this.authModalPassword) {
+      this.authModalError = 'Ingresa tu correo/usuario y contraseña.';
+      return;
+    }
+    const success = this.auth.login(this.authModalEmail, this.authModalPassword);
+    if (success && this.auth.currentUser()?.role === 'CLIENTE') {
+      this.fillClientDataIfLoggedIn();
+      this.showAuthGateModal = false;
+      this.currentStep = 4;
+    } else if (success && this.auth.currentUser()?.role !== 'CLIENTE') {
+      this.authModalError = 'Esta sesión es del personal. Inicia sesión como cliente para agendar.';
+    } else {
+      this.authModalError = 'Credenciales inválidas. Verifica tu correo y contraseña.';
+    }
+  }
+
+  submitAuthModalRegister(): void {
+    this.authModalError = '';
+    const res = this.auth.registerClient({
+      name: this.authModalName,
+      email: this.authModalEmail,
+      phone: this.authModalPhone,
+      password: this.authModalPassword
+    });
+
+    if (res.success) {
+      this.fillClientDataIfLoggedIn();
+      this.showAuthGateModal = false;
+      this.currentStep = 4;
+    } else {
+      this.authModalError = res.message;
+    }
+  }
+
   onSubmit(): void {
+    if (!this.isClientLoggedIn) {
+      this.openAuthGate('LOGIN');
+      return;
+    }
+
     if (this.bookingForm.invalid) {
       this.bookingForm.markAllAsTouched();
       return;
@@ -190,6 +310,19 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.isSubmitting = false;
         this.bookingSuccess = response;
+        this.earnedPoints = 100;
+        this.totalClientPoints = this.auth.addClientPoints(100, `Reserva confirmada: ${this.selectedService?.name || 'Protocolo'}`);
+        this.auth.addClientBooking({
+          id: response.id,
+          service: this.selectedService?.name || 'Protocolo Sanctum',
+          prof: this.selectedProfessional?.name || 'Especialista RECOVR',
+          room: 'Sanctum 01 (Descompresión)',
+          date: response.date,
+          time: response.timeSlot,
+          price: this.selectedService?.price || 65000,
+          status: 'CONFIRMADA',
+          notes: this.bookingForm.value.notes
+        });
       },
       error: (err) => {
         this.isSubmitting = false;

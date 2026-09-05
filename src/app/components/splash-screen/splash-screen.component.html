@@ -1,0 +1,14 @@
+@if (showSplash) {
+  <div class="splash-screen-container" [class.fade-out]="isFadingOut">
+    <video
+      #splashVideo
+      class="splash-video"
+      src="assets/loading_staryuki.mp4"
+      autoplay
+      [muted]="true"
+      playsinline
+      preload="auto"
+      (ended)="onVideoEnded()">
+    </video>
+  </div>
+}
