@@ -107,6 +107,13 @@ public class ReservaService {
     }
 
     /**
+     * Retorna el listado completo de todas las reservas registradas.
+     */
+    public List<Reserva> listarTodas() {
+        return reservaRepository.findAll();
+    }
+
+    /**
      * Búsqueda por ID con manejo de excepción de recurso inexistente.
      */
     public Reserva buscarPorId(Long id) {

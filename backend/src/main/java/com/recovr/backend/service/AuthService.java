@@ -50,7 +50,7 @@ public class AuthService {
 
     public AuthResponse registrarPrimerAdmin(RegistroRequest request) {
         if (usuarioRepository.countByRol(Rol.ADMIN) > 0) {
-            throw new IllegalStateException("Ya existe un administrador. Un admin autenticado debe crear los siguientes.");
+            return login(new LoginRequest(request.correo(), request.password()));
         }
         return respuesta(crearUsuario(request, Rol.ADMIN));
     }

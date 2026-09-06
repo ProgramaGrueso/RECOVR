@@ -1,0 +1,298 @@
+{
+  "info": {
+    "_postman_id": "recovr-tdd-rest-collection-2026",
+    "name": "RECOVR - Suite TDD Pruebas REST (GET, POST, PUT, DELETE)",
+    "description": "Colección oficial de pruebas TDD y contratos RESTful para RECOVR Recovery Clinic. Incluye aserciones automatizadas en JavaScript (pm.test) para evaluar códigos HTTP 200, 201, 204, 400, 404 y 409.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" },
+    { "key": "reservaId", "value": "1" }
+  ],
+  "item": [
+    {
+      "name": "0. Autenticación - Obtener Token JWT",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[PASS] HTTP 201 Created o 200 OK en Autenticación\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "pm.test(\"[PASS] Retorna Token JWT válido\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data.token).to.be.a('string');",
+              "    pm.collectionVariables.set('token', data.token);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Admin Auditor\",\n  \"correo\": \"admin@recovr.com\",\n  \"password\": \"Admin123\",\n  \"telefono\": \"999888777\"\n}"
+        },
+        "url": "{{baseUrl}}/api/auth/registro-admin",
+        "description": "Inicializa o autentica un administrador para obtener el Bearer Token JWT necesario en los endpoints asegurados."
+      }
+    },
+    {
+      "name": "1. POST - Crear Reserva Válida (HTTP 201)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[PASS] POST retorna HTTP 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "pm.test(\"[PASS] Payload contiene ID autoincremental y estado PENDIENTE\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data.id).to.be.a('number');",
+              "    pm.expect(data.estado).to.eql('PENDIENTE');",
+              "    pm.expect(data.montoTotal).to.be.above(0);",
+              "    pm.collectionVariables.set('reservaId', data.id);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clienteId\": 1,\n  \"empleadoId\": 2,\n  \"servicioId\": 1,\n  \"salaId\": 1,\n  \"fechaHora\": \"2026-09-25T10:00:00\",\n  \"duracionTotalMinutos\": 60,\n  \"montoTotal\": 65.00\n}"
+        },
+        "url": "{{baseUrl}}/api/reservas",
+        "description": "Crea una nueva reserva válida. Comprueba que el recurso se crea y retorna HTTP 201."
+      }
+    },
+    {
+      "name": "2. POST - Conflicto por Solapamiento Horario (HTTP 409)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[PASS] POST detecta colisión y retorna HTTP 409 Conflict\", function () {",
+              "    pm.response.to.have.status(409);",
+              "});",
+              "pm.test(\"[PASS] Estructura de error semántica de negocio\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data.error).to.include('Conflicto');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clienteId\": 2,\n  \"empleadoId\": 2,\n  \"servicioId\": 1,\n  \"salaId\": 2,\n  \"fechaHora\": \"2026-09-25T10:30:00\",\n  \"duracionTotalMinutos\": 60,\n  \"montoTotal\": 65.00\n}"
+        },
+        "url": "{{baseUrl}}/api/reservas",
+        "description": "Intenta registrar un turno para el mismo especialista a las 10:30 (dentro del bloque de 10:00 a 11:00). Debe ser rechazado con 409 Conflict."
+      }
+    },
+    {
+      "name": "3. POST - Validación Defensiva Fecha en el Pasado (HTTP 400)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[PASS] POST rechaza fecha en el pasado con HTTP 400 Bad Request\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clienteId\": 1,\n  \"empleadoId\": 2,\n  \"servicioId\": 1,\n  \"salaId\": 1,\n  \"fechaHora\": \"2020-01-01T10:00:00\",\n  \"duracionTotalMinutos\": 60,\n  \"montoTotal\": 65.00\n}"
+        },
+        "url": "{{baseUrl}}/api/reservas"
+      }
+    },
+    {
+      "name": "4. GET - Listar Colección Completa (HTTP 200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[PASS] GET colección retorna HTTP 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"[PASS] Respuesta es un arreglo JSON\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data).to.be.an('array');",
+              "    pm.expect(data.length).to.be.at.least(1);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/reservas"
+      }
+    },
+    {
+      "name": "5. GET - Consultar Reserva por ID (HTTP 200)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[PASS] GET por ID retorna HTTP 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"[PASS] El ID coincide con el recurso solicitado\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data.id.toString()).to.eql(pm.collectionVariables.get('reservaId').toString());",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/reservas/{{reservaId}}"
+      }
+    },
+    {
+      "name": "6. GET - Recurso Inexistente (HTTP 404 Not Found)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[PASS] GET con ID inexistente retorna HTTP 404 Not Found\", function () {",
+              "    pm.response.to.have.status(404);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/reservas/999999"
+      }
+    },
+    {
+      "name": "7. PUT - Confirmar Reserva (HTTP 200 OK)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[PASS] PUT retorna HTTP 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"[PASS] Transición de estado muta a CONFIRMADA\", function () {",
+              "    var data = pm.response.json();",
+              "    pm.expect(data.estado).to.eql('CONFIRMADA');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/reservas/{{reservaId}}/confirmar"
+      }
+    },
+    {
+      "name": "8. DELETE - Anular / Soft Delete de Reserva (HTTP 204 No Content)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[PASS] DELETE retorna HTTP 204 No Content\", function () {",
+              "    pm.response.to.have.status(204);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/reservas/{{reservaId}}"
+      }
+    },
+    {
+      "name": "9. GET - Verificar Soft Delete (Estado CANCELADA)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"[PASS] GET confirma que la reserva persiste pero en estado CANCELADA\", function () {",
+              "    pm.response.to.have.status(200);",
+              "    var data = pm.response.json();",
+              "    pm.expect(data.estado).to.eql('CANCELADA');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/reservas/{{reservaId}}"
+      }
+    }
+  ]
+}

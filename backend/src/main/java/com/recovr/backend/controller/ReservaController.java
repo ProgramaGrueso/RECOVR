@@ -5,6 +5,7 @@ import com.recovr.backend.entity.Pago;
 import com.recovr.backend.entity.Reserva;
 import com.recovr.backend.service.ReservaService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
@@ -12,11 +13,12 @@ import org.springframework.security.core.Authentication;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/reservas")
+@RestController("jpaReservaController")
+@RequestMapping("/api/db/reservas")
 public class ReservaController {
 
     @Autowired
+    @Qualifier("jpaReservaService")
     private ReservaService reservaService;
 
     @GetMapping

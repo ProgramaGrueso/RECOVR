@@ -37,6 +37,18 @@ public class ReservaController {
     }
 
     /**
+     * Endpoint para listar todas las reservas registradas.
+     * Retorna HTTP 200 OK con la colección de recursos.
+     */
+    @GetMapping
+    public ResponseEntity<java.util.List<ReservaResponse>> listarTodas() {
+        java.util.List<ReservaResponse> lista = reservaService.listarTodas().stream()
+                .map(ReservaResponse::fromDomain)
+                .toList();
+        return ResponseEntity.ok(lista);
+    }
+
+    /**
      * Endpoint para consultar una reserva por su ID.
      */
     @GetMapping("/{id}")
@@ -61,5 +73,15 @@ public class ReservaController {
     public ResponseEntity<ReservaResponse> cancelarReserva(@PathVariable Long id) {
         Reserva cancelada = reservaService.cancelarReserva(id);
         return ResponseEntity.ok(ReservaResponse.fromDomain(cancelada));
+    }
+
+    /**
+     * Endpoint para anular / eliminar una reserva (Baja lógica idempotente).
+     * Aplica la semántica HTTP DELETE retornando HTTP 204 No Content.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarReserva(@PathVariable Long id) {
+        reservaService.cancelarReserva(id);
+        return ResponseEntity.noContent().build();
     }
 }
