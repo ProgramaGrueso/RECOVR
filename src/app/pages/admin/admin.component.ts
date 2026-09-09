@@ -1007,7 +1007,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   closeDailyCashRegister(): void {
     const total = this.totalCollectedToday;
-    this.showToast(`Cierre de caja completado. Total arqueado: $${total.toLocaleString('es-CL')} CLP. Comprobante archivado.`);
+    this.showToast(`Cierre de caja completado. Total arqueado: S/ ${total.toLocaleString('es-PE')} PEN. Comprobante archivado.`);
   }
 
   // -------------------------------------------------------------

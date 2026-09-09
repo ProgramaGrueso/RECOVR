@@ -558,7 +558,7 @@ export class AuthService {
     if (!canCancelFree && !acceptFee) {
       return {
         success: false,
-        message: `Atención: Quedan menos de 4 horas para tu turno. Cancelar ahora requiere el cobro de indemnización del 50% ($${fee.toLocaleString('es-CL')} CLP).`,
+        message: `Atención: Quedan menos de 4 horas para tu turno. Cancelar ahora requiere el cobro de indemnización del 50% (S/ ${fee.toLocaleString('es-PE')} PEN).`,
         requiresIndemnity: true,
         feeAmount: fee
       };
@@ -574,7 +574,7 @@ export class AuthService {
     if (!canCancelFree) {
       return {
         success: true,
-        message: `Cita cancelada. Se ha aplicado el cargo de indemnización por cancelación tardía ($${fee.toLocaleString('es-CL')} CLP).`,
+        message: `Cita cancelada. Se ha aplicado el cargo de indemnización por cancelación tardía (S/ ${fee.toLocaleString('es-PE')} PEN).`,
         requiresIndemnity: true,
         feeAmount: fee
       };

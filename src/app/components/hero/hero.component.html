@@ -1,8 +1,8 @@
 <section
   class="hero-container"
-  (mouseenter)="setCursor('[ RECOVR SANCTUM ]')"
+  (mouseenter)="setCursor('🫧 BUBBLE SPA')"
   (mouseleave)="resetCursor()"
-  aria-label="Sección principal de RECOVR">
+  aria-label="Sección principal de RECOVR Bubblegum Spa">
   
   @if (showVideo) {
     <div class="video-wrapper" [class.video-failed]="isVideoFailed">
@@ -24,31 +24,47 @@
     </div>
   } @else {
     <div class="video-wrapper">
-      <img src="assets/Krea2-155013_00001_.png" alt="Recovr Sanctum Background" style="width: 100%; height: 100%; object-fit: cover;">
+      <img src="assets/Krea2-155013_00001_.png" alt="Recovr Bubblegum Spa Background" style="width: 100%; height: 100%; object-fit: cover;">
       <div class="video-overlay"></div>
     </div>
   }
 
   <div class="hero-content">
-    <span class="hero-badge">[ PROTOCOLOS DE RESTAURACIÓN FISCAL & PODOLOGÍA ]</span>
-    <h1 class="hero-wordmark">RECOVR</h1>
+    <div class="hero-badge-pill">
+      <span class="bubble-icon">🫧</span>
+      <span class="hero-badge">BUBBLEGUM SPA &bull; EXPERIENCIA SENSORIAL</span>
+    </div>
 
-    <p class="hero-tagline">El cuerpo, restaurado.</p>
+    <h1 class="hero-wordmark">RECOVR <span class="highlight-pink">BUBBLE</span></h1>
+
+    <p class="hero-tagline">El cuidado sensorial de tu cuerpo en una atmósfera envolvente de burbujas, aromas dulces y relax absoluto.</p>
+
+    <div class="hero-pricing-pill">
+      <span>Tratamientos desde <strong>S/ 85 Soles</strong> &bull; Atención exclusiva con reserva</span>
+    </div>
 
     <div class="hero-actions">
       <a
         (click)="onReserve()"
-        (mouseenter)="setCursor('[ RESERVAR ]')"
+        (mouseenter)="setCursor('🫧 RESERVAR EN SOLES')"
         (mouseleave)="resetCursor()"
         class="btn-primary"
         id="hero-cta-reserve">
-        [ RESERVAR SESIÓN ]
+        <span>🫧 RESERVAR SESIÓN (S/)</span>
+      </a>
+      <a
+        href="#reels"
+        class="btn-secondary"
+        (mouseenter)="setCursor('✨ VER VIDEOS')"
+        (mouseleave)="resetCursor()">
+        <span>✨ VER VIDEO REELS</span>
       </a>
     </div>
   </div>
 
   <div class="hero-scroll-indicator">
-    <span class="scroll-label">[ DESCUBRIR ]</span>
+    <span class="scroll-label">🫧 EXPLORAR</span>
     <div class="scroll-line-vertical"></div>
   </div>
 </section>
+

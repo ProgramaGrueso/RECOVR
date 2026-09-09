@@ -6,150 +6,305 @@
 
   .section-header {
     text-align: center;
-    max-width: 750px;
-    margin: 0 auto 3.8rem;
+    max-width: 780px;
+    margin: 0 auto 3.5rem;
     padding: 0 1.5rem;
 
     .section-subtitle {
-      display: block;
-      font-family: var(--font-body);
-      font-size: 0.75rem;
-      letter-spacing: 0.25em;
-      color: var(--color-accent-soft);
-      margin-bottom: 0.85rem;
-      font-weight: 600;
+      display: inline-block;
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      color: var(--color-bubble-pink);
+      margin-bottom: 0.75rem;
+      font-weight: 700;
       text-transform: uppercase;
+      padding: 0.35rem 1rem;
+      background: rgba(255, 102, 161, 0.12);
+      border: 1px solid rgba(255, 102, 161, 0.3);
+      border-radius: 9999px;
     }
 
     .section-title {
-      font-family: var(--font-display);
-      font-size: clamp(2.2rem, 4.5vw, 3.4rem);
-      letter-spacing: var(--letter-spacing-wide);
-      margin-bottom: 1.1rem;
+      font-family: var(--font-heading);
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.9rem;
       color: var(--color-text);
+      background: linear-gradient(135deg, #ffffff 0%, #ffcbe3 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .section-description {
       font-family: var(--font-body);
-      font-size: 0.95rem;
+      font-size: 0.96rem;
       color: var(--color-text-muted);
       line-height: 1.65;
     }
   }
 
-  // 2. SECCIÓN CATEGORÍAS (Corchetes Serotoninn 1:1)
-  .categories-section {
-    padding: 5.5rem 2rem 2.5rem;
-    max-width: 1350px;
+  // 2. SECCIÓN VIDEO REELS
+  .video-reels-section {
+    padding: 5rem 2rem 3rem;
+    max-width: 1400px;
     margin: 0 auto;
 
-    .categories-brackets-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    .reels-grid {
+      display: flex;
       gap: 1.6rem;
+      padding-bottom: 1.5rem;
 
-      .bracket-card {
-        background: var(--color-bg-alt);
-        border: 1px solid rgba(184, 180, 176, 0.14);
-        padding: 2.2rem 2rem;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.85rem;
+      .reel-card {
+        min-width: 280px;
+        max-width: 320px;
+        flex: 0 0 auto;
+        background: rgba(22, 14, 34, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 102, 161, 0.25);
+        border-radius: 20px;
+        overflow: hidden;
         cursor: pointer;
-        text-align: left;
-        transition: all 0.4s var(--ease-serotoninn);
+        transition: all 0.4s var(--ease-bubble);
 
-        &:hover, &.active {
-          border-color: var(--color-accent-soft);
-          background: rgba(20, 16, 20, 0.98);
-          box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(92, 26, 43, 0.25);
+        &:hover {
+          transform: translateY(-8px) scale(1.02);
+          border-color: rgba(255, 102, 161, 0.6);
+          box-shadow: 0 16px 36px rgba(255, 20, 147, 0.35), 0 0 20px rgba(168, 85, 247, 0.25);
 
-          .bracket-code {
-            color: var(--color-text);
+          .reel-play-btn {
+            transform: translate(-50%, -50%) scale(1.2);
+            background: var(--gradient-bubble-btn);
+            box-shadow: 0 0 24px rgba(255, 102, 161, 0.8);
           }
 
-          .bracket-name {
-            color: var(--color-text);
+          .reel-video-preview {
+            transform: scale(1.08);
           }
         }
 
-        .bracket-code {
-          font-family: var(--font-display);
-          font-size: 0.95rem;
-          letter-spacing: 0.25em;
-          color: var(--color-accent-soft);
-          font-weight: 600;
-          transition: color 0.3s var(--ease-serotoninn);
+        .reel-video-wrapper {
+          position: relative;
+          width: 100%;
+          height: 380px;
+          overflow: hidden;
+          background: #000;
+
+          .reel-video-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s var(--ease-bubble);
+          }
+
+          .reel-tag {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            z-index: 2;
+            background: rgba(13, 8, 20, 0.85);
+            backdrop-filter: blur(6px);
+            color: #ffffff;
+            font-family: var(--font-heading);
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.3rem 0.75rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 102, 161, 0.4);
+          }
+
+          .reel-play-btn {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 54px;
+            height: 54px;
+            background: rgba(255, 102, 161, 0.85);
+            backdrop-filter: blur(8px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 1.2rem;
+            box-shadow: 0 0 20px rgba(255, 20, 147, 0.5);
+            transition: all 0.35s var(--ease-bubble);
+            z-index: 2;
+
+            span {
+              margin-left: 3px;
+            }
+          }
+
+          .reel-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 45%;
+            background: linear-gradient(to top, rgba(22, 14, 34, 0.95), transparent);
+            pointer-events: none;
+          }
         }
 
-        .bracket-name {
-          font-family: var(--font-body);
-          font-size: 0.82rem;
-          letter-spacing: 0.15em;
-          color: var(--color-text-muted);
-          transition: color 0.3s var(--ease-serotoninn);
-        }
+        .reel-info {
+          padding: 1.25rem 1.4rem;
 
-        .bracket-count {
-          font-family: var(--font-display);
-          font-size: 0.78rem;
-          color: var(--color-metal);
-          letter-spacing: 0.2em;
-          margin-top: 0.5rem;
+          .reel-category {
+            font-family: var(--font-heading);
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--color-bubble-pink);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 0.35rem;
+          }
+
+          .reel-title {
+            font-family: var(--font-heading);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.35rem;
+          }
+
+          .reel-subtitle {
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            color: var(--color-text-muted);
+            line-height: 1.4;
+          }
         }
       }
     }
   }
 
-  // 3. SECCIÓN PROTOCOLOS
+  // 3. SECCIÓN CATEGORÍAS
+  .categories-section {
+    padding: 4rem 2rem 2rem;
+    max-width: 1400px;
+    margin: 0 auto;
+
+    .categories-brackets-grid {
+      display: flex;
+      gap: 1.25rem;
+      padding-bottom: 1rem;
+
+      .bracket-card {
+        min-width: 220px;
+        flex: 1;
+        background: rgba(22, 14, 34, 0.65);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 102, 161, 0.2);
+        border-radius: 18px;
+        padding: 1.8rem 1.6rem;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.6rem;
+        cursor: pointer;
+        text-align: left;
+        transition: all 0.35s var(--ease-bubble);
+
+        &:hover, &.active {
+          border-color: var(--color-bubble-pink);
+          background: rgba(255, 102, 161, 0.16);
+          box-shadow: 0 12px 28px rgba(255, 20, 147, 0.25), 0 0 16px rgba(168, 85, 247, 0.2);
+          transform: translateY(-4px);
+
+          .bracket-code {
+            color: #ffffff;
+          }
+
+          .bracket-name {
+            color: #ffffff;
+          }
+        }
+
+        .bracket-code {
+          font-family: var(--font-heading);
+          font-size: 1.05rem;
+          font-weight: 700;
+          letter-spacing: 0.04em;
+          color: var(--color-bubble-pink);
+          transition: color 0.3s ease;
+        }
+
+        .bracket-name {
+          font-family: var(--font-body);
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: var(--color-text-muted);
+          transition: color 0.3s ease;
+        }
+
+        .bracket-count {
+          font-family: var(--font-heading);
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: var(--color-bubble-cyan);
+          margin-top: 0.4rem;
+          padding: 0.2rem 0.6rem;
+          background: rgba(56, 189, 248, 0.12);
+          border-radius: 9999px;
+        }
+      }
+    }
+  }
+
+  // 4. SECCIÓN PROTOCOLOS
   .protocols-section {
-    padding: 2.5rem 2rem 4.5rem;
-    max-width: 1350px;
+    padding: 3rem 2rem 4.5rem;
+    max-width: 1400px;
     margin: 0 auto;
 
     .services-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 2.2rem;
+      gap: 2rem;
     }
   }
 
-  // 4. SECCIÓN EL ESPACIO (8 SUITES RECOVR)
+  // 5. SECCIÓN EL ESPACIO (BUBBLE SUITES)
   .space-section {
     padding: 4.5rem 2rem;
-    max-width: 1350px;
+    max-width: 1400px;
     margin: 0 auto;
 
     .space-container {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 4.5rem;
+      gap: 4rem;
       align-items: center;
 
       .space-image-wrapper {
         position: relative;
         width: 100%;
-        height: 520px;
+        height: 480px;
         overflow: hidden;
-        border: 1px solid rgba(184, 180, 176, 0.18);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 102, 161, 0.3);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 102, 161, 0.2);
 
         .space-img {
           width: 100%;
           height: 100%;
           object-fit: cover;
-          filter: contrast(1.1) brightness(0.85);
-          transition: transform 0.7s var(--ease-serotoninn);
+          transition: transform 0.6s var(--ease-bubble);
 
           &:hover {
-            transform: scale(1.04);
+            transform: scale(1.05);
           }
         }
 
         .space-img-overlay {
           position: absolute;
           inset: 0;
-          background: linear-gradient(135deg, rgba(10, 10, 11, 0.45), transparent);
+          background: linear-gradient(135deg, rgba(22, 14, 34, 0.45), transparent);
           pointer-events: none;
         }
       }
@@ -160,59 +315,60 @@
         align-items: flex-start;
 
         .space-badge {
-          font-family: var(--font-body);
-          font-size: 0.72rem;
-          letter-spacing: 0.28em;
-          color: var(--color-accent-soft);
-          margin-bottom: 0.95rem;
-          font-weight: 600;
+          font-family: var(--font-heading);
+          font-size: 0.75rem;
+          letter-spacing: 0.12em;
+          color: var(--color-bubble-pink);
+          margin-bottom: 0.85rem;
+          font-weight: 700;
+          text-transform: uppercase;
         }
 
         .space-title {
-          font-family: var(--font-display);
-          font-size: clamp(2.2rem, 3.8vw, 3.4rem);
-          letter-spacing: var(--letter-spacing-wide);
-          margin-bottom: 1.6rem;
+          font-family: var(--font-heading);
+          font-size: clamp(2rem, 3.5vw, 3rem);
+          font-weight: 800;
+          letter-spacing: -0.01em;
+          margin-bottom: 1.2rem;
+          color: #ffffff;
         }
 
         .space-lead {
-          font-family: var(--font-display);
-          font-size: 1.2rem;
-          font-style: italic;
-          color: var(--color-metal);
+          font-family: var(--font-body);
+          font-size: 1.15rem;
+          color: var(--color-bubble-lavender);
           line-height: 1.5;
-          margin-bottom: 1.1rem;
+          margin-bottom: 1rem;
         }
 
         .space-body {
           font-family: var(--font-body);
-          font-size: 0.92rem;
+          font-size: 0.94rem;
           color: var(--color-text-muted);
           line-height: 1.65;
-          margin-bottom: 2.2rem;
+          margin-bottom: 2rem;
         }
 
         .space-stats {
           display: flex;
-          gap: 3.5rem;
-          margin-bottom: 1rem;
+          gap: 3rem;
 
           .stat-item {
             display: flex;
             flex-direction: column;
 
             .stat-val {
-              font-family: var(--font-display);
-              font-size: 2.4rem;
-              font-weight: 600;
-              color: var(--color-text);
-              letter-spacing: 0.1em;
+              font-family: var(--font-heading);
+              font-size: 2.5rem;
+              font-weight: 800;
+              color: var(--color-bubble-pink);
             }
 
             .stat-lbl {
               font-family: var(--font-body);
-              font-size: 0.68rem;
-              letter-spacing: 0.2em;
+              font-size: 0.75rem;
+              letter-spacing: 0.08em;
+              font-weight: 600;
               color: var(--color-text-muted);
             }
           }
@@ -222,77 +378,78 @@
 
     // SPACES GRID
     .spaces-grid-container {
-      margin-top: 5.5rem;
+      margin-top: 5rem;
 
       .spaces-grid-title {
-        font-family: var(--font-display);
-        font-size: 1.25rem;
-        letter-spacing: 0.28em;
-        color: var(--color-accent-soft);
-        margin-bottom: 2.8rem;
+        font-family: var(--font-heading);
+        font-size: 1.35rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        color: var(--color-bubble-pink);
+        margin-bottom: 2.5rem;
         text-align: center;
         text-transform: uppercase;
       }
 
       .spaces-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 1.6rem;
 
         .space-card {
-          background: var(--color-bg-alt);
-          border: 1px solid rgba(184, 180, 176, 0.14);
-          padding: 1.9rem;
+          background: rgba(22, 14, 34, 0.7);
+          backdrop-filter: blur(14px);
+          border: 1px solid rgba(255, 102, 161, 0.2);
+          border-radius: 20px;
+          padding: 1.8rem;
           display: flex;
           flex-direction: column;
-          transition: all 0.4s var(--ease-serotoninn);
+          transition: all 0.4s var(--ease-bubble);
 
           &:hover {
-            border-color: var(--color-metal);
-            transform: translateY(-4px);
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65);
+            border-color: var(--color-bubble-pink);
+            transform: translateY(-5px);
+            box-shadow: 0 14px 32px rgba(255, 20, 147, 0.25);
           }
 
           .space-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.85rem;
+            margin-bottom: 0.75rem;
 
             .space-code {
-              font-family: var(--font-display);
-              font-size: 0.82rem;
-              letter-spacing: 0.2em;
-              color: var(--color-accent-soft);
+              font-family: var(--font-heading);
+              font-size: 0.85rem;
+              font-weight: 700;
+              color: var(--color-bubble-pink);
             }
 
             .space-capacity {
               font-family: var(--font-body);
-              font-size: 0.68rem;
-              letter-spacing: 0.15em;
-              color: var(--color-text-muted);
-              background: rgba(255, 255, 255, 0.05);
-              padding: 0.2rem 0.6rem;
-              border: 1px solid rgba(184, 180, 176, 0.12);
+              font-size: 0.72rem;
+              color: var(--color-bubble-lavender);
+              background: rgba(168, 85, 247, 0.15);
+              padding: 0.25rem 0.65rem;
+              border-radius: 9999px;
             }
           }
 
           .space-card-name {
-            font-family: var(--font-display);
-            font-size: 1.3rem;
-            letter-spacing: 0.1em;
-            color: var(--color-text);
+            font-family: var(--font-heading);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
             margin-bottom: 0.25rem;
           }
 
           .space-card-subtitle {
             font-family: var(--font-body);
-            font-size: 0.78rem;
-            letter-spacing: 0.1em;
-            color: var(--color-accent-soft);
-            margin-bottom: 1rem;
+            font-size: 0.82rem;
+            color: var(--color-bubble-pink);
+            margin-bottom: 0.85rem;
             display: block;
-            font-weight: 500;
+            font-weight: 600;
           }
 
           .space-card-desc {
@@ -300,28 +457,27 @@
             font-size: 0.88rem;
             color: var(--color-text-muted);
             line-height: 1.55;
-            margin-bottom: 1.35rem;
+            margin-bottom: 1.25rem;
           }
 
           .space-card-features {
             display: flex;
             flex-direction: column;
             gap: 0.35rem;
-            margin-bottom: 1.6rem;
+            margin-bottom: 1.5rem;
             margin-top: auto;
 
             .feature-tag {
               font-family: var(--font-body);
-              font-size: 0.78rem;
+              font-size: 0.8rem;
               color: var(--color-metal);
-              letter-spacing: 0.05em;
             }
           }
 
           .space-card-btn {
             width: 100%;
-            padding: 0.65rem 1rem;
-            font-size: 0.75rem;
+            padding: 0.75rem 1rem;
+            font-size: 0.8rem;
             text-align: center;
             cursor: pointer;
           }
@@ -330,16 +486,109 @@
     }
   }
 
-  // 5. SECCIÓN EQUIPO
+  // 6. SECCIÓN EQUIPO
   .team-section {
-    padding: 2.5rem 2rem 4.5rem;
-    max-width: 1350px;
+    padding: 3rem 2rem 5rem;
+    max-width: 1400px;
     margin: 0 auto;
 
     .team-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 2.2rem;
+      gap: 2rem;
+    }
+  }
+
+  // MODAL VIDEO REELS
+  .video-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1000;
+    background: rgba(10, 6, 16, 0.85);
+    backdrop-filter: blur(16px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+
+    .video-modal-content {
+      position: relative;
+      background: #191026;
+      border: 1px solid rgba(255, 102, 161, 0.4);
+      border-radius: 24px;
+      overflow: hidden;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 102, 161, 0.3);
+
+      .modal-close-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 10;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.6);
+        color: #ffffff;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+
+        &:hover {
+          background: var(--color-bubble-pink);
+        }
+      }
+
+      .modal-video-container {
+        width: 100%;
+        height: 480px;
+        background: #000;
+
+        .modal-video-player {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+
+      .modal-video-info {
+        padding: 1.5rem;
+
+        .modal-tag {
+          font-family: var(--font-heading);
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: var(--color-bubble-pink);
+          display: inline-block;
+          margin-bottom: 0.4rem;
+        }
+
+        .modal-title {
+          font-family: var(--font-heading);
+          font-size: 1.25rem;
+          font-weight: 700;
+          color: #ffffff;
+          margin-bottom: 0.4rem;
+        }
+
+        .modal-desc {
+          font-family: var(--font-body);
+          font-size: 0.88rem;
+          color: var(--color-text-muted);
+          margin-bottom: 1.25rem;
+        }
+
+        .modal-cta-btn {
+          width: 100%;
+        }
+      }
     }
   }
 }
@@ -351,8 +600,9 @@
       gap: 2.5rem;
 
       .space-image-wrapper {
-        height: 360px;
+        height: 340px;
       }
     }
   }
 }
+

@@ -4,10 +4,10 @@ import { HeroComponent } from '../../components/hero/hero.component';
 import { ServiceCardComponent } from '../../components/service-card/service-card.component';
 import { ProfessionalCardComponent } from '../../components/professional-card/professional-card.component';
 import { SectionDividerComponent } from '../../components/section-divider/section-divider.component';
-import { CatalogService } from '../../services/catalog.service';
+import { CatalogService, VideoReel } from '../../services/catalog.service';
 import { BookingService } from '../../services/booking.service';
 import { CursorService } from '../../services/cursor.service';
-import { ServiceItem, ServiceCategory } from '../../models/service.model';
+import { ServiceItem } from '../../models/service.model';
 import { Professional } from '../../models/professional.model';
 import { SpaceItem } from '../../models/space.model';
 
@@ -33,7 +33,11 @@ export class HomeComponent implements OnInit {
   filteredServices: ServiceItem[] = [];
   professionals: Professional[] = [];
   spaces: SpaceItem[] = [];
-  activeCategory: ServiceCategory | 'ALL' = 'ALL';
+  videoReels: VideoReel[] = [];
+  activeCategory: string = 'ALL';
+
+  activeReel: VideoReel | null = null;
+  showVideoModal: boolean = false;
 
   ngOnInit(): void {
     this.catalogService.getFeaturedServices().subscribe(services => {
@@ -48,15 +52,29 @@ export class HomeComponent implements OnInit {
     this.catalogService.getSpaces().subscribe(spaces => {
       this.spaces = spaces;
     });
+
+    this.catalogService.getVideoReels().subscribe(reels => {
+      this.videoReels = reels;
+    });
   }
 
-  filterCategory(category: ServiceCategory | 'ALL'): void {
+  filterCategory(category: string): void {
     this.activeCategory = category;
     if (category === 'ALL') {
       this.filteredServices = this.featuredServices;
     } else {
-      this.filteredServices = this.featuredServices.filter(s => s.category === category);
+      this.filteredServices = this.featuredServices.filter(s => s.category.toUpperCase() === category.toUpperCase());
     }
+  }
+
+  openVideoModal(reel: VideoReel): void {
+    this.activeReel = reel;
+    this.showVideoModal = true;
+  }
+
+  closeVideoModal(): void {
+    this.showVideoModal = false;
+    this.activeReel = null;
   }
 
   onReserve(service?: ServiceItem): void {
@@ -75,3 +93,4 @@ export class HomeComponent implements OnInit {
     this.cursorService.resetCursor();
   }
 }
+

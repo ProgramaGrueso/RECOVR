@@ -185,7 +185,7 @@
           <section class="stats-grid">
             <div class="stat-card">
               <span class="stat-label">INGRESOS DEL MES</span>
-              <h3 class="stat-value">$14,850 USD</h3>
+              <h3 class="stat-value">S/ 14,850 PEN</h3>
               <span class="stat-change positive">+12.4% vs mes anterior</span>
             </div>
             <div class="stat-card">
@@ -231,7 +231,7 @@
             </div>
             <div class="stat-card">
               <span class="stat-label">TOTAL EN CAJA HOY</span>
-              <h3 class="stat-value">${{ totalCollectedToday | number:'1.0-0' }} CLP</h3>
+              <h3 class="stat-value">S/ {{ totalCollectedToday | number:'1.0-0' }} PEN</h3>
               <span class="stat-change positive">Arqueo al día</span>
             </div>
           </section>
@@ -254,7 +254,7 @@
             </div>
             <div class="stat-card">
               <span class="stat-label">COMISIÓN ESTIMADA MES</span>
-              <h3 class="stat-value">$1,240,000 CLP</h3>
+              <h3 class="stat-value">S/ 4,250 PEN</h3>
               <span class="stat-change positive">35% de factor base</span>
             </div>
           </section>
@@ -777,22 +777,22 @@
         <section class="stats-grid">
           <div class="stat-card highlight">
             <span class="stat-label">TOTAL RECAUDADO HOY</span>
-            <h3 class="stat-value">${{ totalCollectedToday | number:'1.0-0' }} CLP</h3>
+            <h3 class="stat-value">S/ {{ totalCollectedToday | number:'1.0-0' }} PEN</h3>
             <span class="stat-change positive">{{ cashTransactions.length }} pagos registrados</span>
           </div>
           <div class="stat-card">
-            <span class="stat-label">POS TRANSBANK (TARJETAS)</span>
-            <h3 class="stat-value">${{ totalTransbank | number:'1.0-0' }} CLP</h3>
+            <span class="stat-label">POS TARJETAS (DÉBITO/CRÉDITO)</span>
+            <h3 class="stat-value">S/ {{ totalTransbank | number:'1.0-0' }} PEN</h3>
             <span class="stat-change">Comprobantes validados</span>
           </div>
           <div class="stat-card">
             <span class="stat-label">EFECTIVO EN CAJA</span>
-            <h3 class="stat-value">${{ totalCash | number:'1.0-0' }} CLP</h3>
-            <span class="stat-change">+ Base inicial ${{ cashRegisterInitial | number:'1.0-0' }}</span>
+            <h3 class="stat-value">S/ {{ totalCash | number:'1.0-0' }} PEN</h3>
+            <span class="stat-change">+ Base inicial S/ {{ cashRegisterInitial | number:'1.0-0' }}</span>
           </div>
           <div class="stat-card">
-            <span class="stat-label">STRIPE (PAGOS ONLINE)</span>
-            <h3 class="stat-value">${{ totalStripe | number:'1.0-0' }} CLP</h3>
+            <span class="stat-label">ONLINE / YAPE / PLIN / STRIPE</span>
+            <h3 class="stat-value">S/ {{ totalStripe | number:'1.0-0' }} PEN</h3>
             <span class="stat-change positive">Depósito automático</span>
           </div>
         </section>
@@ -815,24 +815,24 @@
               </select>
             </div>
             <div class="pos-input-group">
-              <label>Servicio / Protocolo</label>
+              <label>Servicio / Tratamiento Bubble</label>
               <select [(ngModel)]="newPayment.service">
-                <option value="Descompresión Miofascial">Descompresión Miofascial ($65.000)</option>
-                <option value="Masaje Deportivo">Masaje Deportivo ($58.000)</option>
-                <option value="Podología Clínica">Podología Clínica ($45.000)</option>
-                <option value="Pack 4 Sesiones">Pack 4 Sesiones ($220.000)</option>
+                <option value="Bubble Hydro Glow Facial">Bubble Hydro Glow Facial (S/ 130)</option>
+                <option value="Bubble Berry Relax Massage">Bubble Berry Relax Massage (S/ 150)</option>
+                <option value="Bubble Pop Podología Spa">Bubble Pop Podología Spa (S/ 85)</option>
+                <option value="Pack 4 Sesiones Bubble">Pack 4 Sesiones Bubble (S/ 450)</option>
               </select>
             </div>
             <div class="pos-input-group">
-              <label>Monto a Cobrar (CLP)</label>
+              <label>Monto a Cobrar (Soles - S/)</label>
               <input type="number" [(ngModel)]="newPayment.amount">
             </div>
             <div class="pos-input-group">
               <label>Medio de Pago</label>
               <select [(ngModel)]="newPayment.method">
-                <option value="POS TRANSBANK">POS Transbank (Débito/Crédito)</option>
+                <option value="POS TARJETA">POS Tarjeta (Débito/Crédito)</option>
                 <option value="EFECTIVO">Efectivo en Caja</option>
-                <option value="STRIPE WEB">Stripe Web / Transferencia</option>
+                <option value="YAPE / PLIN / TRANSFERENCIA">Yape / Plin / Transferencia</option>
               </select>
             </div>
             <button class="btn-charge" (click)="registerQuickPayment()">EMITIR COBRO ↗</button>
@@ -868,7 +868,7 @@
                     <td>
                       <span class="method-tag">{{ t.method }}</span>
                     </td>
-                    <td class="amount-cell">${{ t.amount | number:'1.0-0' }} CLP</td>
+                    <td class="amount-cell">S/ {{ t.amount | number:'1.2-2' }} PEN</td>
                     <td>{{ t.processedBy }}</td>
                     @if (currentUser().role === 'SUPER ADMIN' || currentUser().role === 'ADMINISTRADOR') {
                       <td>
@@ -965,7 +965,7 @@
               <div class="protocol-card">
                 <div class="protocol-header">
                   <span class="protocol-cat">{{ p.category }}</span>
-                  <span class="protocol-price">${{ p.price | number:'1.0-0' }} CLP</span>
+                  <span class="protocol-price">S/ {{ p.price | number:'1.0-0' }} PEN</span>
                 </div>
                 <h3>{{ p.name }}</h3>
                 <p>{{ p.desc }}</p>
@@ -1090,7 +1090,7 @@
                 </div>
                 <div class="alarm-detail-row">
                   <span>Valor Reservado:</span>
-                  <strong>${{ activeNextBooking.price.toLocaleString('es-CL') }} CLP</strong>
+                  <strong>S/ {{ activeNextBooking.price.toLocaleString('es-PE') }} PEN</strong>
                 </div>
 
                 <!-- Aviso de Límite de Cancelación / Indemnización -->
@@ -1099,7 +1099,7 @@
                     <span class="indemnity-icon">⚠️</span>
                     <div class="indemnity-text">
                       <strong>ALERTA DE INDEMNIZACIÓN POR CANCELACIÓN TARDÍA:</strong>
-                      <p>Faltan menos de 4 horas para tu turno. Si cancelas ahora o no te presentas a la sesión, se aplicará el cobro obligatorio de indemnización del <strong>50% ($32.500 CLP)</strong> por la reserva exclusiva de la kinesióloga y la cabina.</p>
+                      <p>Faltan menos de 4 horas para tu turno. Si cancelas ahora o no te presentas a la sesión, se aplicará el cobro obligatorio de indemnización del <strong>50% (S/ 65 PEN)</strong> por la reserva exclusiva de la especialista y la cabina.</p>
                     </div>
                   </div>
                 } @else {
@@ -1238,7 +1238,7 @@
                     <td>{{ b.service }}</td>
                     <td>{{ b.prof }}</td>
                     <td>{{ b.date }} &bull; {{ b.time }} HS</td>
-                    <td>${{ b.price.toLocaleString('es-CL') }} CLP</td>
+                    <td>S/ {{ b.price.toLocaleString('es-PE') }} PEN</td>
                     <td>
                       <span class="booking-status-tag" [attr.data-status]="b.status">
                         {{ b.status }}
@@ -1337,7 +1337,7 @@
                   <strong>ATENCIÓN:</strong> Faltan menos de 4 horas para tu sesión con <strong>{{ selectedBookingToCancel.prof }}</strong>.
                 </p>
                 <p>
-                  Al cancelar fuera de la ventana de anticipación obligatoria o no presentarte, se aplicará el cobro de una <strong>indemnización del 50% (${{ cancelWarningData.fee.toLocaleString('es-CL') }} CLP)</strong> para compensar los honorarios reservados de la especialista y la higienización de la suite.
+                  Al cancelar fuera de la ventana de anticipación obligatoria o no presentarte, se aplicará el cobro de una <strong>indemnización del 50% (S/ {{ cancelWarningData.fee.toLocaleString('es-PE') }} PEN)</strong> para compensar los honorarios reservados de la especialista y la higienización de la suite.
                 </p>
                 <p style="margin-top: 0.5rem; font-size: 0.8rem; color: #ffcdd2;">
                   * Consumirás 1 de tus 2 cancelaciones mensuales y no se reembolsará el cargo de indemnización.
@@ -1345,9 +1345,9 @@
               </div>
 
               <div class="cancel-booking-summary">
-                <div><strong>Protocolo:</strong> {{ selectedBookingToCancel.service }}</div>
+                <div><strong>Tratamiento:</strong> {{ selectedBookingToCancel.service }}</div>
                 <div><strong>Fecha y Hora:</strong> {{ selectedBookingToCancel.date }} a las {{ selectedBookingToCancel.time }} HS</div>
-                <div><strong>Monto de Indemnización:</strong> ${{ cancelWarningData.fee.toLocaleString('es-CL') }} CLP</div>
+                <div><strong>Monto de Indemnización:</strong> S/ {{ cancelWarningData.fee.toLocaleString('es-PE') }} PEN</div>
               </div>
 
               <p class="cancel-confirm-question">

@@ -1,27 +1,84 @@
 <main class="home-page">
   
-  <!-- 1. HERO -->
+  <!-- 1. HERO CON VIDEO BUBBLE -->
   <app-hero (reserveClick)="onReserve()"></app-hero>
 
-  <!-- 2. CATEGORÍAS (Estilo corchetes Serotoninn) -->
-  <section class="categories-section" id="categorias" aria-label="Categorías de recuperación">
+  <!-- 2. SECCIÓN VIDEO REELS (Videos de public/videos/) -->
+  <section class="video-reels-section" id="reels" aria-label="Demostraciones en Video de Tratamientos">
     <div class="section-header">
-      <span class="section-subtitle">[ ÁREAS DE TRATAMIENTO ]</span>
+      <span class="section-subtitle">✨ EXPERIENCIA MULTIMEDIA &bull; PUBLIC VIDEOS</span>
+      <h2 class="section-title">BUBBLE VIDEO REELS</h2>
+      <p class="section-description">
+        Descubre nuestros protocolos sensoriales en acción: hidrofaciales con microburbujas, masajes relajantes y tratamientos de bienestar.
+      </p>
+    </div>
+
+    <div
+      class="reels-grid drag-scroll-container"
+      (mouseenter)="setCursor('✨ REPRODUCIR VIDEO')"
+      (mouseleave)="resetCursor()">
+      <div
+        class="reel-card"
+        *ngFor="let reel of videoReels"
+        (click)="openVideoModal(reel)">
+        <div class="reel-video-wrapper">
+          <video
+            class="reel-video-preview"
+            [src]="reel.videoUrl"
+            [poster]="reel.posterUrl"
+            muted
+            loop
+            playsinline
+            onmouseover="this.play()"
+            onmouseout="this.pause()">
+          </video>
+          <span class="reel-tag">{{ reel.tag }}</span>
+          <div class="reel-play-btn">
+            <span>▶</span>
+          </div>
+          <div class="reel-overlay"></div>
+        </div>
+        <div class="reel-info">
+          <span class="reel-category">🫧 {{ reel.category }}</span>
+          <h4 class="reel-title">{{ reel.title }}</h4>
+          <p class="reel-subtitle">{{ reel.subtitle }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <app-section-divider></app-section-divider>
+
+  <!-- 3. CATEGORÍAS BUBBLE -->
+  <section class="categories-section" id="categorias" aria-label="Categorías de tratamientos">
+    <div class="section-header">
+      <span class="section-subtitle">🌸 MENÚ DE BIENESTAR</span>
       <h2 class="section-title">CATEGORÍAS DE SERVICIO</h2>
+      <p class="section-description">Selecciona tu área de cuidado corporal para filtrar nuestros tratamientos exclusivos.</p>
     </div>
 
     <div
       class="categories-brackets-grid drag-scroll-container"
-      (mouseenter)="setCursor('[ FILTRAR ]')"
+      (mouseenter)="setCursor('🫧 FILTRAR')"
       (mouseleave)="resetCursor()">
       <button
         class="bracket-card"
         [class.active]="activeCategory === 'ALL'"
         (click)="filterCategory('ALL')"
         id="cat-all">
-        <span class="bracket-code">[ TODOS ]</span>
-        <span class="bracket-name">PROTOCOLOS COMPLETOS</span>
-        <span class="bracket-count">[ 4 ]</span>
+        <span class="bracket-code">🌸 TODOS</span>
+        <span class="bracket-name">TODOS LOS TRATAMIENTOS</span>
+        <span class="bracket-count">6 PROTOCOLOS</span>
+      </button>
+
+      <button
+        class="bracket-card"
+        [class.active]="activeCategory === 'FACIAL'"
+        (click)="filterCategory('FACIAL')"
+        id="cat-facial">
+        <span class="bracket-code">✨ HIDROFACIAL</span>
+        <span class="bracket-name">MICROBURBUJAS & OXÍGENO</span>
+        <span class="bracket-count">DESDE S/ 130</span>
       </button>
 
       <button
@@ -29,9 +86,9 @@
         [class.active]="activeCategory === 'MASAJE'"
         (click)="filterCategory('MASAJE')"
         id="cat-masaje">
-        <span class="bracket-code">[ MASAJE TERAPÉUTICO ]</span>
-        <span class="bracket-name">TERAPIA MIOFASCIAL & DEPORTIVA</span>
-        <span class="bracket-count">[ 4 ]</span>
+        <span class="bracket-code">💖 MASAJE BUBBLE</span>
+        <span class="bracket-name">ACEITES & CUARZO ROSA</span>
+        <span class="bracket-count">DESDE S/ 150</span>
       </button>
 
       <button
@@ -39,22 +96,32 @@
         [class.active]="activeCategory === 'PODOLOGÍA'"
         (click)="filterCategory('PODOLOGÍA')"
         id="cat-podologia">
-        <span class="bracket-code">[ PODOLOGÍA CLÍNICA ]</span>
-        <span class="bracket-name">ACONDICIONAMIENTO PLANTAR</span>
-        <span class="bracket-count">[ 4 ]</span>
+        <span class="bracket-code">🫧 PODOLOGÍA SPA</span>
+        <span class="bracket-name">BAÑOS DE SALES & JELLY</span>
+        <span class="bracket-count">DESDE S/ 85</span>
+      </button>
+
+      <button
+        class="bracket-card"
+        [class.active]="activeCategory === 'CORPORAL'"
+        (click)="filterCategory('CORPORAL')"
+        id="cat-corporal">
+        <span class="bracket-code">🌸 SCULPT & DRENAJE</span>
+        <span class="bracket-name">PRESOTERAPIA & MODELADO</span>
+        <span class="bracket-count">DESDE S/ 120</span>
       </button>
     </div>
   </section>
 
   <app-section-divider></app-section-divider>
 
-  <!-- 3. PROTOCOLOS DESTACADOS -->
-  <section class="protocols-section" id="protocolos" aria-label="Protocolos destacados">
+  <!-- 4. TRATAMIENTOS BUBBLE DESTACADOS (PRECIOS EN SOLES) -->
+  <section class="protocols-section" id="protocolos" aria-label="Tratamientos Bubble destacados">
     <div class="section-header">
-      <span class="section-subtitle">[ RITUALES DE RECUPERACIÓN ]</span>
-      <h2 class="section-title">PROTOCOLOS DESTACADOS</h2>
+      <span class="section-subtitle">🫧 CATÁLOGO DE TRATAMIENTOS &bull; EN SOLES (S/)</span>
+      <h2 class="section-title">RITUALES &bull; BUBBLE TREATMENTS</h2>
       <p class="section-description">
-        Tratamientos diseñados bajo estándares de máxima exigencia para la restauración física integral.
+        Tratamientos sensoriales diseñados bajo los más altos estándares de cosmetología, relax y cuidado corporal.
       </p>
     </div>
 
@@ -69,38 +136,38 @@
 
   <app-section-divider></app-section-divider>
 
-  <!-- 4. EL ESPACIO (8 SUITES RECOVR) -->
-  <section class="space-section" id="espacio" aria-label="El espacio RECOVR">
+  <!-- 5. EL ESPACIO (BUBBLE SUITES) -->
+  <section class="space-section" id="espacio" aria-label="El espacio Bubblegum Spa">
     <div class="space-container">
       <div
         class="space-image-wrapper"
-        (mouseenter)="setCursor('[ SANCTUM 01 ]')"
+        (mouseenter)="setCursor('🌸 BUBBLE SANCTUM')"
         (mouseleave)="resetCursor()">
         <img
           src="assets/Krea2-155013_00001_.png"
-          alt="Sala de tratamiento gótica RECOVR con espejos y candelabros"
+          alt="Bubblegum Spa Suite privada con iluminación envolvente"
           class="space-img"
           loading="lazy" />
         <div class="space-img-overlay"></div>
       </div>
 
       <div class="space-content">
-        <span class="space-badge">[ ATMÓSFERA & SANCTUM ]</span>
-        <h2 class="space-title">EL ESPACIO & 8 SUITES DE TRATAMIENTO</h2>
+        <span class="space-badge">🫧 ATMÓSFERA SENSORIAL &bull; PINK WELLNESS</span>
+        <h2 class="space-title">BUBBLE SUITES & CABINAS PRIVADAS</h2>
         <p class="space-lead">
-          Un ambiente sobrio, confidencial y concebido bajo una arquitectura visual gótico-editorial.
+          Un entorno diseñado para desconectar los sentidos mediante aromaterapia dulce, cromoterapia suave y confort absoluto.
         </p>
         <p class="space-body">
-          8 áreas privadas e insonorizadas, iluminación tenue de penumbra controlada y equipamiento de precisión médica para garantizar la total inmersión en la regeneración corporal.
+          Cabinas privadas 100% insonorizadas, camillas ergonómicas climatizadas y estaciones de podología con baños efervescentes para que tu visita sea inolvidable.
         </p>
         <div class="space-stats">
           <div class="stat-item">
             <span class="stat-val">100%</span>
-            <span class="stat-lbl">PRIVACIDAD INDIVIDUAL</span>
+            <span class="stat-lbl">PRIVACIDAD & CONFORT</span>
           </div>
           <div class="stat-item">
-            <span class="stat-val">08</span>
-            <span class="stat-lbl">ESPACIOS & SUITES</span>
+            <span class="stat-val">04</span>
+            <span class="stat-lbl">BUBBLE SUITES VIP</span>
           </div>
         </div>
       </div>
@@ -108,10 +175,10 @@
 
     <!-- SUITES GRID -->
     <div class="spaces-grid-container">
-      <h3 class="spaces-grid-title">[ ÁREAS DE TRATAMIENTO — 8 ESPACIOS ]</h3>
+      <h3 class="spaces-grid-title">🫧 CABINAS & EXPERIENCIAS DISPONIBLES</h3>
       <div
         class="spaces-grid drag-scroll-container"
-        (mouseenter)="setCursor('[ DESLIZAR ]')"
+        (mouseenter)="setCursor('✨ DESLIZAR')"
         (mouseleave)="resetCursor()">
         <div class="space-card" *ngFor="let spc of spaces">
           <div class="space-card-header">
@@ -123,10 +190,10 @@
           <p class="space-card-desc">{{ spc.description }}</p>
           <div class="space-card-features">
             <span class="feature-tag" *ngFor="let feat of spc.features">
-              • {{ feat }}
+              ✨ {{ feat }}
             </span>
           </div>
-          <a (click)="onReserve()" class="btn-secondary space-card-btn">[ RESERVAR ÁREA ]</a>
+          <a (click)="onReserve()" class="btn-secondary space-card-btn">RESERVAR CABINA 🫧</a>
         </div>
       </div>
     </div>
@@ -134,13 +201,13 @@
 
   <app-section-divider></app-section-divider>
 
-  <!-- 5. EQUIPO -->
-  <section class="team-section" id="equipo" aria-label="Equipo profesional">
+  <!-- 6. EQUIPO DE ESPECIALISTAS -->
+  <section class="team-section" id="equipo" aria-label="Especialistas Bubble Spa">
     <div class="section-header">
-      <span class="section-subtitle">[ EXPERTOS EN ANATOMÍA & REHABILITACIÓN ]</span>
-      <h2 class="section-title">EQUIPO PROFESIONAL</h2>
+      <span class="section-subtitle">🌸 NUESTRAS TERAPEUTAS</span>
+      <h2 class="section-title">ESPECIALISTAS EN BIENESTAR</h2>
       <p class="section-description">
-        Kinesiólogos deportivos y podólogos clínicos especializados en alto rendimiento físico.
+        Profesionales certificadas en dermoestética facial, masoterapia relajante y podología spa.
       </p>
     </div>
 
@@ -155,4 +222,29 @@
 
   <app-section-divider></app-section-divider>
 
+  <!-- MODAL DE REPRODUCTOR DE VIDEO BUBBLE REEL -->
+  <div class="video-modal-backdrop" *ngIf="showVideoModal && activeReel" (click)="closeVideoModal()">
+    <div class="video-modal-content" (click)="$event.stopPropagation()">
+      <button class="modal-close-btn" (click)="closeVideoModal()">✕</button>
+      <div class="modal-video-container">
+        <video
+          [src]="activeReel.videoUrl"
+          controls
+          autoplay
+          playsinline
+          class="modal-video-player">
+        </video>
+      </div>
+      <div class="modal-video-info">
+        <span class="modal-tag">{{ activeReel.tag }}</span>
+        <h3 class="modal-title">{{ activeReel.title }}</h3>
+        <p class="modal-desc">{{ activeReel.subtitle }}</p>
+        <button class="btn-primary modal-cta-btn" (click)="closeVideoModal(); onReserve()">
+          <span>🫧 Reservar Tratamiento en Soles (S/)</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
 </main>
+
