@@ -2,6 +2,7 @@ package com.recovr.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.recovr.backend.entity.Cliente;
+import com.recovr.backend.security.JwtService;
 import com.recovr.backend.service.ClienteService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -33,6 +35,12 @@ public class ClienteControllerTest {
 
     @MockBean
     private ClienteService clienteService;
+
+    @MockBean
+    private JwtService jwtService;
+
+    @MockBean
+    private UserDetailsService userDetailsService;
 
     @Autowired
     private ObjectMapper objectMapper;
