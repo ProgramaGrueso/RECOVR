@@ -1,38 +1,32 @@
 <section class="catalog-page">
-  <div class="section-video-bg" aria-hidden="true">
-    <video class="section-bg-video" poster="assets/Krea2-194000_00001_.png" autoplay muted loop playsinline preload="auto">
-      <source src="assets/catalogo.mp4" type="video/mp4" />
-    </video>
-    <div class="section-video-overlay"></div>
+  <div class="catalog-header">
+    <span class="subhead">🫧 MENÚ DE PROTOCOLOS &bull; EN SOLES (S/)</span>
+    <h1 class="title">CATÁLOGO BUBBLE SPA</h1>
+    <p class="desc">Hidrofaciales de microburbujas, masajes relajantes sensoriales, podología spa y remodelación corporal.</p>
   </div>
 
-  <div class="catalog-content">
-    <div class="catalog-header">
-      <span class="subhead">[ INVENTARIO TÉCNICO ]</span>
-      <h1 class="title">CATÁLOGO DE SERVICIOS</h1>
-      <p class="desc">Tratamientos miofasciales, kinesiología deportiva y podología clínica reconstructiva.</p>
-    </div>
-
-    <div class="category-filters">
-      <button class="filter-btn" [class.active]="selectedCategory === 'ALL'" (click)="setCategory('ALL')">[ TODOS ] [ 4 ]</button>
-      <button class="filter-btn" [class.active]="selectedCategory === 'MASAJE'" (click)="setCategory('MASAJE')">[ MASAJE TERAPÉUTICO ] [ 2 ]</button>
-      <button class="filter-btn" [class.active]="selectedCategory === 'PODOLOGÍA'" (click)="setCategory('PODOLOGÍA')">[ PODOLOGÍA CLÍNICA ] [ 2 ]</button>
-    </div>
-
-    <div class="catalog-grid" *ngIf="isLoading">
-      <app-service-card *ngFor="let item of [1,2,3,4]" [isLoading]="true"></app-service-card>
-    </div>
-
-    <div class="catalog-grid" *ngIf="!isLoading">
-      <app-service-card
-        *ngFor="let s of filteredServices"
-        [service]="s"
-        [isLoading]="false"
-        (reserve)="onReserve($event)">
-      </app-service-card>
-    </div>
-
-    <app-section-divider></app-section-divider>
+  <div class="category-filters">
+    <button class="filter-btn" [class.active]="selectedCategory === 'ALL'" (click)="setCategory('ALL')">🌸 TODOS (6)</button>
+    <button class="filter-btn" [class.active]="selectedCategory === 'FACIAL'" (click)="setCategory('FACIAL')">✨ HIDROFACIAL (S/ 130)</button>
+    <button class="filter-btn" [class.active]="selectedCategory === 'MASAJE'" (click)="setCategory('MASAJE')">💖 MASAJE BUBBLE (S/ 150)</button>
+    <button class="filter-btn" [class.active]="selectedCategory === 'PODOLOGÍA'" (click)="setCategory('PODOLOGÍA')">🫧 PODOLOGÍA SPA (S/ 85 - S/ 95)</button>
+    <button class="filter-btn" [class.active]="selectedCategory === 'CORPORAL'" (click)="setCategory('CORPORAL')">🌸 CORPORAL & PRESOTERAPIA (S/ 120 - S/ 160)</button>
   </div>
+
+  <div class="catalog-grid" *ngIf="isLoading">
+    <app-service-card *ngFor="let item of [1,2,3,4,5,6]" [isLoading]="true"></app-service-card>
+  </div>
+
+  <div class="catalog-grid" *ngIf="!isLoading">
+    <app-service-card
+      *ngFor="let s of filteredServices"
+      [service]="s"
+      [isLoading]="false"
+      (reserve)="onReserve($event)">
+    </app-service-card>
+  </div>
+
+  <app-section-divider></app-section-divider>
 </section>
+
 

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, ViewChild, ElementRef, AfterViewInit, inject } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild, ElementRef, AfterViewInit, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BookingService } from '../../services/booking.service';
 import { CursorService } from '../../services/cursor.service';
@@ -10,7 +10,7 @@ import { CursorService } from '../../services/cursor.service';
   templateUrl: './hero.component.html',
   styleUrls: ['./hero.component.scss']
 })
-export class HeroComponent implements AfterViewInit {
+export class HeroComponent implements OnInit, AfterViewInit {
   private bookingService = inject(BookingService);
   private cursorService = inject(CursorService);
 
@@ -18,15 +18,30 @@ export class HeroComponent implements AfterViewInit {
   @ViewChild('heroVideo') heroVideoRef?: ElementRef<HTMLVideoElement>;
 
   isVideoFailed = false;
+  videoSource = 'videos/bubble-hero.mp4';
+  showVideo = true;
+  
+  ngOnInit(): void {
+    this.showVideo = true;
+  }
 
   ngAfterViewInit(): void {
     const video = this.heroVideoRef?.nativeElement;
     if (video) {
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          this.isVideoFailed = true;
-        });
+      const tryPlay = () => {
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(() => {
+            // fallback silently
+          });
+        }
+      };
+
+      if (video.readyState >= 2) {
+        tryPlay();
+      } else {
+        video.addEventListener('loadeddata', tryPlay);
+        video.addEventListener('canplay', tryPlay);
       }
     }
   }
@@ -48,3 +63,4 @@ export class HeroComponent implements AfterViewInit {
     this.cursorService.resetCursor();
   }
 }
+

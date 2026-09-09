@@ -1,0 +1,19 @@
+@if (showSplash) {
+  <div class="splash-screen-container" [class.fade-out]="isFadingOut">
+    <video
+      #splashVideo
+      class="splash-video"
+      src="videos/bubble-space.mp4"
+      autoplay
+      [muted]="true"
+      playsinline
+      preload="auto"
+      (ended)="onVideoEnded()">
+    </video>
+    <div class="splash-bubble-loader">
+      <span class="bubble-icon">🫧</span>
+      <span class="splash-brand">RECOVR BUBBLEGUM SPA</span>
+    </div>
+  </div>
+}
+

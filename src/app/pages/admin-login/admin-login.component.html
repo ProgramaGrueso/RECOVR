@@ -1,0 +1,222 @@
+<main class="login-wrapper">
+  <a routerLink="/" class="back-button" title="Volver al inicio">
+    <span>← Volver a la Web Pública</span>
+  </a>
+
+  <div class="login-box">
+    <div class="login-icon">
+      <app-brand-mark size="md" color="var(--color-metal)"></app-brand-mark>
+    </div>
+
+    <h1 class="login-headline">ACCESO SANCTUM</h1>
+
+
+    <!-- ========================================================= -->
+    <!-- MODO 1: PORTAL CLIENTE / PACIENTES                        -->
+    <!-- ========================================================= -->
+    @if (loginMode === 'CLIENT') {
+      <div class="client-auth-card animate-fade">
+        <!-- Sub-pestañas: Iniciar Sesión vs Registro -->
+        <div class="sub-tabs">
+          <button
+            type="button"
+            class="sub-tab-btn"
+            [class.active]="clientTab === 'LOGIN'"
+            (click)="setClientTab('LOGIN')">
+            Iniciar Sesión
+          </button>
+          <button
+            type="button"
+            class="sub-tab-btn"
+            [class.active]="clientTab === 'REGISTER'"
+            (click)="setClientTab('REGISTER')">
+            Crear Cuenta Nueva
+          </button>
+        </div>
+
+
+
+        <!-- FORMULARIO LOGIN CLIENTE -->
+        @if (clientTab === 'LOGIN') {
+          <form (ngSubmit)="submitClientLogin()" class="minimal-login-form">
+            <div class="input-group">
+              <span class="input-label-tag">[ CORREO O ID ]</span>
+              <input
+                type="text"
+                name="clientEmail"
+                [(ngModel)]="clientEmail"
+                placeholder="ej. carlos@gmail.com o cli-01"
+                required />
+            </div>
+
+            <div class="input-group">
+              <span class="input-label-tag">[ CONTRASEÑA ]</span>
+              <input
+                type="password"
+                name="clientPassword"
+                [(ngModel)]="clientPassword"
+                placeholder="••••••••"
+                required />
+            </div>
+
+            <div class="options-row">
+              <label class="remember">
+                <input type="checkbox" name="rememberMe" [(ngModel)]="rememberMe" />
+                <span>Recordarme</span>
+              </label>
+              <a class="forgot" (click)="forgotPassword()">¿Olvidaste tu contraseña?</a>
+            </div>
+
+            @if (error) {
+              <div class="error-msg">{{ error }}</div>
+            }
+            @if (infoMessage) {
+              <div class="info-msg">{{ infoMessage }}</div>
+            }
+            @if (successMessage) {
+              <div class="success-msg">{{ successMessage }}</div>
+            }
+
+            <button type="submit" class="btn-login">
+              [ INGRESAR A MI CUENTA ]
+            </button>
+
+
+          </form>
+        }
+
+        <!-- FORMULARIO REGISTRO CLIENTE -->
+        @if (clientTab === 'REGISTER') {
+          <form (ngSubmit)="submitClientRegister()" class="minimal-login-form">
+            <div class="input-group">
+              <span class="input-label-tag">[ NOMBRE Y APELLIDO * ]</span>
+              <input
+                type="text"
+                name="regName"
+                [(ngModel)]="regName"
+                placeholder="Ej. Roberto Soto"
+                required />
+            </div>
+
+            <div class="input-group">
+              <span class="input-label-tag">[ CORREO ELECTRÓNICO * ]</span>
+              <input
+                type="email"
+                name="regEmail"
+                [(ngModel)]="regEmail"
+                placeholder="roberto@empresa.cl"
+                required />
+            </div>
+
+            <div class="input-group">
+              <span class="input-label-tag">[ TELÉFONO CELULAR * ]</span>
+              <input
+                type="tel"
+                name="regPhone"
+                [(ngModel)]="regPhone"
+                placeholder="+56 9 1234 5678"
+                required />
+            </div>
+
+            <div class="input-group">
+              <span class="input-label-tag">[ CONTRASEÑA * ]</span>
+              <input
+                type="password"
+                name="regPassword"
+                [(ngModel)]="regPassword"
+                placeholder="Mínimo 6 caracteres"
+                required />
+            </div>
+
+            <div class="input-group">
+              <span class="input-label-tag">[ CONFIRMAR CONTRASEÑA * ]</span>
+              <input
+                type="password"
+                name="regConfirmPassword"
+                [(ngModel)]="regConfirmPassword"
+                placeholder="Repite tu contraseña"
+                required />
+            </div>
+
+            @if (error) {
+              <div class="error-msg">{{ error }}</div>
+            }
+            @if (infoMessage) {
+              <div class="info-msg">{{ infoMessage }}</div>
+            }
+            @if (successMessage) {
+              <div class="success-msg">{{ successMessage }}</div>
+            }
+
+            <button type="submit" class="btn-login">
+              [ CREAR MI CUENTA NUEVA ]
+            </button>
+          </form>
+        }
+      </div>
+    }
+
+    <!-- ========================================================= -->
+    <!-- MODO 2: ACCESO PERSONAL & STAFF                           -->
+    <!-- ========================================================= -->
+    @if (loginMode === 'STAFF') {
+      <div class="staff-auth-card animate-fade">
+        <p class="staff-lead">
+          Acceso exclusivo para colaboradores del Sanctum (Kinesiólogas, Front-Desk, Gerencia y DevOps).
+        </p>
+
+
+
+        <form (ngSubmit)="submitStaffLogin()" class="minimal-login-form">
+          <div class="input-group">
+            <span class="input-label-tag">[ USUARIO O EMAIL CORPORATIVO ]</span>
+            <input
+              type="text"
+              name="staffUserId"
+              [(ngModel)]="staffUserId"
+              placeholder="devops@recovr.cl"
+              required />
+          </div>
+
+          <div class="input-group">
+            <span class="input-label-tag">[ CONTRASEÑA AUTORIZADA ]</span>
+            <input
+              type="password"
+              name="staffPassword"
+              [(ngModel)]="staffPassword"
+              placeholder="••••••••"
+              required />
+          </div>
+
+          <div class="options-row">
+            <label class="remember">
+              <input type="checkbox" name="rememberMe" [(ngModel)]="rememberMe" />
+              <span>Recordar sesión segura</span>
+            </label>
+            <a class="forgot" (click)="forgotPassword()">Soporte TI</a>
+          </div>
+
+          @if (error) {
+            <div class="error-msg">{{ error }}</div>
+          }
+          @if (infoMessage) {
+            <div class="info-msg">{{ infoMessage }}</div>
+          }
+
+          <button type="submit" class="btn-login">
+            [ INGRESAR AL CENTRO DE CONTROL ]
+          </button>
+        </form>
+      </div>
+    }
+
+    <div class="login-footer-security">
+      <span>🔒 Sistema RBAC Sanctum v2.0 • Sesiones aisladas por rol y token de seguridad</span>
+      <br><br>
+      <a style="font-size: 0.75rem; color: #666; cursor: pointer; text-decoration: underline;" (click)="resetLocalData()">
+        (Limpiar datos de prueba y perfiles antiguos)
+      </a>
+    </div>
+  </div>
+</main>
+

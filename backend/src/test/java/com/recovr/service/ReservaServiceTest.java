@@ -278,4 +278,13 @@ class ReservaServiceTest {
         assertNotNull(creada.getId());
         assertEquals(EstadoReserva.PENDIENTE, creada.getEstado());
     }
+
+    @Test
+    @DisplayName("Debe listar todas las reservas almacenadas")
+    void debeListarTodasLasReservas() {
+        reservaRepository.save(new Reserva(null, 1L, 1L, 1L, 1L, LocalDateTime.of(2026, 9, 21, 9, 0), 60, EstadoReserva.PENDIENTE, new BigDecimal("40.00")));
+        reservaRepository.save(new Reserva(null, 2L, 2L, 2L, 2L, LocalDateTime.of(2026, 9, 21, 11, 0), 60, EstadoReserva.CONFIRMADA, new BigDecimal("50.00")));
+
+        assertEquals(2, reservaService.listarTodas().size());
+    }
 }

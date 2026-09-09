@@ -1,8 +1,9 @@
-import { Component, EventEmitter, HostListener, Output, inject } from '@angular/core';
+import { Component, EventEmitter, HostListener, Output, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BookingService } from '../../services/booking.service';
 import { CursorService } from '../../services/cursor.service';
+import { AuthService } from '../../services/auth.service';
 import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
 
 @Component({
@@ -15,6 +16,10 @@ import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
 export class NavbarComponent {
   private bookingService = inject(BookingService);
   private cursorService = inject(CursorService);
+  auth = inject(AuthService);
+
+  currentUser = computed(() => this.auth.currentUser());
+  clientPoints = computed(() => this.auth.getClientPoints());
 
   @Output() reserveClick = new EventEmitter<void>();
   isMobileMenuOpen = false;
@@ -37,6 +42,11 @@ export class NavbarComponent {
     this.closeMobileMenu();
     this.bookingService.navigateToBooking();
     this.reserveClick.emit();
+  }
+
+  logout(): void {
+    this.closeMobileMenu();
+    this.auth.logout();
   }
 
   setCursor(label: string) {

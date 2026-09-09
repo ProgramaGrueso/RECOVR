@@ -6,22 +6,23 @@
   left: 0;
   width: 100%;
   z-index: 200;
-  background: transparent;
-  backdrop-filter: blur(0px);
-  border-bottom: 1px solid rgba(184, 180, 176, 0.08);
-  transition: all 0.4s var(--ease-serotoninn);
+  background: rgba(13, 8, 20, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 102, 161, 0.15);
+  transition: all 0.4s var(--ease-bubble);
 
   &.scrolled {
-    background: rgba(10, 10, 11, 0.94);
+    background: rgba(13, 8, 20, 0.92);
     backdrop-filter: blur(20px);
-    border-bottom-color: rgba(184, 180, 176, 0.18);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    border-bottom: 1px solid rgba(255, 102, 161, 0.3);
+    box-shadow: 0 4px 30px rgba(255, 20, 147, 0.15);
   }
 
   .navbar-container {
     max-width: 1440px;
     margin: 0 auto;
-    padding: 1.4rem 2.5rem;
+    padding: 1rem 2.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -32,58 +33,77 @@
       gap: 0.85rem;
       text-decoration: none;
 
-      .brand-text {
-        font-family: var(--font-display);
-        font-size: 1.35rem;
-        font-weight: 500;
-        letter-spacing: var(--letter-spacing-ultra);
-        color: var(--color-text);
-        transition: color 0.3s var(--ease-serotoninn);
+      .brand-text-group {
+        display: flex;
+        flex-direction: column;
       }
 
-      &:hover .brand-text {
-        color: var(--color-metal);
+      .brand-text {
+        font-family: var(--font-display);
+        font-size: 1.45rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        background: var(--gradient-bubble);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .brand-subtext {
+        font-family: var(--font-heading);
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        color: var(--color-bubble-pink);
+        text-transform: uppercase;
+        margin-top: -3px;
       }
     }
 
-    .menu-toggle-btn {
-      font-family: var(--font-body);
-      font-size: 0.8rem;
-      font-weight: 600;
-      letter-spacing: 0.22em;
-      color: var(--color-text);
-      background: transparent;
-      border: 1px solid rgba(184, 180, 176, 0.25);
-      padding: 0.55rem 1.25rem;
-      cursor: pointer;
-      transition: all 0.3s var(--ease-serotoninn);
+    .navbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
 
-      &:hover {
-        border-color: var(--color-accent-soft);
+      .menu-toggle-btn {
+        font-family: var(--font-heading);
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
         color: var(--color-text);
-        background: rgba(92, 26, 43, 0.2);
-        box-shadow: 0 0 16px rgba(92, 26, 43, 0.5);
+        background: rgba(255, 102, 161, 0.12);
+        border: 1px solid rgba(255, 102, 161, 0.35);
+        border-radius: 9999px;
+        padding: 0.55rem 1.35rem;
+        cursor: pointer;
+        transition: all 0.3s var(--ease-bubble);
+
+        &:hover {
+          border-color: var(--color-bubble-pink);
+          background: rgba(255, 102, 161, 0.25);
+          box-shadow: 0 0 16px rgba(255, 102, 161, 0.4);
+          transform: scale(1.05);
+        }
       }
     }
   }
 }
 
-// Fullscreen Overlay Menu (Serotoninn Style)
+// Fullscreen Overlay Menu Bubblegum
 .fullscreen-nav-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   z-index: 150;
-  background-color: var(--color-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: radial-gradient(circle at center, #241438 0%, #0d0814 100%);
   opacity: 0;
   pointer-events: none;
-  transform: scale(0.98);
-  transition: opacity 0.4s var(--ease-serotoninn), transform 0.4s var(--ease-serotoninn);
+  transform: scale(0.96);
+  transition: opacity 0.4s var(--ease-bubble), transform 0.4s var(--ease-bubble);
+  overflow-y: auto;
+  overflow-x: hidden;
 
   &.open {
     opacity: 1;
@@ -95,24 +115,25 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between;
-    height: 80vh;
-    max-height: 700px;
+    justify-content: flex-start;
+    min-height: 100%;
     width: 100%;
     max-width: 900px;
-    padding: 2.5rem;
+    margin: 0 auto;
+    padding: 5rem 2.5rem 3rem 2.5rem;
+    gap: 2rem;
 
     .overlay-brand {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      opacity: 0.6;
 
       .overlay-wordmark {
-        font-family: var(--font-display);
-        font-size: 0.95rem;
-        letter-spacing: var(--letter-spacing-ultra);
-        color: var(--color-metal);
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        color: var(--color-bubble-pink);
       }
     }
 
@@ -120,44 +141,68 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1.4rem;
+      gap: 1.1rem;
 
       .overlay-link {
         font-family: var(--font-display);
-        font-size: clamp(1.8rem, 4vw, 3.2rem);
-        font-weight: 500;
-        letter-spacing: 0.22em;
+        font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+        font-weight: 600;
+        letter-spacing: 0.04em;
         color: var(--color-text);
         text-transform: uppercase;
-        transition: all 0.3s var(--ease-serotoninn);
+        transition: all 0.3s var(--ease-bubble);
         text-decoration: none;
         cursor: pointer;
 
         &:hover {
-          color: var(--color-accent-soft);
-          letter-spacing: 0.3em;
-          text-shadow: 0 0 24px rgba(122, 46, 63, 0.7);
+          color: var(--color-bubble-pink);
+          transform: scale(1.08) translateY(-2px);
+          text-shadow: 0 0 20px rgba(255, 102, 161, 0.6);
         }
 
         &.overlay-cta {
-          color: var(--color-metal);
-          font-size: clamp(1.4rem, 3vw, 2.4rem);
-          margin-top: 1rem;
-          border-bottom: 1px solid var(--color-accent);
+          background: var(--gradient-bubble-btn);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          font-size: clamp(1.4rem, 3vw, 2.2rem);
+          margin-top: 0.5rem;
+          border-bottom: 2px solid var(--color-bubble-pink);
 
           &:hover {
-            color: var(--color-text);
-            border-color: var(--color-accent-soft);
+            transform: scale(1.1);
+          }
+        }
+
+        &.overlay-login-link {
+          color: var(--color-bubble-lavender);
+          font-family: var(--font-heading);
+          font-size: clamp(1rem, 2.2vw, 1.4rem);
+          letter-spacing: 0.08em;
+          margin-top: 0.5rem;
+          padding: 0.5rem 1.4rem;
+          border: 1px solid rgba(255, 102, 161, 0.35);
+          background: rgba(255, 102, 161, 0.12);
+          border-radius: 9999px;
+          transition: all 0.3s var(--ease-bubble);
+
+          &:hover {
+            color: #ffffff;
+            border-color: var(--color-bubble-pink);
+            background: rgba(255, 102, 161, 0.3);
+            box-shadow: 0 0 20px rgba(255, 102, 161, 0.4);
           }
         }
       }
     }
 
     .overlay-footer {
+      margin-top: auto;
+      text-align: center;
+
       .sanctum-tag {
-        font-family: var(--font-body);
-        font-size: 0.7rem;
-        letter-spacing: 0.3em;
+        font-family: var(--font-heading);
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
         color: var(--color-text-muted);
       }
     }
@@ -166,11 +211,11 @@
 
 @media (max-width: 768px) {
   .navbar .navbar-container {
-    padding: 1rem 1.25rem;
+    padding: 0.85rem 1.25rem;
   }
 
   .fullscreen-nav-overlay .overlay-inner .overlay-menu-links .overlay-link {
-    font-size: 1.6rem;
-    letter-spacing: 0.15em;
+    font-size: 1.4rem;
   }
 }
+

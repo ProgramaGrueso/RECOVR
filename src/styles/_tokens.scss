@@ -1,35 +1,62 @@
 // src/styles/_tokens.scss
-// Tokens de diseño RECOVR — Estética Serotoninn 1:1 adaptada a RECOVR (Gótico-Editorial)
+// Tokens de diseño RECOVR — Estética Bubblegum Spa & Jelly Glow
 
 :root {
-  // Paleta RECOVR oficial
-  --color-bg: #0A0A0B;
-  --color-bg-alt: #141014;
-  --color-accent: #5C1A2B;
-  --color-accent-soft: #7A2E3F;
-  --color-text: #F2EDEA;
-  --color-text-muted: #8A8285;
-  --color-metal: #B8B4B0;
+  // Paleta Bubblegum Spa oficial
+  --color-bg: #0d0814;
+  --color-bg-alt: #160e22;
+  --color-bg-card: rgba(255, 255, 255, 0.04);
+  --color-bg-card-hover: rgba(255, 255, 255, 0.08);
+  --color-card-border: rgba(255, 105, 180, 0.22);
+  --color-card-border-hover: rgba(255, 105, 180, 0.55);
 
-  // Tipografía Serotoninn Escalada
-  --font-display: 'Bodoni Moda', serif;
-  --font-body: 'Inter', sans-serif;
+  // Acentos Bubblegum / Candy / Neon Pastel
+  --color-bubble-pink: #ff66a1;
+  --color-bubble-hotpink: #ff1493;
+  --color-bubble-magenta: #e02475;
+  --color-bubble-purple: #a855f7;
+  --color-bubble-lavender: #c084fc;
+  --color-bubble-cyan: #38bdf8;
+  --color-bubble-mint: #34d399;
+  --color-bubble-glow: rgba(255, 102, 161, 0.35);
 
-  // Tracking y espaciado editorial
-  --letter-spacing-tight: -0.04em;
-  --letter-spacing-normal: 0.05em;
-  --letter-spacing-wide: 0.25em;
-  --letter-spacing-ultra: 0.45em;
+  --color-accent: #ff66a1;
+  --color-accent-soft: #ff8ec2;
+  --color-text: #fff5f9;
+  --color-text-muted: #c9b5c7;
+  --color-metal: #dfcfe0;
 
-  // Motion & Cubic Beziers Serotoninn 1:1
-  --ease-serotoninn: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-out-smooth: cubic-bezier(0.25, 1, 0.5, 1);
+  // Degradados Bubblegum
+  --gradient-bubble: linear-gradient(135deg, #ff66a1 0%, #c084fc 50%, #38bdf8 100%);
+  --gradient-bubble-soft: linear-gradient(135deg, rgba(255, 102, 161, 0.15) 0%, rgba(168, 85, 247, 0.12) 100%);
+  --gradient-bubble-btn: linear-gradient(135deg, #ff66a1 0%, #ff1493 50%, #a855f7 100%);
+  --gradient-bubble-glow: radial-gradient(circle at center, rgba(255, 102, 161, 0.25) 0%, transparent 70%);
+
+  // Tipografía Bubblegum
+  --font-display: 'Fredoka', 'Outfit', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+
+  // Espaciado y tracking
+  --letter-spacing-tight: -0.02em;
+  --letter-spacing-normal: 0.02em;
+  --letter-spacing-wide: 0.12em;
+  --letter-spacing-ultra: 0.22em;
+
+  // Curvas de animación elásticas / Bubble Pop
+  --ease-bubble: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-smooth: cubic-bezier(0.16, 1, 0.3, 1);
   --transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 // Variables SCSS
 $color-bg: var(--color-bg);
 $color-bg-alt: var(--color-bg-alt);
+$color-bubble-pink: var(--color-bubble-pink);
+$color-bubble-hotpink: var(--color-bubble-hotpink);
+$color-bubble-purple: var(--color-bubble-purple);
+$color-bubble-cyan: var(--color-bubble-cyan);
+$color-bubble-mint: var(--color-bubble-mint);
 $color-accent: var(--color-accent);
 $color-accent-soft: var(--color-accent-soft);
 $color-text: var(--color-text);
@@ -37,9 +64,10 @@ $color-text-muted: var(--color-text-muted);
 $color-metal: var(--color-metal);
 
 $font-display: var(--font-display);
+$font-heading: var(--font-heading);
 $font-body: var(--font-body);
 
-$ease-serotoninn: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-bubble: cubic-bezier(0.34, 1.56, 0.64, 1);
 $transition-smooth: cubic-bezier(0.16, 1, 0.3, 1);
 
 // Breakpoints
@@ -58,57 +86,83 @@ $breakpoint-lg: 1024px;
   }
 }
 
-// Mixins de firma Serotoninn
+// Mixins Bubblegum
 @mixin font-wordmark {
   font-family: $font-display;
-  text-transform: uppercase;
-  letter-spacing: var(--letter-spacing-ultra);
-  font-weight: 500;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  background: var(--gradient-bubble);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-@mixin serotoninn-bracket-label {
-  font-family: $font-body;
-  font-size: 0.75rem;
+@mixin bubble-pill-label {
+  font-family: $font-heading;
+  font-size: 0.78rem;
   font-weight: 600;
-  letter-spacing: 0.15em;
-  color: var(--color-metal);
+  letter-spacing: 0.08em;
+  color: var(--color-bubble-pink);
   text-transform: uppercase;
 }
 
-@mixin gothic-border-bottom {
-  border-bottom: 1px solid rgba(184, 180, 176, 0.12);
-  position: relative;
+@mixin bubble-glass-card {
+  background: rgba(22, 14, 34, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-card-border);
+  border-radius: 20px;
+  transition: all 0.35s var(--ease-bubble);
 
-  &::after {
-    content: '';
-    position: absolute;
-    bottom: -1px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60px;
-    height: 1px;
-    background-color: var(--color-accent);
+  &:hover {
+    border-color: var(--color-card-border-hover);
+    box-shadow: 0 12px 32px rgba(255, 102, 161, 0.22), 0 0 20px rgba(168, 85, 247, 0.15);
+    transform: translateY(-4px);
   }
 }
 
-// Keyframes & Skeleton
-@keyframes skeleton-pulse {
+// Keyframes animaciones Bubble
+@keyframes float-bubbles {
   0% {
-    background-color: #141014;
-    border-color: rgba(92, 26, 43, 0.2);
+    transform: translateY(0px) rotate(0deg);
   }
   50% {
-    background-color: #1a161c;
-    border-color: rgba(122, 46, 63, 0.4);
+    transform: translateY(-12px) rotate(4deg);
   }
   100% {
-    background-color: #141014;
-    border-color: rgba(92, 26, 43, 0.2);
+    transform: translateY(0px) rotate(0deg);
+  }
+}
+
+@keyframes bubble-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 102, 161, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 16px rgba(255, 102, 161, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 102, 161, 0);
+  }
+}
+
+@keyframes skeleton-bubble-pulse {
+  0% {
+    background-color: #191126;
+    border-color: rgba(255, 102, 161, 0.15);
+  }
+  50% {
+    background-color: #241838;
+    border-color: rgba(255, 102, 161, 0.35);
+  }
+  100% {
+    background-color: #191126;
+    border-color: rgba(255, 102, 161, 0.15);
   }
 }
 
 .skeleton-dark {
-  animation: skeleton-pulse 1.8s ease-in-out infinite;
-  background-color: #141014;
-  border: 1px solid rgba(92, 26, 43, 0.2);
+  animation: skeleton-bubble-pulse 1.8s ease-in-out infinite;
+  background-color: #191126;
+  border: 1px solid rgba(255, 102, 161, 0.2);
+  border-radius: 12px;
 }

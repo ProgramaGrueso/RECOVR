@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -152,5 +153,37 @@ class ReservaControllerTest {
                         .content(objectMapper.writeValueAsString(requestInvalido)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Solicitud Inválida"));
+    }
+
+    @Test
+    @DisplayName("GET /api/reservas debe retornar HTTP 200 OK con la lista de todas las reservas")
+    void debeListarTodasLasReservasYRetornar200() throws Exception {
+        Reserva r1 = new Reserva(null, 1L, 1L, 1L, 1L, LocalDateTime.of(2026, 9, 20, 10, 0), 60, EstadoReserva.PENDIENTE, new BigDecimal("50.00"));
+        Reserva r2 = new Reserva(null, 2L, 2L, 2L, 2L, LocalDateTime.of(2026, 9, 20, 12, 0), 60, EstadoReserva.CONFIRMADA, new BigDecimal("75.00"));
+        reservaRepository.save(r1);
+        reservaRepository.save(r2);
+
+        mockMvc.perform(get("/api/reservas"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[1].id").exists());
+    }
+
+    @Test
+    @DisplayName("DELETE /api/reservas/{id} debe ejecutar la baja lógica y retornar HTTP 204 No Content")
+    void debeEliminarReservaYRetornar204() throws Exception {
+        Reserva pendiente = new Reserva(
+                null, 1L, 2L, 3L, 4L,
+                LocalDateTime.of(2026, 9, 20, 14, 0),
+                60, EstadoReserva.PENDIENTE, new BigDecimal("65.00")
+        );
+        Reserva guardada = reservaRepository.save(pendiente);
+
+        mockMvc.perform(delete("/api/reservas/{id}", guardada.getId()))
+                .andExpect(status().isNoContent());
+
+        Reserva actualizada = reservaRepository.findById(guardada.getId()).orElseThrow();
+        assertEquals(EstadoReserva.CANCELADA, actualizada.getEstado());
     }
 }

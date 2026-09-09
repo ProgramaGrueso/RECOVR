@@ -19,8 +19,7 @@ public class Cliente {
 
     private String telefono;
 
-    // Referencia al usuario de Auth (modulo 1). No es una relacion JPA completa
-    // a proposito: el modulo de Auth maneja su propia tabla de usuarios/roles.
+    // Referencia al usuario de Auth. Se mantiene como ID para evitar ciclos de serializacion JSON.
     @Column(name = "usuario_id")
     private Long usuarioId;
 
