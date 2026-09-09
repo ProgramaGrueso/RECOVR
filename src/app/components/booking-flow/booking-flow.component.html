@@ -5,15 +5,15 @@
     <div class="auth-gate-modal animate-fade">
       <div class="gate-header">
         <div class="gate-brand">
-          <span class="gate-cross">✠</span>
-          <span class="gate-badge">[ IDENTIFICACIÓN OBLIGATORIA ]</span>
+          <span class="gate-cross">🫧</span>
+          <span class="gate-badge">IDENTIFICACIÓN DE PACIENTE</span>
         </div>
         <button type="button" class="gate-close-btn" (click)="closeAuthGate()" title="Cerrar">✕</button>
       </div>
 
       <h3 class="gate-title">ACCESO REQUERIDO PARA RESERVAR</h3>
       <p class="gate-subtitle">
-        Para garantizar la confidencialidad clínica, asegurar tu turno con la especialista seleccionada y acumular <strong>Puntos RECOVR Sanctum</strong> (canjeables por sesiones gratis), primero debes identificarte o crear tu cuenta.
+        Para asegurar tu turno con la especialista seleccionada y acumular <strong>Puntos Bubble Spa</strong> (canjeables por sesiones gratis), primero debes identificarte o crear tu cuenta.
       </p>
 
       <!-- Selector de Pestañas -->
@@ -23,14 +23,14 @@
           class="gate-tab-btn"
           [class.active]="authModalTab === 'LOGIN'"
           (click)="authModalTab = 'LOGIN'; authModalError = ''">
-          [ INICIAR SESIÓN ]
+          🌸 INICIAR SESIÓN
         </button>
         <button
           type="button"
           class="gate-tab-btn"
           [class.active]="authModalTab === 'REGISTER'"
           (click)="authModalTab = 'REGISTER'; authModalError = ''">
-          [ CREAR CUENTA NUEVA (+50 PTS) ]
+          ✨ CREAR CUENTA NUEVA (+50 PTS)
         </button>
       </div>
 
@@ -65,7 +65,7 @@
 
         <div class="gate-actions">
           <button type="button" class="btn-primary" (click)="submitAuthModalLogin()">
-            Ingresar y Continuar Reserva
+            <span>Ingresar y Continuar Reserva 🫧</span>
           </button>
           <button type="button" class="btn-secondary btn-demo-quick" (click)="quickLoginDemoClient()">
             ⚡ Acceso 1-Clic como Carlos Mendoza (Demo)
@@ -76,7 +76,7 @@
       <!-- Pestaña 2: Crear Cuenta Nueva -->
       <div class="gate-form-panel" *ngIf="authModalTab === 'REGISTER'">
         <div class="bonus-notice">
-          <span>🎁 <strong>Bono de Bienvenida:</strong> Recibe +50 Puntos Sanctum inmediatamente al registrarte.</span>
+          <span>🎁 <strong>Bono de Bienvenida:</strong> Recibe +50 Puntos Bubblegum inmediatamente al registrarte.</span>
         </div>
         <div class="form-group">
           <label class="form-label">NOMBRE Y APELLIDO COMPLETO *</label>
@@ -92,7 +92,7 @@
           <input
             type="email"
             class="form-input"
-            placeholder="roberto@empresa.cl"
+            placeholder="roberto@empresa.com"
             [(ngModel)]="authModalEmail"
             name="regEmail" />
         </div>
@@ -101,7 +101,7 @@
           <input
             type="tel"
             class="form-input"
-            placeholder="+56 9 1234 5678"
+            placeholder="+51 987 654 321"
             [(ngModel)]="authModalPhone"
             name="regPhone" />
         </div>
@@ -117,13 +117,13 @@
 
         <div class="gate-actions">
           <button type="button" class="btn-primary" (click)="submitAuthModalRegister()">
-            Crear Cuenta & Continuar Reserva (+50 Pts)
+            <span>Crear Cuenta & Continuar (+50 Pts) 🫧</span>
           </button>
         </div>
       </div>
 
       <div class="gate-footer">
-        <span>🔒 Resguardo confidencial bajo protocolos de privacidad médica RECOVR.</span>
+        <span>🔒 Privacidad garantizada bajo estándares de confidencialidad RECOVR Bubble Spa.</span>
       </div>
     </div>
   </div>
@@ -137,7 +137,7 @@
         [class.current]="currentStep === 1"
         (click)="goToStep(1)">
         <span class="step-num">01</span>
-        <span class="step-label">PROTOCOLO</span>
+        <span class="step-label">TRATAMIENTO</span>
       </div>
       <div class="step-line" [class.active]="currentStep >= 2"></div>
       <div
@@ -147,7 +147,7 @@
         [class.disabled]="!bookingForm.get('serviceId')?.value"
         (click)="bookingForm.get('serviceId')?.value && goToStep(2)">
         <span class="step-num">02</span>
-        <span class="step-label">PROFESIONAL</span>
+        <span class="step-label">ESPECIALISTA</span>
       </div>
       <div class="step-line" [class.active]="currentStep >= 3"></div>
       <div
@@ -187,17 +187,17 @@
   <!-- Success Screen -->
   <div class="flow-card success-card" *ngIf="bookingSuccess">
     <div class="success-icon-wrapper">
-      <app-brand-mark size="lg" color="var(--color-metal)"></app-brand-mark>
+      <app-brand-mark size="lg" color="var(--color-bubble-pink)"></app-brand-mark>
     </div>
 
-    <h3 class="success-title">RESERVA CONFIRMADA CON ÉXITO</h3>
+    <h3 class="success-title">RESERVA CONFIRMADA CON ÉXITO 🫧</h3>
     <p class="success-code">CÓDIGO DE SEGUIMIENTO: <strong>{{ bookingSuccess.id }}</strong></p>
 
     <!-- Tarjeta de Puntos Ganados -->
     <div class="points-reward-box" *ngIf="earnedPoints > 0">
-      <div class="reward-star">✦</div>
+      <div class="reward-star">✨</div>
       <div class="reward-text">
-        <h4>¡HAS ACUMULADO +{{ earnedPoints }} PUNTOS RECOVR SANCTUM!</h4>
+        <h4>¡HAS ACUMULADO +{{ earnedPoints }} PUNTOS BUBBLEGUM!</h4>
         <p>Tu saldo actualizado es de <strong>{{ totalClientPoints }} Puntos</strong>. Acércate a los 500 puntos para canjear tu próxima sesión gratuita.</p>
       </div>
     </div>
@@ -216,8 +216,8 @@
         <span>{{ bookingForm.value.clientName }}</span>
       </div>
       <div class="summary-row" *ngIf="selectedService">
-        <span>Protocolo:</span>
-        <span>{{ selectedService.name }}</span>
+        <span>Tratamiento:</span>
+        <span>{{ selectedService.name }} (S/ {{ selectedService.price }} PEN)</span>
       </div>
       <div class="summary-row" *ngIf="selectedProfessional">
         <span>Especialista:</span>
@@ -226,11 +226,11 @@
     </div>
 
     <p class="success-note">
-      Hemos enviado los detalles y el código QR de acceso a <em>{{ bookingForm.value.clientEmail }}</em>.
+      Hemos enviado los detalles y la confirmación de acceso a <em>{{ bookingForm.value.clientEmail }}</em>.
     </p>
 
     <div class="success-actions">
-      <a routerLink="/admin" class="btn-primary">Ver Mi Cuenta, Citas y Puntos ↗</a>
+      <a routerLink="/admin" class="btn-primary"><span>Ver Mi Cuenta & Puntos ↗</span></a>
       <button class="btn-secondary" (click)="resetFlow()">Reservar otra sesión</button>
     </div>
   </div>
@@ -241,7 +241,7 @@
 
       <!-- STEP 1: SERVICE SELECTION -->
       <div class="step-content" *ngIf="currentStep === 1">
-        <h3 class="step-heading">PASO 01 — SELECCIONA EL PROTOCOLO DE TRATAMIENTO</h3>
+        <h3 class="step-heading">PASO 01 — SELECCIONA EL TRATAMIENTO BUBBLE SPA</h3>
 
         <!-- Skeleton Loading State for Services -->
         <div class="services-list" *ngIf="isLoadingServices">
@@ -260,13 +260,13 @@
             (click)="selectService(s)">
             <div class="option-header">
               <span class="option-code">{{ s.code }}</span>
-              <span class="option-price">${{ s.price }} USD</span>
+              <span class="option-price">S/ {{ s.price }} Soles</span>
             </div>
             <h4 class="option-title">{{ s.name }}</h4>
             <p class="option-desc">{{ s.description }}</p>
             <div class="option-footer">
-              <span class="option-meta">{{ s.category }} &bull; {{ s.durationMinutes }} MINUTOS</span>
-              <span class="select-badge" *ngIf="bookingForm.get('serviceId')?.value === s.id">SELECCIONADO</span>
+              <span class="option-meta">🫧 {{ s.category }} &bull; ⏱ {{ s.durationMinutes }} MINUTOS</span>
+              <span class="select-badge" *ngIf="bookingForm.get('serviceId')?.value === s.id">SELECCIONADO ✨</span>
             </div>
           </div>
         </div>
@@ -274,7 +274,7 @@
 
       <!-- STEP 2: PROFESSIONAL SELECTION -->
       <div class="step-content" *ngIf="currentStep === 2">
-        <h3 class="step-heading">PASO 02 — SELECCIONA EL ESPECIALISTA HABILITADO</h3>
+        <h3 class="step-heading">PASO 02 — SELECCIONA LA ESPECIALISTA BUBBLE SPA</h3>
 
         <!-- Skeleton Loading State for Professionals -->
         <div class="professionals-list" *ngIf="isLoadingProfessionals">
@@ -298,15 +298,15 @@
             <div class="option-prof-info">
               <h4 class="option-prof-name">{{ p.name }}</h4>
               <p class="option-prof-title">{{ p.title }}</p>
-              <p class="option-prof-specialty">{{ p.specialty }}</p>
-              <span class="option-prof-avail">{{ p.availability }}</span>
+              <p class="option-prof-specialty">✨ {{ p.specialty }}</p>
+              <span class="option-prof-avail">🌸 {{ p.availability }}</span>
             </div>
-            <span class="select-badge" *ngIf="bookingForm.get('professionalId')?.value === p.id">SELECCIONADO</span>
+            <span class="select-badge" *ngIf="bookingForm.get('professionalId')?.value === p.id">SELECCIONADO ✨</span>
           </div>
         </div>
 
         <div class="step-actions">
-          <button type="button" class="btn-secondary" (click)="prevStep()">Volver a protocolos</button>
+          <button type="button" class="btn-secondary" (click)="prevStep()">Volver a tratamientos</button>
         </div>
       </div>
 
@@ -341,7 +341,7 @@
         <div class="step-actions">
           <button type="button" class="btn-secondary" (click)="prevStep()">Volver a especialista</button>
           <button type="button" class="btn-primary" [disabled]="!bookingForm.get('timeSlot')?.value" (click)="nextStep()">
-            Continuar a confirmación
+            <span>Continuar a confirmación 🫧</span>
           </button>
         </div>
       </div>
@@ -356,17 +356,17 @@
             <span class="badge-dot"></span>
             <span>SESIÓN AUTENTICADA: <strong>{{ auth.currentUser()?.name }}</strong> ({{ auth.currentUser()?.email }})</span>
           </div>
-          <span class="badge-points-reward">★ +100 PUNTOS RECOVR SANCTUM POR ESTA SESIÓN</span>
+          <span class="badge-points-reward">✨ +100 PUNTOS BUBBLEGUM POR ESTA SESIÓN</span>
         </div>
 
         <!-- Resumen de reserva -->
         <div class="booking-summary-preview" *ngIf="selectedService && selectedProfessional">
-          <div class="summary-preview-header">RESUMEN DEL PROTOCOLO</div>
-          <div class="preview-item"><strong>Protocolo:</strong> {{ selectedService.code }} — {{ selectedService.name }}</div>
+          <div class="summary-preview-header">RESUMEN DEL TRATAMIENTO</div>
+          <div class="preview-item"><strong>Tratamiento:</strong> {{ selectedService.code }} — {{ selectedService.name }}</div>
           <div class="preview-item"><strong>Especialista:</strong> {{ selectedProfessional.name }}</div>
           <div class="preview-item"><strong>Duración:</strong> {{ selectedService.durationMinutes }} Minutos</div>
           <div class="preview-item"><strong>Fecha y Hora:</strong> {{ bookingForm.value.date }} a las {{ bookingForm.value.timeSlot }} HS</div>
-          <div class="preview-item preview-total"><strong>Valor Total:</strong> ${{ selectedService.price }} USD</div>
+          <div class="preview-item preview-total"><strong>Valor Total:</strong> S/ {{ selectedService.price }} SOLES (PEN)</div>
         </div>
 
         <div class="form-grid">
@@ -388,7 +388,7 @@
 
           <div class="form-group full-width">
             <label for="clientPhone" class="form-label">TELÉFONO DE CONTACTO *</label>
-            <input type="tel" id="clientPhone" formControlName="clientPhone" class="form-input" placeholder="+54 9 11 1234 5678" />
+            <input type="tel" id="clientPhone" formControlName="clientPhone" class="form-input" placeholder="+51 987 654 321" />
             <div *ngIf="bookingForm.get('clientPhone')?.touched && bookingForm.get('clientPhone')?.invalid" class="form-error">
               Teléfono válido requerido (mínimo 8 dígitos).
             </div>
@@ -396,14 +396,14 @@
 
           <div class="form-group full-width">
             <label for="notes" class="form-label">OBSERVACIONES O CONDICIONES FÍSICAS (OPCIONAL)</label>
-            <textarea id="notes" formControlName="notes" class="form-textarea" rows="3" placeholder="Detalle molestias musculares, lesiones previas o preferencias..."></textarea>
+            <textarea id="notes" formControlName="notes" class="form-textarea" rows="3" placeholder="Detalle preferencias de aromas, tipo de piel o notas especiales..."></textarea>
           </div>
         </div>
 
         <div class="step-actions">
           <button type="button" class="btn-secondary" (click)="prevStep()">Volver a horario</button>
           <button type="submit" class="btn-primary" [disabled]="isSubmitting || bookingForm.invalid">
-            <span *ngIf="!isSubmitting">Confirmar reserva de sesión</span>
+            <span *ngIf="!isSubmitting">Confirmar reserva en Soles (S/) 🫧</span>
             <span *ngIf="isSubmitting" class="submitting-spinner">
               <span class="spinner-dot"></span> Procesando registro...
             </span>
@@ -414,3 +414,4 @@
     </form>
   </div>
 </div>
+

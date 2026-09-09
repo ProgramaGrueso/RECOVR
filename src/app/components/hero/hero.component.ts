@@ -18,16 +18,11 @@ export class HeroComponent implements OnInit, AfterViewInit {
   @ViewChild('heroVideo') heroVideoRef?: ElementRef<HTMLVideoElement>;
 
   isVideoFailed = false;
-  videoSource = 'assets/Video_00025.mp4';
+  videoSource = 'videos/bubble-hero.mp4';
   showVideo = true;
   
   ngOnInit(): void {
-    const hasSeenVideo = sessionStorage.getItem('recovr_has_seen_video');
-    if (hasSeenVideo) {
-      this.showVideo = false;
-    } else {
-      sessionStorage.setItem('recovr_has_seen_video', 'true');
-    }
+    this.showVideo = true;
   }
 
   ngAfterViewInit(): void {
@@ -37,12 +32,12 @@ export class HeroComponent implements OnInit, AfterViewInit {
         const playPromise = video.play();
         if (playPromise !== undefined) {
           playPromise.catch(() => {
-            this.isVideoFailed = true;
+            // fallback silently
           });
         }
       };
 
-      if (video.readyState >= 3) {
+      if (video.readyState >= 2) {
         tryPlay();
       } else {
         video.addEventListener('loadeddata', tryPlay);
@@ -68,3 +63,4 @@ export class HeroComponent implements OnInit, AfterViewInit {
     this.cursorService.resetCursor();
   }
 }
+

@@ -23,25 +23,29 @@ html {
 body {
   min-height: 100vh;
   background-color: var(--color-bg);
+  background-image: 
+    radial-gradient(circle at 15% 20%, rgba(255, 102, 161, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 85% 60%, rgba(168, 85, 247, 0.14) 0%, transparent 45%),
+    radial-gradient(circle at 50% 90%, rgba(56, 189, 248, 0.08) 0%, transparent 40%);
+  background-attachment: fixed;
   color: var(--color-text);
   overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  font-weight: 500;
-  letter-spacing: var(--letter-spacing-wide);
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: var(--letter-spacing-normal);
   color: var(--color-text);
-  text-transform: uppercase;
 }
 
 a {
   color: inherit;
   text-decoration: none;
-  transition: color 0.3s var(--ease-serotoninn);
+  transition: all 0.3s var(--ease-bubble);
 
   &:hover {
-    color: var(--color-accent-soft);
+    color: var(--color-bubble-pink);
   }
 }
 
@@ -50,28 +54,28 @@ button {
   border: none;
   outline: none;
   background: none;
-  font-family: var(--font-body);
-  transition: all 0.3s var(--ease-serotoninn);
+  font-family: var(--font-heading);
+  transition: all 0.3s var(--ease-bubble);
 }
 
-// Botones con estilo Serotoninn + Firma RECOVR
+// Botones Bubblegum Pop & Jelly Gloss
 .btn-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.95rem 2.4rem;
-  background-color: var(--color-accent);
-  color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  border: 1px solid var(--color-accent-soft);
+  padding: 0.95rem 2.2rem;
+  background: var(--gradient-bubble-btn);
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-radius: 9999px; // Pill shape
+  box-shadow: 0 8px 24px rgba(255, 20, 147, 0.38), 0 0 12px rgba(255, 102, 161, 0.25);
   position: relative;
   overflow: hidden;
-  gap: 0.4rem;
-  transition: all 0.4s var(--ease-serotoninn);
+  gap: 0.5rem;
+  transition: all 0.35s var(--ease-bubble);
 
   &::before {
     content: '';
@@ -80,15 +84,13 @@ button {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.6s var(--ease-serotoninn);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    transition: left 0.6s ease;
   }
 
   &:hover {
-    background-color: var(--color-accent-soft);
-    border-color: var(--color-metal);
-    box-shadow: 0 0 20px rgba(92, 26, 43, 0.7);
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 14px 30px rgba(255, 20, 147, 0.5), 0 0 20px rgba(168, 85, 247, 0.4);
 
     &::before {
       left: 100%;
@@ -96,7 +98,7 @@ button {
   }
 
   &:active {
-    transform: translateY(0);
+    transform: translateY(1px) scale(0.98);
   }
 }
 
@@ -104,33 +106,54 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.95rem 2.4rem;
-  background-color: transparent;
+  padding: 0.9rem 2.2rem;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
   color: var(--color-text);
-  font-family: var(--font-body);
-  font-size: 0.82rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.22em;
-  border: 1px solid var(--color-metal);
-  gap: 0.4rem;
-  transition: all 0.4s var(--ease-serotoninn);
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1.5px solid rgba(255, 102, 161, 0.35);
+  border-radius: 9999px;
+  gap: 0.5rem;
+  transition: all 0.35s var(--ease-bubble);
 
   &:hover {
-    background-color: rgba(184, 180, 176, 0.08);
-    border-color: var(--color-accent-soft);
-    color: var(--color-text);
+    background: rgba(255, 102, 161, 0.15);
+    border-color: var(--color-bubble-pink);
+    color: #ffffff;
+    box-shadow: 0 8px 24px rgba(255, 102, 161, 0.25);
     transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 }
 
-// Utilidades de corchetes e interacciones Serotoninn
-.bracket-text {
-  font-family: var(--font-body);
-  font-size: 0.78rem;
+// Utilidades Bubblegum
+.bubble-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  background: rgba(255, 102, 161, 0.12);
+  border: 1px solid rgba(255, 102, 161, 0.3);
+  border-radius: 9999px;
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
   font-weight: 600;
-  letter-spacing: 0.18em;
-  color: var(--color-metal);
+  color: var(--color-bubble-pink);
+  letter-spacing: 0.04em;
+}
+
+.bracket-text {
+  font-family: var(--font-heading);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-bubble-pink);
   text-transform: uppercase;
 }
 
@@ -142,9 +165,21 @@ button {
   cursor: grab;
   user-select: none;
   -webkit-overflow-scrolling: touch;
+  gap: 1.5rem;
+  padding-bottom: 1rem;
 
   &::-webkit-scrollbar {
-    display: none;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 102, 161, 0.35);
+    border-radius: 10px;
   }
 
   &:active {
@@ -152,10 +187,10 @@ button {
   }
 }
 
-// Custom Scrollbar estilo oscuro
+// Custom Scrollbar Bubblegum
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
@@ -163,11 +198,12 @@ button {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-accent);
+  background: linear-gradient(180deg, #ff66a1 0%, #a855f7 100%);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent-soft);
+  background: linear-gradient(180deg, #ff1493 0%, #c084fc 100%);
 }
 
 // Respeto de prefers-reduced-motion
