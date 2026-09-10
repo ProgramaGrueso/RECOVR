@@ -36,7 +36,7 @@
       height: 100%;
       object-fit: cover;
       object-position: center;
-      filter: saturate(1.15) brightness(0.85);
+      filter: saturate(1.2) brightness(0.82);
     }
 
     .video-overlay {
@@ -47,9 +47,9 @@
       height: 100%;
       background: linear-gradient(
         90deg,
-        rgba(13, 8, 20, 0.92) 0%,
-        rgba(13, 8, 20, 0.65) 50%,
-        rgba(255, 20, 147, 0.18) 100%
+        rgba(8, 5, 16, 0.94) 0%,
+        rgba(8, 5, 16, 0.68) 50%,
+        rgba(255, 31, 152, 0.20) 100%
       );
       pointer-events: none;
     }
@@ -69,11 +69,11 @@
       align-items: center;
       gap: 0.5rem;
       padding: 0.45rem 1.1rem;
-      background: rgba(255, 102, 161, 0.15);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 102, 161, 0.4);
+      background: rgba(255, 110, 170, 0.17);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 110, 170, 0.45);
       border-radius: 9999px;
-      box-shadow: 0 0 16px rgba(255, 102, 161, 0.25);
+      box-shadow: 0 0 20px rgba(255, 110, 170, 0.3);
 
       .bubble-icon {
         font-size: 1rem;
@@ -81,7 +81,7 @@
 
       .hero-badge {
         font-family: var(--font-heading);
-        font-size: 0.8rem;
+        font-size: 0.84rem;
         font-weight: 700;
         letter-spacing: 0.1em;
         color: #ffffff;
@@ -91,14 +91,14 @@
 
     .hero-wordmark {
       font-family: var(--font-display);
-      font-size: clamp(3.4rem, 8vw, 6.5rem);
+      font-size: clamp(3.6rem, 8.5vw, 7rem);
       font-weight: 700;
       letter-spacing: -0.01em;
       line-height: 1.05;
       color: var(--color-text);
       text-transform: uppercase;
       margin: 0;
-      text-shadow: 0 4px 30px rgba(0, 0, 0, 0.8);
+      text-shadow: 0 6px 36px rgba(0, 0, 0, 0.85);
 
       .highlight-pink {
         background: var(--gradient-bubble);
@@ -109,24 +109,33 @@
     }
 
     .hero-tagline {
+      font-family: var(--font-heading);
+      font-size: clamp(1.2rem, 2.5vw, 1.55rem);
+      font-weight: 600;
+      line-height: 1.45;
+      color: #ffffff;
+      margin: 0;
+      max-width: 700px;
+      text-shadow: 0 3px 14px rgba(0, 0, 0, 0.7);
+    }
+
+    .hero-subline {
       font-family: var(--font-body);
-      font-size: clamp(1.05rem, 2vw, 1.3rem);
-      font-weight: 400;
-      line-height: 1.55;
+      font-size: clamp(0.95rem, 1.8vw, 1.1rem);
       color: var(--color-metal);
       margin: 0;
-      max-width: 650px;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+      max-width: 680px;
+      line-height: 1.55;
     }
 
     .hero-pricing-pill {
       display: inline-flex;
       align-items: center;
       padding: 0.4rem 1rem;
-      background: rgba(168, 85, 247, 0.15);
-      border: 1px solid rgba(168, 85, 247, 0.35);
+      background: rgba(176, 92, 247, 0.18);
+      border: 1px solid rgba(176, 92, 247, 0.4);
       border-radius: 9999px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       color: #f1ddff;
 
       strong {
@@ -162,7 +171,7 @@
 
     .scroll-label {
       font-family: var(--font-heading);
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       font-weight: 700;
       letter-spacing: 0.18em;
       color: var(--color-bubble-pink);

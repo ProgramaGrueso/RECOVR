@@ -1,38 +1,38 @@
 // src/styles/_tokens.scss
-// Tokens de diseño RECOVR — Estética Bubblegum Spa & Jelly Glow
+// Tokens de diseño RECOVR — Estética Bubblegum Spa & Jelly Glow (Refined v2)
 
 :root {
-  // Paleta Bubblegum Spa oficial
-  --color-bg: #0d0814;
-  --color-bg-alt: #160e22;
-  --color-bg-card: rgba(255, 255, 255, 0.04);
-  --color-bg-card-hover: rgba(255, 255, 255, 0.08);
-  --color-card-border: rgba(255, 105, 180, 0.22);
-  --color-card-border-hover: rgba(255, 105, 180, 0.55);
+  // Paleta Bubblegum Spa — fondos más profundos y ricos
+  --color-bg: #080510;
+  --color-bg-alt: #110a1e;
+  --color-bg-card: rgba(255, 255, 255, 0.045);
+  --color-bg-card-hover: rgba(255, 255, 255, 0.09);
+  --color-card-border: rgba(255, 105, 180, 0.24);
+  --color-card-border-hover: rgba(255, 105, 180, 0.6);
 
-  // Acentos Bubblegum / Candy / Neon Pastel
-  --color-bubble-pink: #ff66a1;
-  --color-bubble-hotpink: #ff1493;
-  --color-bubble-magenta: #e02475;
-  --color-bubble-purple: #a855f7;
-  --color-bubble-lavender: #c084fc;
-  --color-bubble-cyan: #38bdf8;
-  --color-bubble-mint: #34d399;
-  --color-bubble-glow: rgba(255, 102, 161, 0.35);
+  // Acentos Bubblegum — más vibrantes y con mayor saturación
+  --color-bubble-pink: #ff6eaa;
+  --color-bubble-hotpink: #ff1f98;
+  --color-bubble-magenta: #e42c7f;
+  --color-bubble-purple: #b05cf7;
+  --color-bubble-lavender: #c98dff;
+  --color-bubble-cyan: #42c8f5;
+  --color-bubble-mint: #3ddbaa;
+  --color-bubble-glow: rgba(255, 110, 170, 0.38);
 
-  --color-accent: #ff66a1;
-  --color-accent-soft: #ff8ec2;
-  --color-text: #fff5f9;
-  --color-text-muted: #c9b5c7;
-  --color-metal: #dfcfe0;
+  --color-accent: #ff6eaa;
+  --color-accent-soft: #ff96c8;
+  --color-text: #fff8fa;
+  --color-text-muted: #d4bfd2;
+  --color-metal: #e8dae6;
 
-  // Degradados Bubblegum
-  --gradient-bubble: linear-gradient(135deg, #ff66a1 0%, #c084fc 50%, #38bdf8 100%);
-  --gradient-bubble-soft: linear-gradient(135deg, rgba(255, 102, 161, 0.15) 0%, rgba(168, 85, 247, 0.12) 100%);
-  --gradient-bubble-btn: linear-gradient(135deg, #ff66a1 0%, #ff1493 50%, #a855f7 100%);
-  --gradient-bubble-glow: radial-gradient(circle at center, rgba(255, 102, 161, 0.25) 0%, transparent 70%);
+  // Degradados Bubblegum — más dinámicos y expresivos
+  --gradient-bubble: linear-gradient(135deg, #ff6eaa 0%, #c98dff 50%, #42c8f5 100%);
+  --gradient-bubble-soft: linear-gradient(135deg, rgba(255, 110, 170, 0.18) 0%, rgba(176, 92, 247, 0.14) 100%);
+  --gradient-bubble-btn: linear-gradient(135deg, #ff6eaa 0%, #ff1f98 50%, #b05cf7 100%);
+  --gradient-bubble-glow: radial-gradient(circle at center, rgba(255, 110, 170, 0.3) 0%, transparent 70%);
 
-  // Tipografía Bubblegum
+  // Tipografía Bubblegum — escala ligeramente mayor
   --font-display: 'Fredoka', 'Outfit', sans-serif;
   --font-heading: 'Outfit', sans-serif;
   --font-body: 'Plus Jakarta Sans', sans-serif;
@@ -98,7 +98,7 @@ $breakpoint-lg: 1024px;
 
 @mixin bubble-pill-label {
   font-family: $font-heading;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   color: var(--color-bubble-pink);
@@ -106,16 +106,16 @@ $breakpoint-lg: 1024px;
 }
 
 @mixin bubble-glass-card {
-  background: rgba(22, 14, 34, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(17, 10, 30, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--color-card-border);
-  border-radius: 20px;
+  border-radius: 22px;
   transition: all 0.35s var(--ease-bubble);
 
   &:hover {
     border-color: var(--color-card-border-hover);
-    box-shadow: 0 12px 32px rgba(255, 102, 161, 0.22), 0 0 20px rgba(168, 85, 247, 0.15);
+    box-shadow: 0 14px 36px rgba(255, 110, 170, 0.24), 0 0 24px rgba(176, 92, 247, 0.18);
     transform: translateY(-4px);
   }
 }
@@ -135,34 +135,34 @@ $breakpoint-lg: 1024px;
 
 @keyframes bubble-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(255, 102, 161, 0.45);
+    box-shadow: 0 0 0 0 rgba(255, 110, 170, 0.45);
   }
   70% {
-    box-shadow: 0 0 0 16px rgba(255, 102, 161, 0);
+    box-shadow: 0 0 0 16px rgba(255, 110, 170, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(255, 102, 161, 0);
+    box-shadow: 0 0 0 0 rgba(255, 110, 170, 0);
   }
 }
 
 @keyframes skeleton-bubble-pulse {
   0% {
-    background-color: #191126;
-    border-color: rgba(255, 102, 161, 0.15);
+    background-color: #140d22;
+    border-color: rgba(255, 110, 170, 0.15);
   }
   50% {
-    background-color: #241838;
-    border-color: rgba(255, 102, 161, 0.35);
+    background-color: #201340;
+    border-color: rgba(255, 110, 170, 0.38);
   }
   100% {
-    background-color: #191126;
-    border-color: rgba(255, 102, 161, 0.15);
+    background-color: #140d22;
+    border-color: rgba(255, 110, 170, 0.15);
   }
 }
 
 .skeleton-dark {
   animation: skeleton-bubble-pulse 1.8s ease-in-out infinite;
-  background-color: #191126;
-  border: 1px solid rgba(255, 102, 161, 0.2);
-  border-radius: 12px;
+  background-color: #140d22;
+  border: 1px solid rgba(255, 110, 170, 0.22);
+  border-radius: 14px;
 }

@@ -199,7 +199,7 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
         this.bookingForm.patchValue({
           clientName: u.name,
           clientEmail: u.email,
-          clientPhone: u.phone || '+56 9 8765 4321'
+          clientPhone: u.phone || '+51 987 654 321'
         });
       }
     }

@@ -14,12 +14,12 @@
 <article
   class="service-card"
   *ngIf="!isLoading && service"
-  (mouseenter)="setCursor(service.code || '🫧 TRATAMIENTO')"
+  (mouseenter)="setCursor(service.code || 'MASAJE')"
   (mouseleave)="resetCursor()">
   
   <div class="card-image-wrapper">
     <img [src]="service.imageUrl" [alt]="service.name" class="card-image" loading="lazy" />
-    <span class="card-category-badge">🫧 {{ service.category }}</span>
+    <span class="card-category-badge">{{ service.code }}</span>
     <div class="card-overlay"></div>
   </div>
 
@@ -43,7 +43,7 @@
         (click)="onReserve()"
         class="btn-primary card-cta"
         [id]="'btn-reserve-' + service.id">
-        <span>RESERVAR 🫧</span>
+        <span>RESERVAR (S/)</span>
       </a>
     </div>
   </div>

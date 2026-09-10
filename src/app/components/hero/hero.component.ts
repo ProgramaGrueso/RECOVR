@@ -18,7 +18,7 @@ export class HeroComponent implements OnInit, AfterViewInit {
   @ViewChild('heroVideo') heroVideoRef?: ElementRef<HTMLVideoElement>;
 
   isVideoFailed = false;
-  videoSource = 'videos/bubble-hero.mp4';
+  videoSource = 'videos/video-project-27.mp4';
   showVideo = true;
   
   ngOnInit(): void {

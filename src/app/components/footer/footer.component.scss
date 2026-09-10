@@ -1,8 +1,8 @@
 @use '../../../styles/tokens' as *;
 
 .footer-container {
-  background: rgba(13, 8, 20, 0.95);
-  border-top: 1px solid rgba(255, 102, 161, 0.2);
+  background: rgba(8, 5, 16, 0.96);
+  border-top: 1px solid rgba(255, 110, 170, 0.22);
   padding: 5rem 2rem 2.5rem;
 
   .footer-cta-banner {
@@ -15,18 +15,18 @@
 
     .footer-headline {
       font-family: var(--font-heading);
-      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      font-size: clamp(2.2rem, 4.8vw, 3.4rem);
       font-weight: 800;
       letter-spacing: -0.01em;
       margin: 1.2rem 0 0.8rem;
-      background: linear-gradient(135deg, #ffffff 0%, #ffcbe3 100%);
+      background: linear-gradient(135deg, #ffffff 0%, #ffd0e8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
     .footer-subhead {
       font-family: var(--font-body);
-      font-size: 1.05rem;
+      font-size: 1.1rem;
       color: var(--color-text-muted);
       margin-bottom: 2.2rem;
       max-width: 600px;
@@ -42,7 +42,7 @@
     max-width: 1200px;
     margin: 0 auto 4rem;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 102, 161, 0.3), transparent);
+    background: linear-gradient(90deg, transparent, rgba(255, 110, 170, 0.35), transparent);
   }
 
   .footer-main {
@@ -55,7 +55,7 @@
     .footer-col {
       .col-title {
         font-family: var(--font-heading);
-        font-size: 0.85rem;
+        font-size: 0.88rem;
         letter-spacing: 0.08em;
         font-weight: 700;
         color: var(--color-bubble-pink);
@@ -65,7 +65,7 @@
 
       .footer-wordmark {
         font-family: var(--font-display);
-        font-size: 2.2rem;
+        font-size: 2.3rem;
         font-weight: 800;
         letter-spacing: 0.02em;
         margin-bottom: 0.25rem;
@@ -79,14 +79,14 @@
 
       .brand-tagline {
         font-family: var(--font-body);
-        font-size: 0.95rem;
+        font-size: 1rem;
         color: var(--color-bubble-lavender);
         margin-bottom: 0.85rem;
       }
 
       .brand-desc {
         font-family: var(--font-body);
-        font-size: 0.88rem;
+        font-size: 0.92rem;
         color: var(--color-text-muted);
         line-height: 1.6;
         max-width: 380px;
@@ -147,11 +147,11 @@
     max-width: 1200px;
     margin: 0 auto;
     padding-top: 2rem;
-    border-top: 1px solid rgba(255, 102, 161, 0.15);
+    border-top: 1px solid rgba(255, 110, 170, 0.18);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.8rem;
+    font-size: 0.84rem;
     color: var(--color-text-muted);
 
     .credits {

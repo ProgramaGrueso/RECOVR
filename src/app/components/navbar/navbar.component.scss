@@ -6,17 +6,17 @@
   left: 0;
   width: 100%;
   z-index: 200;
-  background: rgba(13, 8, 20, 0.4);
-  backdrop-filter: blur(12px);
+  background: rgba(8, 5, 16, 0.45);
+  backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 102, 161, 0.15);
+  border-bottom: 1px solid rgba(255, 110, 170, 0.18);
   transition: all 0.4s var(--ease-bubble);
 
   &.scrolled {
-    background: rgba(13, 8, 20, 0.92);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 102, 161, 0.3);
-    box-shadow: 0 4px 30px rgba(255, 20, 147, 0.15);
+    background: rgba(8, 5, 16, 0.94);
+    backdrop-filter: blur(22px);
+    border-bottom: 1px solid rgba(255, 110, 170, 0.32);
+    box-shadow: 0 4px 32px rgba(255, 31, 152, 0.18);
   }
 
   .navbar-container {
@@ -40,7 +40,7 @@
 
       .brand-text {
         font-family: var(--font-display);
-        font-size: 1.45rem;
+        font-size: 1.5rem;
         font-weight: 700;
         letter-spacing: 0.08em;
         background: var(--gradient-bubble);
@@ -50,7 +50,7 @@
 
       .brand-subtext {
         font-family: var(--font-heading);
-        font-size: 0.68rem;
+        font-size: 0.72rem;
         font-weight: 700;
         letter-spacing: 0.12em;
         color: var(--color-bubble-pink);
@@ -66,12 +66,12 @@
 
       .menu-toggle-btn {
         font-family: var(--font-heading);
-        font-size: 0.85rem;
+        font-size: 0.88rem;
         font-weight: 700;
         letter-spacing: 0.06em;
         color: var(--color-text);
-        background: rgba(255, 102, 161, 0.12);
-        border: 1px solid rgba(255, 102, 161, 0.35);
+        background: rgba(255, 110, 170, 0.14);
+        border: 1px solid rgba(255, 110, 170, 0.38);
         border-radius: 9999px;
         padding: 0.55rem 1.35rem;
         cursor: pointer;
@@ -79,8 +79,8 @@
 
         &:hover {
           border-color: var(--color-bubble-pink);
-          background: rgba(255, 102, 161, 0.25);
-          box-shadow: 0 0 16px rgba(255, 102, 161, 0.4);
+          background: rgba(255, 110, 170, 0.28);
+          box-shadow: 0 0 18px rgba(255, 110, 170, 0.45);
           transform: scale(1.05);
         }
       }
@@ -97,7 +97,7 @@
   height: 100vh;
   height: 100dvh;
   z-index: 150;
-  background: radial-gradient(circle at center, #241438 0%, #0d0814 100%);
+  background: radial-gradient(circle at center, #1e1035 0%, #080510 100%);
   opacity: 0;
   pointer-events: none;
   transform: scale(0.96);
@@ -145,7 +145,7 @@
 
       .overlay-link {
         font-family: var(--font-display);
-        font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+        font-size: clamp(1.7rem, 3.8vw, 2.8rem);
         font-weight: 600;
         letter-spacing: 0.04em;
         color: var(--color-text);
@@ -157,14 +157,14 @@
         &:hover {
           color: var(--color-bubble-pink);
           transform: scale(1.08) translateY(-2px);
-          text-shadow: 0 0 20px rgba(255, 102, 161, 0.6);
+          text-shadow: 0 0 24px rgba(255, 110, 170, 0.65);
         }
 
         &.overlay-cta {
           background: var(--gradient-bubble-btn);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          font-size: clamp(1.4rem, 3vw, 2.2rem);
+          font-size: clamp(1.5rem, 3.2vw, 2.4rem);
           margin-top: 0.5rem;
           border-bottom: 2px solid var(--color-bubble-pink);
 
@@ -176,20 +176,20 @@
         &.overlay-login-link {
           color: var(--color-bubble-lavender);
           font-family: var(--font-heading);
-          font-size: clamp(1rem, 2.2vw, 1.4rem);
+          font-size: clamp(1.05rem, 2.4vw, 1.5rem);
           letter-spacing: 0.08em;
           margin-top: 0.5rem;
           padding: 0.5rem 1.4rem;
-          border: 1px solid rgba(255, 102, 161, 0.35);
-          background: rgba(255, 102, 161, 0.12);
+          border: 1px solid rgba(255, 110, 170, 0.38);
+          background: rgba(255, 110, 170, 0.14);
           border-radius: 9999px;
           transition: all 0.3s var(--ease-bubble);
 
           &:hover {
             color: #ffffff;
             border-color: var(--color-bubble-pink);
-            background: rgba(255, 102, 161, 0.3);
-            box-shadow: 0 0 20px rgba(255, 102, 161, 0.4);
+            background: rgba(255, 110, 170, 0.32);
+            box-shadow: 0 0 22px rgba(255, 110, 170, 0.45);
           }
         }
       }

@@ -1,8 +1,8 @@
 <section
   class="hero-container"
-  (mouseenter)="setCursor('🫧 BUBBLE SPA')"
+  (mouseenter)="setCursor('RECOVR')"
   (mouseleave)="resetCursor()"
-  aria-label="Sección principal de RECOVR Bubblegum Spa">
+  aria-label="Sección principal de RECOVR">
   
   @if (showVideo) {
     <div class="video-wrapper" [class.video-failed]="isVideoFailed">
@@ -24,46 +24,47 @@
     </div>
   } @else {
     <div class="video-wrapper">
-      <img src="assets/Krea2-155013_00001_.png" alt="Recovr Bubblegum Spa Background" style="width: 100%; height: 100%; object-fit: cover;">
+      <img src="assets/Krea2-155013_00001_.png" alt="RECOVR Background" style="width: 100%; height: 100%; object-fit: cover;">
       <div class="video-overlay"></div>
     </div>
   }
 
   <div class="hero-content">
     <div class="hero-badge-pill">
-      <span class="bubble-icon">🫧</span>
-      <span class="hero-badge">BUBBLEGUM SPA &bull; EXPERIENCIA SENSORIAL</span>
+      <span class="hero-badge">MASAJES SENSITIVOS &bull; RELAX PREMIUM</span>
     </div>
 
-    <h1 class="hero-wordmark">RECOVR <span class="highlight-pink">BUBBLE</span></h1>
+    <h1 class="hero-wordmark">RECOVR</h1>
 
-    <p class="hero-tagline">El cuidado sensorial de tu cuerpo en una atmósfera envolvente de burbujas, aromas dulces y relax absoluto.</p>
+    <h2 class="hero-tagline">Masajes exclusivos, privacidad absoluta y una experiencia visual diferente.</h2>
+
+    <p class="hero-subline">Atención personalizada en cabinas privadas climatizadas. Elige tu tipo de masaje y a tu masajista favorita.</p>
 
     <div class="hero-pricing-pill">
-      <span>Tratamientos desde <strong>S/ 85 Soles</strong> &bull; Atención exclusiva con reserva</span>
+      <span>Masajes desde <strong>S/ 180 Soles</strong> &bull; Atención exclusiva con reserva</span>
     </div>
 
     <div class="hero-actions">
       <a
         (click)="onReserve()"
-        (mouseenter)="setCursor('🫧 RESERVAR EN SOLES')"
+        (mouseenter)="setCursor('RESERVAR CITA')"
         (mouseleave)="resetCursor()"
         class="btn-primary"
         id="hero-cta-reserve">
-        <span>🫧 RESERVAR SESIÓN (S/)</span>
+        <span>RESERVAR CITA (S/)</span>
       </a>
       <a
         href="#reels"
         class="btn-secondary"
-        (mouseenter)="setCursor('✨ VER VIDEOS')"
+        (mouseenter)="setCursor('VER VIDEOS')"
         (mouseleave)="resetCursor()">
-        <span>✨ VER VIDEO REELS</span>
+        <span>VER VIDEO REELS</span>
       </a>
     </div>
   </div>
 
   <div class="hero-scroll-indicator">
-    <span class="scroll-label">🫧 EXPLORAR</span>
+    <span class="scroll-label">EXPLORAR</span>
     <div class="scroll-line-vertical"></div>
   </div>
 </section>

@@ -14,6 +14,15 @@ export interface VideoReel {
   tag: string;
 }
 
+export interface ReviewItem {
+  id: string;
+  clientName: string;
+  stars: number;
+  comment: string;
+  serviceName?: string;
+  masseuseName?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -21,219 +30,243 @@ export class CatalogService {
 
   private services: ServiceItem[] = [
     {
-      id: 'srv-01',
-      code: '🫧 BUBBLE 01',
-      name: 'Bubble Hydro Glow Facial & Oxygen',
-      category: 'FACIAL',
-      description: 'Limpieza hidrofacial profunda con micro-burbujas activas oxigenadas, sérum iluminador de frambuesa silvestre y mascarilla jelly de colágeno rosa.',
-      durationMinutes: 60,
-      price: 130,
-      imageUrl: 'assets/Krea2-155101_00001_.png',
-      featured: true
-    },
-    {
-      id: 'srv-02',
-      code: '🫧 BUBBLE 02',
-      name: 'Bubble Berry Relax & Deep Massage',
+      id: 'rc-01',
+      code: 'RC-01',
+      name: 'Masaje Tántrico Sensitivo',
       category: 'MASAJE',
-      description: 'Masaje relajante y descontracturante con aceites esenciales tibios de fresa & chicle, ventosas de succión suave bubble y piedras de cuarzo rosa.',
-      durationMinutes: 75,
-      price: 150,
-      imageUrl: 'assets/Krea2-155101_00001_.png',
-      featured: true
-    },
-    {
-      id: 'srv-03',
-      code: '🫧 BUBBLE 03',
-      name: 'Bubble Pop Podología Spa & Jelly Bath',
-      category: 'PODOLOGÍA',
-      description: 'Pedicura spa con baño efervescente de sales aromatizadas Bubble Pop, remoción suave de asperezas, exfoliación de azúcar rosa y pulido de uñas gloss.',
-      durationMinutes: 50,
-      price: 85,
-      imageUrl: 'assets/Krea2-155101_00001_.png',
-      featured: true
-    },
-    {
-      id: 'srv-04',
-      code: '🫧 BUBBLE 04',
-      name: 'Bubble Cloud Drenaje Linfático & Preso',
-      category: 'CORPORAL',
-      description: 'Drenaje linfático manual y presoterapia suave en cámaras de compresión neumática efecto nube para alivio total de piernas y reactivación circulatoria.',
+      description: 'Toques lentos, suaves y continuos por todo el cuerpo con aceites tibios neutros. Máxima relajación muscular y estimulación sensorial de pies a cabeza.',
       durationMinutes: 60,
-      price: 120,
+      price: 200,
       imageUrl: 'assets/Krea2-155101_00001_.png',
       featured: true
     },
     {
-      id: 'srv-05',
-      code: '🫧 BUBBLE 05',
-      name: 'Bubble Sculpt Pink Maderoterapia',
-      category: 'CORPORAL',
-      description: 'Modelado y reducción corporal de alta precisión con copas de burbuja modeladoras, maderoterapia y gel criogénico reafirmante de sandía.',
-      durationMinutes: 80,
-      price: 160,
+      id: 'rc-02',
+      code: 'RC-02',
+      name: 'Masaje Nuru Body Slide',
+      category: 'MASAJE',
+      description: 'Masaje cuerpo a cuerpo sobre camilla especial con gel nuru tibio hiperdeslizante. Deslizamientos completos y contacto continuo.',
+      durationMinutes: 75,
+      price: 280,
       imageUrl: 'assets/Krea2-155101_00001_.png',
-      featured: false
+      featured: true
     },
     {
-      id: 'srv-06',
-      code: '🫧 BUBBLE 06',
-      name: 'Bubble Luxe Foot & Parafina Glow',
-      category: 'PODOLOGÍA',
-      description: 'Ritual podológico intensivo con baño de burbujas emolientes, hidratación profunda con botitas de parafina tibia rosa y masaje relajante plantar.',
-      durationMinutes: 55,
-      price: 95,
+      id: 'rc-03',
+      code: 'RC-03',
+      name: 'Masaje Relajante & Descontracturante',
+      category: 'MASAJE',
+      description: 'Presión media y profunda para liberar sobrecargas en espalda, hombros y cuello. Termina con toques suaves de descanso.',
+      durationMinutes: 60,
+      price: 180,
       imageUrl: 'assets/Krea2-155101_00001_.png',
-      featured: false
+      featured: true
+    },
+    {
+      id: 'rc-04',
+      code: 'RC-04',
+      name: 'Masaje Tántrico Completo',
+      category: 'MASAJE',
+      description: 'Sesión tántrica integral que combina maniobras sensitivas lentas con piedras tibias de cuarzo y aceites aromáticos.',
+      durationMinutes: 75,
+      price: 250,
+      imageUrl: 'assets/Krea2-155101_00001_.png',
+      featured: true
+    },
+    {
+      id: 'rc-05',
+      code: 'RC-05',
+      name: 'Masaje a Cuatro Manos',
+      category: 'MASAJE',
+      description: 'Dos masajistas trabajando al mismo tiempo de manera sincronizada. Relajación total e intensa.',
+      durationMinutes: 60,
+      price: 380,
+      imageUrl: 'assets/Krea2-155101_00001_.png',
+      featured: true
+    },
+    {
+      id: 'rc-06',
+      code: 'RC-06',
+      name: 'Masaje RECOVR VIP',
+      category: 'MASAJE',
+      description: 'La sesión más completa: masaje tántrico, técnica cuerpo a cuerpo Nuru y tiempo de tina de hidromasaje privada con microburbujas.',
+      durationMinutes: 90,
+      price: 450,
+      imageUrl: 'assets/Krea2-155101_00001_.png',
+      featured: true
     }
   ];
 
   private videoReels: VideoReel[] = [
     {
       id: 'reel-01',
-      title: 'Bubble Hydro Facial Experiencia',
-      subtitle: 'Oxigenación profunda & Glow Instantáneo',
-      category: 'FACIAL',
+      title: 'Masaje Tántrico Sensitivo',
+      subtitle: 'Toques lentos y estimulación suave con aceites tibios',
+      category: 'TÁNTRICO',
       videoUrl: 'videos/bubble-facial.mp4',
       posterUrl: 'assets/Krea2-155013_00001_.png',
-      tag: '✨ MÁS POPULAR'
+      tag: '✨ SENSITIVO'
     },
     {
       id: 'reel-02',
-      title: 'Bubble Berry Relax Massage',
-      subtitle: 'Alivio de tensiones & Aromaterapia Dulce',
-      category: 'MASAJE',
+      title: 'Masaje Nuru Body Slide',
+      subtitle: 'Deslizamientos continuos y contacto cuerpo a cuerpo',
+      category: 'NURU',
       videoUrl: 'videos/bubble-massage.mp4',
       posterUrl: 'assets/Krea2-155101_00001_.png',
-      tag: '💖 RELAX TOTAL'
+      tag: '💖 NURU SLIDE'
     },
     {
       id: 'reel-03',
-      title: 'Bubble Pop Pedicura & Jelly Spa',
-      subtitle: 'Efervescencia relajante & Pies de Seda',
-      category: 'PODOLOGÍA',
+      title: 'Masaje a Cuatro Manos',
+      subtitle: 'Sincronización simultánea de dos masajistas',
+      category: '4 MANOS',
       videoUrl: 'videos/bubble-pedi.mp4',
       posterUrl: 'assets/Krea2-194016_00002_.png',
-      tag: '🫧 SPA FEET'
+      tag: '✨ 4 MANOS'
     },
     {
       id: 'reel-04',
-      title: 'Bubble Suites & Pink Sanctuary',
-      subtitle: 'Ambiente sensorial inmersivo 100% privado',
-      category: 'SANCTUARY',
+      title: 'Cabinas Privadas & Ambiente Neón',
+      subtitle: 'Privacidad absoluta y cabinas climatizadas',
+      category: 'CABINAS',
       videoUrl: 'videos/bubble-space.mp4',
       posterUrl: 'assets/Krea2-155023_00001_.png',
-      tag: '🌸 SUITE VIP'
+      tag: '🌸 CABINAS'
     },
     {
       id: 'reel-05',
-      title: 'Bubble Signature Rituals',
-      subtitle: 'Protocolos exclusivos de bienestar Bubblegum',
-      category: 'WELLNESS',
+      title: 'Experiencia RECOVR VIP',
+      subtitle: 'Masaje completo con tina de hidromasaje privada',
+      category: 'VIP',
       videoUrl: 'videos/bubble-hero.mp4',
       posterUrl: 'assets/Krea2-155034_00001_.png',
-      tag: '👑 SIGNATURE'
+      tag: '👑 SESIÓN VIP'
     }
   ];
 
   private professionals: Professional[] = [
     {
       id: 'prof-01',
-      name: 'Valentina Ross',
-      title: 'Especialista en Bubble Facial & Dermoestética',
-      specialty: 'Hidrofaciales de Oxígeno & Mascarillas Jelly Glow',
+      name: 'Ely',
+      title: 'Especialista en Masaje Tántrico Sensitivo',
+      specialty: 'Masaje Tántrico Sensitivo y técnicas suaves',
       photoUrl: 'assets/Krea2-154110_00001_.png',
-      bio: 'Pionera en tratamientos hidrofaciales con microburbujas oxigenadas y cosmética sensorial con extractos frutales.',
-      duties: 'Limpieza con micro-burbujas, exfoliación enzimática de frambuesa y terapia LED de colágeno.',
+      bio: 'Especialista en toques lentos, continuos y suaves por todo el cuerpo con aceites tibios neutros.',
+      duties: 'Estimulación sensorial de pies a cabeza y relajación muscular profunda en ambiente tenue.',
       availability: 'Disponible hoy',
-      category: 'FACIAL' as any
+      category: 'MASAJE'
     },
     {
       id: 'prof-02',
-      name: 'Freya Lind',
-      title: 'Terapeuta Corporal & Masajes Bubble Relax',
-      specialty: 'Liberación de Estrés, Aceites Esenciales & Cuarzo Rosa',
+      name: 'Miranda',
+      title: 'Experta en Masaje Nuru Body Slide',
+      specialty: 'Masaje Nuru Body Slide y cuerpo a cuerpo',
       photoUrl: 'assets/Krea2-193952_00001_.png',
-      bio: 'Experta en maniobras de relajación envolvente, aromaterapia Bubble Pop y masajes sensitivos descontracturantes.',
-      duties: 'Masajes con bálsamos tibios, ventosas suaves y piedras de cuarzo rosa energizantes.',
+      bio: 'Especialista en técnicas cuerpo a cuerpo sobre camilla especial con gel nuru tibio hiperdeslizante.',
+      duties: 'Deslizamientos corporales completos, contacto continuo y descanso integral.',
       availability: 'Disponible hoy',
       category: 'MASAJE'
     },
     {
       id: 'prof-03',
-      name: 'Astrid Vane',
-      title: 'Especialista en Escultura Corporal & Presoterapia',
-      specialty: 'Bubble Sculpting & Drenaje Cloud Nube',
+      name: 'Pamela',
+      title: 'Especialista en Descontracturante & Cuatro Manos',
+      specialty: 'Descontracturante profundo y Masajes a Cuatro Manos',
       photoUrl: 'assets/Krea2-194000_00001_.png',
-      bio: 'Certificada en maderoterapia estética y protocolos de presoterapia de compresión secuencial para ligereza corporal.',
-      duties: 'Modelado con copas de burbuja, presoterapia relajante y geles criogénicos.',
-      availability: 'Turnos esta semana',
-      category: 'CORPORAL' as any
+      bio: 'Experta en presión media y profunda para liberar sobrecargas musculares y maniobras sincronizadas simultáneas.',
+      duties: 'Descompresión de espalda, hombros y cuello, y sesiones dobles a cuatro manos.',
+      availability: 'Turnos por agenda',
+      category: 'MASAJE'
     },
     {
       id: 'prof-04',
-      name: 'Elena Roth',
-      title: 'Podóloga Clínica & Especialista Bubble Feet',
-      specialty: 'Pedicura Spa Efervescente & Pulido Gloss',
+      name: 'Maria',
+      title: 'Atención en Masaje RECOVR VIP',
+      specialty: 'Masaje RECOVR VIP y sesiones completas combinadas',
       photoUrl: 'assets/Krea2-194009_00001_.png',
-      bio: 'Líder en podología estética y tratamientos emolientes con sales de baño burbujeantes y mascarillas regeneradoras.',
-      duties: 'Cuidado podológico completo, exfoliación de azúcar rosa y acabado gloss brillante.',
+      bio: 'Atención exclusiva en la sesión más completa: masaje tántrico, técnica Nuru cuerpo a cuerpo e hidromasaje.',
+      duties: 'Sesiones integrales VIP con tiempo de tina de hidromasaje privada en suite.',
       availability: 'Disponible hoy',
-      category: 'PODOLOGÍA'
-    },
-    {
-      id: 'prof-05',
-      name: 'Chloe Thorne',
-      title: 'Especialista en Parafina Rosa & Hidratación',
-      specialty: 'Tratamientos Térmicos & Cuidado Intensivo Plantar',
-      photoUrl: 'assets/Krea2-194016_00002_.png',
-      bio: 'Enfocada en nutrición tisular profunda mediante baños emolientes y botitas térmicas de parafina rosa aromática.',
-      duties: 'Baño de burbujas termales, mascarillas lipídicas y masaje relajante plantar.',
-      availability: 'Turnos esta semana',
-      category: 'PODOLOGÍA'
+      category: 'MASAJE'
     }
   ];
 
   private spaces: SpaceItem[] = [
     {
       id: 'spc-01',
-      code: '🌸 SUITE 01',
-      name: 'Pink Cloud Sanctum',
-      subtitle: 'Cámara de relajación & masajes sensoriales',
-      description: 'Equipada con camilla térmica de viscoelástica, cielo de luces led rosadas y difusor aromático de frambuesa dulce.',
-      features: ['Camilla Térmica Suave', 'Cromoterapia Rosa Pastel', 'Aromaterapia Bubblegum'],
+      code: 'CABINA 01',
+      name: 'Néon Rose',
+      subtitle: 'Cabina privada con iluminación neón tenue',
+      description: 'Camilla térmica extra ancha, sábanas satinadas y control de iluminación neón.',
+      features: ['Camilla Térmica Extra Ancha', 'Sábanas Satinadas', 'Control de Iluminación Neón'],
       imageUrl: 'assets/Krea2-155013_00001_.png',
       capacity: '1 Persona'
     },
     {
       id: 'spc-02',
-      code: '🫧 SUITE 02',
-      name: 'Hydro Bubble Lounge',
-      subtitle: 'Gabinete de Podología Spa & Jelly Bath',
-      description: 'Sillones anatómicos con hidromasaje de microburbujas, luz cálida envolvente e infusiones refrescantes.',
-      features: ['Sillón Hidro-Masaje 360°', 'Tina de Burbujas Efervescentes', 'Pantalla Relax Streaming'],
+      code: 'CABINA 02',
+      name: 'Nuru Suite',
+      subtitle: 'Especial para masaje cuerpo a cuerpo',
+      description: 'Especial para cuerpo a cuerpo, equipada con colchón impermeable y ducha privada de alta presión.',
+      features: ['Colchón Impermeable Nuru', 'Ducha Privada Alta Presión', 'Climatización Óptima'],
       imageUrl: 'assets/Krea2-155013_00001_.png',
       capacity: '1 Persona'
     },
     {
       id: 'spc-03',
-      code: '✨ SUITE 03',
-      name: 'Oxygen & Glow Vault',
-      subtitle: 'Estudio de oxigenoterapia facial',
-      description: 'Entorno esterilizado de estética avanzada con tecnología de microburbujas de oxígeno y terapia de luz LED.',
-      features: ['Generador de Oxígeno Puro', 'Máscara LED Multifrecuencia', 'Aislamiento Acústico Total'],
+      code: 'CABINA 03',
+      name: 'Dúo / 4 Manos',
+      subtitle: 'Espacio amplio para sesiones simultáneas',
+      description: 'Espacio amplio para sesiones simultáneas con dos masajistas trabajando de manera sincronizada.',
+      features: ['Sesiones a Cuatro Manos', 'Espacio Amplio Climatizado', 'Sonido Acústico Envolvente'],
       imageUrl: 'assets/Krea2-155013_00001_.png',
-      capacity: '1 Persona'
+      capacity: '1-2 Personas'
     },
     {
       id: 'spc-04',
-      code: '💖 SUITE 04',
-      name: 'Berry Dream Twin Suite',
-      subtitle: 'Suite dúo para experiencias simultáneas',
-      description: 'Espacio VIP amplio con dos camillas de tratamiento, batas de seda rosa y servicio exclusivo de mocktails Bubble Pop.',
-      features: ['Atención Dúo Simultánea', 'Lounge Privado & Vestidor', 'Barra Mocktails Efervescentes'],
+      code: 'CABINA 04',
+      name: 'VIP Hidromasaje',
+      subtitle: 'Camilla especial y tina de hidromasaje privada',
+      description: 'Camilla especial y tina de hidromasaje privada en suite con microburbujas para relajación total.',
+      features: ['Tina de Hidromasaje Privada', 'Microburbujas Relajantes', 'Máxima Exclusividad & Confort'],
       imageUrl: 'assets/Krea2-155013_00001_.png',
-      capacity: '1-2 Personas'
+      capacity: '1 Persona'
+    }
+  ];
+
+  private reviews: ReviewItem[] = [
+    {
+      id: 'rev-01',
+      clientName: 'Carlos M.',
+      stars: 5,
+      comment: 'Excelente nivel de privacidad y atención impecable desde la recepción. El masaje Nuru con Miranda superó totalmente mis expectativas. La cabina climatizada y la música de fondo hacen que te desconectes al 100%.',
+      serviceName: 'Masaje Nuru Body Slide',
+      masseuseName: 'Miranda'
+    },
+    {
+      id: 'rev-02',
+      clientName: 'Diego R.',
+      stars: 5,
+      comment: 'El masaje tántrico sensitivo con Ely es otro nivel. Muy profesional, el ambiente con luz tenue neón es súper relajante y los aceites tibios marcan la diferencia. Definitivamente volveré.',
+      serviceName: 'Masaje Tántrico Sensitivo',
+      masseuseName: 'Ely'
+    },
+    {
+      id: 'rev-03',
+      clientName: 'Andrés V.',
+      stars: 5,
+      comment: 'Probé el masaje a cuatro manos con Pamela y fue una experiencia increíblemente relajante. Local discreto, limpio y súper puntual. 10 de 10.',
+      serviceName: 'Masaje a Cuatro Manos',
+      masseuseName: 'Pamela'
+    },
+    {
+      id: 'rev-04',
+      clientName: 'Javier S.',
+      stars: 5,
+      comment: 'Instalaciones de primera. La tina de hidromasaje privada en la cabina VIP es genial después de una semana de estrés. Excelente servicio de Maria.',
+      serviceName: 'Masaje RECOVR VIP',
+      masseuseName: 'Maria'
     }
   ];
 
@@ -247,7 +280,7 @@ export class CatalogService {
   }
 
   getServiceById(id: string): Observable<ServiceItem | undefined> {
-    return of(this.services.find(s => s.id === id || s.name.toLowerCase().includes(id.toLowerCase())));
+    return of(this.services.find(s => s.id.toLowerCase() === id.toLowerCase() || s.code.toLowerCase() === id.toLowerCase() || s.name.toLowerCase().includes(id.toLowerCase())));
   }
 
   getProfessionals(): Observable<Professional[]> {
@@ -260,5 +293,9 @@ export class CatalogService {
 
   getVideoReels(): Observable<VideoReel[]> {
     return of(this.videoReels);
+  }
+
+  getReviews(): Observable<ReviewItem[]> {
+    return of(this.reviews);
   }
 }

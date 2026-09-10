@@ -5,15 +5,14 @@
     <div class="auth-gate-modal animate-fade">
       <div class="gate-header">
         <div class="gate-brand">
-          <span class="gate-cross">🫧</span>
-          <span class="gate-badge">IDENTIFICACIÓN DE PACIENTE</span>
+          <span class="gate-badge">IDENTIFICACIÓN DE CLIENTE</span>
         </div>
         <button type="button" class="gate-close-btn" (click)="closeAuthGate()" title="Cerrar">✕</button>
       </div>
 
       <h3 class="gate-title">ACCESO REQUERIDO PARA RESERVAR</h3>
       <p class="gate-subtitle">
-        Para asegurar tu turno con la especialista seleccionada y acumular <strong>Puntos Bubble Spa</strong> (canjeables por sesiones gratis), primero debes identificarte o crear tu cuenta.
+        Para asegurar tu turno con la masajista seleccionada y acumular <strong>Puntos RECOVR</strong> (canjeables por sesiones gratis), primero debes identificarte o crear tu cuenta.
       </p>
 
       <!-- Selector de Pestañas -->
@@ -23,14 +22,14 @@
           class="gate-tab-btn"
           [class.active]="authModalTab === 'LOGIN'"
           (click)="authModalTab = 'LOGIN'; authModalError = ''">
-          🌸 INICIAR SESIÓN
+          INICIAR SESIÓN
         </button>
         <button
           type="button"
           class="gate-tab-btn"
           [class.active]="authModalTab === 'REGISTER'"
           (click)="authModalTab = 'REGISTER'; authModalError = ''">
-          ✨ CREAR CUENTA NUEVA (+50 PTS)
+          CREAR CUENTA NUEVA (+50 PTS)
         </button>
       </div>
 
@@ -65,7 +64,7 @@
 
         <div class="gate-actions">
           <button type="button" class="btn-primary" (click)="submitAuthModalLogin()">
-            <span>Ingresar y Continuar Reserva 🫧</span>
+            <span>Ingresar y Continuar Reserva</span>
           </button>
           <button type="button" class="btn-secondary btn-demo-quick" (click)="quickLoginDemoClient()">
             ⚡ Acceso 1-Clic como Carlos Mendoza (Demo)
@@ -76,7 +75,7 @@
       <!-- Pestaña 2: Crear Cuenta Nueva -->
       <div class="gate-form-panel" *ngIf="authModalTab === 'REGISTER'">
         <div class="bonus-notice">
-          <span>🎁 <strong>Bono de Bienvenida:</strong> Recibe +50 Puntos Bubblegum inmediatamente al registrarte.</span>
+          <span>🎁 <strong>Bono de Bienvenida:</strong> Recibe +50 Puntos RECOVR inmediatamente al registrarte.</span>
         </div>
         <div class="form-group">
           <label class="form-label">NOMBRE Y APELLIDO COMPLETO *</label>
@@ -117,13 +116,13 @@
 
         <div class="gate-actions">
           <button type="button" class="btn-primary" (click)="submitAuthModalRegister()">
-            <span>Crear Cuenta & Continuar (+50 Pts) 🫧</span>
+            <span>Crear Cuenta & Continuar (+50 Pts)</span>
           </button>
         </div>
       </div>
 
       <div class="gate-footer">
-        <span>🔒 Privacidad garantizada bajo estándares de confidencialidad RECOVR Bubble Spa.</span>
+        <span>🔒 Privacidad garantizada bajo estándares de confidencialidad RECOVR.</span>
       </div>
     </div>
   </div>
@@ -137,7 +136,7 @@
         [class.current]="currentStep === 1"
         (click)="goToStep(1)">
         <span class="step-num">01</span>
-        <span class="step-label">TRATAMIENTO</span>
+        <span class="step-label">TIPO DE MASAJE</span>
       </div>
       <div class="step-line" [class.active]="currentStep >= 2"></div>
       <div
@@ -147,7 +146,7 @@
         [class.disabled]="!bookingForm.get('serviceId')?.value"
         (click)="bookingForm.get('serviceId')?.value && goToStep(2)">
         <span class="step-num">02</span>
-        <span class="step-label">ESPECIALISTA</span>
+        <span class="step-label">MASAJISTA</span>
       </div>
       <div class="step-line" [class.active]="currentStep >= 3"></div>
       <div
@@ -190,14 +189,14 @@
       <app-brand-mark size="lg" color="var(--color-bubble-pink)"></app-brand-mark>
     </div>
 
-    <h3 class="success-title">RESERVA CONFIRMADA CON ÉXITO 🫧</h3>
+    <h3 class="success-title">CITA CONFIRMADA CON ÉXITO</h3>
     <p class="success-code">CÓDIGO DE SEGUIMIENTO: <strong>{{ bookingSuccess.id }}</strong></p>
 
     <!-- Tarjeta de Puntos Ganados -->
     <div class="points-reward-box" *ngIf="earnedPoints > 0">
       <div class="reward-star">✨</div>
       <div class="reward-text">
-        <h4>¡HAS ACUMULADO +{{ earnedPoints }} PUNTOS BUBBLEGUM!</h4>
+        <h4>¡HAS ACUMULADO +{{ earnedPoints }} PUNTOS RECOVR!</h4>
         <p>Tu saldo actualizado es de <strong>{{ totalClientPoints }} Puntos</strong>. Acércate a los 500 puntos para canjear tu próxima sesión gratuita.</p>
       </div>
     </div>
@@ -216,11 +215,11 @@
         <span>{{ bookingForm.value.clientName }}</span>
       </div>
       <div class="summary-row" *ngIf="selectedService">
-        <span>Tratamiento:</span>
+        <span>Masaje:</span>
         <span>{{ selectedService.name }} (S/ {{ selectedService.price }} PEN)</span>
       </div>
       <div class="summary-row" *ngIf="selectedProfessional">
-        <span>Especialista:</span>
+        <span>Masajista:</span>
         <span>{{ selectedProfessional.name }}</span>
       </div>
     </div>
@@ -231,7 +230,7 @@
 
     <div class="success-actions">
       <a routerLink="/admin" class="btn-primary"><span>Ver Mi Cuenta & Puntos ↗</span></a>
-      <button class="btn-secondary" (click)="resetFlow()">Reservar otra sesión</button>
+      <button class="btn-secondary" (click)="resetFlow()">Reservar otra cita</button>
     </div>
   </div>
 
@@ -241,7 +240,7 @@
 
       <!-- STEP 1: SERVICE SELECTION -->
       <div class="step-content" *ngIf="currentStep === 1">
-        <h3 class="step-heading">PASO 01 — SELECCIONA EL TRATAMIENTO BUBBLE SPA</h3>
+        <h3 class="step-heading">PASO 01 — SELECCIONA EL TIPO DE MASAJE</h3>
 
         <!-- Skeleton Loading State for Services -->
         <div class="services-list" *ngIf="isLoadingServices">
@@ -274,7 +273,7 @@
 
       <!-- STEP 2: PROFESSIONAL SELECTION -->
       <div class="step-content" *ngIf="currentStep === 2">
-        <h3 class="step-heading">PASO 02 — SELECCIONA LA ESPECIALISTA BUBBLE SPA</h3>
+        <h3 class="step-heading">PASO 02 — SELECCIONA A TU MASAJISTA</h3>
 
         <!-- Skeleton Loading State for Professionals -->
         <div class="professionals-list" *ngIf="isLoadingProfessionals">
@@ -298,15 +297,15 @@
             <div class="option-prof-info">
               <h4 class="option-prof-name">{{ p.name }}</h4>
               <p class="option-prof-title">{{ p.title }}</p>
-              <p class="option-prof-specialty">✨ {{ p.specialty }}</p>
-              <span class="option-prof-avail">🌸 {{ p.availability }}</span>
+              <p class="option-prof-specialty">&bull; {{ p.specialty }}</p>
+              <span class="option-prof-avail">&bull; {{ p.availability }}</span>
             </div>
-            <span class="select-badge" *ngIf="bookingForm.get('professionalId')?.value === p.id">SELECCIONADO ✨</span>
+            <span class="select-badge" *ngIf="bookingForm.get('professionalId')?.value === p.id">SELECCIONADA</span>
           </div>
         </div>
 
         <div class="step-actions">
-          <button type="button" class="btn-secondary" (click)="prevStep()">Volver a tratamientos</button>
+          <button type="button" class="btn-secondary" (click)="prevStep()">Volver a masajes</button>
         </div>
       </div>
 
@@ -339,16 +338,16 @@
         </div>
 
         <div class="step-actions">
-          <button type="button" class="btn-secondary" (click)="prevStep()">Volver a especialista</button>
+          <button type="button" class="btn-secondary" (click)="prevStep()">Volver a masajista</button>
           <button type="button" class="btn-primary" [disabled]="!bookingForm.get('timeSlot')?.value" (click)="nextStep()">
-            <span>Continuar a confirmación 🫧</span>
+            <span>Continuar a confirmación</span>
           </button>
         </div>
       </div>
 
       <!-- STEP 4: CLIENT DATA & CONFIRMATION -->
       <div class="step-content" *ngIf="currentStep === 4">
-        <h3 class="step-heading">PASO 04 — DATOS DE CONTACTO Y CONFIRMACIÓN DE RESERVA</h3>
+        <h3 class="step-heading">PASO 04 — DATOS DE CONTACTO Y CONFIRMACIÓN DE CITA</h3>
 
         <!-- Insignia de Sesión Activa de Cliente y Puntos -->
         <div class="client-active-badge" *ngIf="isClientLoggedIn">
@@ -356,17 +355,17 @@
             <span class="badge-dot"></span>
             <span>SESIÓN AUTENTICADA: <strong>{{ auth.currentUser()?.name }}</strong> ({{ auth.currentUser()?.email }})</span>
           </div>
-          <span class="badge-points-reward">✨ +100 PUNTOS BUBBLEGUM POR ESTA SESIÓN</span>
+          <span class="badge-points-reward">+100 PUNTOS RECOVR POR ESTA SESIÓN</span>
         </div>
 
         <!-- Resumen de reserva -->
         <div class="booking-summary-preview" *ngIf="selectedService && selectedProfessional">
-          <div class="summary-preview-header">RESUMEN DEL TRATAMIENTO</div>
-          <div class="preview-item"><strong>Tratamiento:</strong> {{ selectedService.code }} — {{ selectedService.name }}</div>
-          <div class="preview-item"><strong>Especialista:</strong> {{ selectedProfessional.name }}</div>
+          <div class="summary-preview-header">RESUMEN DE LA CITA</div>
+          <div class="preview-item"><strong>Masaje:</strong> {{ selectedService.code }} — {{ selectedService.name }}</div>
+          <div class="preview-item"><strong>Masajista:</strong> {{ selectedProfessional.name }}</div>
           <div class="preview-item"><strong>Duración:</strong> {{ selectedService.durationMinutes }} Minutos</div>
           <div class="preview-item"><strong>Fecha y Hora:</strong> {{ bookingForm.value.date }} a las {{ bookingForm.value.timeSlot }} HS</div>
-          <div class="preview-item preview-total"><strong>Valor Total:</strong> S/ {{ selectedService.price }} SOLES (PEN)</div>
+          <div class="preview-item preview-total"><strong>Tarifa Total:</strong> S/ {{ selectedService.price }} SOLES (PEN)</div>
         </div>
 
         <div class="form-grid">
@@ -395,15 +394,15 @@
           </div>
 
           <div class="form-group full-width">
-            <label for="notes" class="form-label">OBSERVACIONES O CONDICIONES FÍSICAS (OPCIONAL)</label>
-            <textarea id="notes" formControlName="notes" class="form-textarea" rows="3" placeholder="Detalle preferencias de aromas, tipo de piel o notas especiales..."></textarea>
+            <label for="notes" class="form-label">OBSERVACIONES O PREFERENCIAS (OPCIONAL)</label>
+            <textarea id="notes" formControlName="notes" class="form-textarea" rows="3" placeholder="Detalle preferencias de presión, intensidad o notas especiales..."></textarea>
           </div>
         </div>
 
         <div class="step-actions">
           <button type="button" class="btn-secondary" (click)="prevStep()">Volver a horario</button>
           <button type="submit" class="btn-primary" [disabled]="isSubmitting || bookingForm.invalid">
-            <span *ngIf="!isSubmitting">Confirmar reserva en Soles (S/) 🫧</span>
+            <span *ngIf="!isSubmitting">Confirmar cita en Soles (S/)</span>
             <span *ngIf="isSubmitting" class="submitting-spinner">
               <span class="spinner-dot"></span> Procesando registro...
             </span>

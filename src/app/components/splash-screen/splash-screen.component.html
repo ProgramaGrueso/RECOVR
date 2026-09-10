@@ -3,16 +3,18 @@
     <video
       #splashVideo
       class="splash-video"
-      src="videos/bubble-space.mp4"
+      src="videos/bubble-hero.mp4"
       autoplay
       [muted]="true"
       playsinline
       preload="auto"
       (ended)="onVideoEnded()">
     </video>
+    <button class="splash-skip-btn" (click)="onVideoEnded()" type="button" aria-label="Saltar introducción">
+      Saltar ✕
+    </button>
     <div class="splash-bubble-loader">
-      <span class="bubble-icon">🫧</span>
-      <span class="splash-brand">RECOVR BUBBLEGUM SPA</span>
+      <span class="splash-brand">RECOVR</span>
     </div>
   </div>
 }

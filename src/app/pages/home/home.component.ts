@@ -4,7 +4,7 @@ import { HeroComponent } from '../../components/hero/hero.component';
 import { ServiceCardComponent } from '../../components/service-card/service-card.component';
 import { ProfessionalCardComponent } from '../../components/professional-card/professional-card.component';
 import { SectionDividerComponent } from '../../components/section-divider/section-divider.component';
-import { CatalogService, VideoReel } from '../../services/catalog.service';
+import { CatalogService, VideoReel, ReviewItem } from '../../services/catalog.service';
 import { BookingService } from '../../services/booking.service';
 import { CursorService } from '../../services/cursor.service';
 import { ServiceItem } from '../../models/service.model';
@@ -34,6 +34,7 @@ export class HomeComponent implements OnInit {
   professionals: Professional[] = [];
   spaces: SpaceItem[] = [];
   videoReels: VideoReel[] = [];
+  reviews: ReviewItem[] = [];
   activeCategory: string = 'ALL';
 
   activeReel: VideoReel | null = null;
@@ -55,6 +56,10 @@ export class HomeComponent implements OnInit {
 
     this.catalogService.getVideoReels().subscribe(reels => {
       this.videoReels = reels;
+    });
+
+    this.catalogService.getReviews().subscribe(revs => {
+      this.reviews = revs;
     });
   }
 

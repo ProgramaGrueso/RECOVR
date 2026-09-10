@@ -6,7 +6,7 @@ export interface Professional {
   photoUrl: string;
   bio: string;
   duties: string;
-  availability: 'Disponible hoy' | 'Turnos esta semana' | 'Consulta previa';
+  availability: 'Disponible hoy' | 'Turnos esta semana' | 'Consulta previa' | 'Turnos por agenda' | string;
   category?: 'MASAJE' | 'PODOLOGÍA' | 'FACIAL' | 'CORPORAL' | string;
 }
 

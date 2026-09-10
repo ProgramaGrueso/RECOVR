@@ -46,7 +46,7 @@ export class SplashScreenComponent implements OnInit, AfterViewInit {
       // Fallback if video takes too long or fails to emit ended event
       setTimeout(() => {
         this.finishSplash();
-      }, 7000); // Max 7 seconds duration
+      }, 16000); // Max 16 seconds duration (bubble-hero is ~15s)
     }
   }
 
