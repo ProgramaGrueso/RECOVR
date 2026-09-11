@@ -1,5 +1,6 @@
 package com.recovr.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -7,14 +8,28 @@ import java.time.LocalDateTime;
  * Objeto de transferencia de datos (DTO) para la creación de una reserva.
  * Desacopla la interfaz pública REST del modelo interno de dominio.
  */
+@Schema(description = "Solicitud para registrar una nueva reserva en RECOVR")
 public class CrearReservaRequest {
 
+    @Schema(description = "Identificador del cliente", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long clienteId;
+
+    @Schema(description = "Identificador del especialista", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long empleadoId;
+
+    @Schema(description = "Identificador del servicio o tratamiento", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long servicioId;
+
+    @Schema(description = "Identificador de la sala o cabina", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long salaId;
+
+    @Schema(description = "Fecha y hora de inicio de la sesión", example = "2026-10-15T10:00:00", requiredMode = Schema.RequiredMode.REQUIRED)
     private LocalDateTime fechaHora;
+
+    @Schema(description = "Duración estimada en minutos", example = "60")
     private Integer duracionTotalMinutos;
+
+    @Schema(description = "Monto total calculado", example = "55.00")
     private BigDecimal montoTotal;
 
     public CrearReservaRequest() {

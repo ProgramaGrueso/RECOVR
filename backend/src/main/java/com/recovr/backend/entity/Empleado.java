@@ -1,23 +1,31 @@
 package com.recovr.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
 @Table(name = "empleados")
+@Schema(description = "Entidad que representa a un terapeuta o especialista de recuperación")
 public class Empleado {
 
+    @Schema(description = "Identificador único del empleado", accessMode = Schema.AccessMode.READ_ONLY, example = "1")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Schema(description = "Nombre completo del especialista", example = "Carlos Fisioterapeuta", requiredMode = Schema.RequiredMode.REQUIRED)
     @Column(nullable = false)
     private String nombre;
 
+    @Schema(description = "Área de especialidad o rol clínico", example = "Crioterapia y Recuperación Muscular")
     private String especialidad;
 
+    @Schema(description = "Teléfono de contacto", example = "911222333")
     private String telefono;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "empleado", cascade = CascadeType.ALL)
     private List<Reserva> reservas;
 

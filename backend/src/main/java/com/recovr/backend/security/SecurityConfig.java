@@ -31,6 +31,11 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
                         .requestMatchers("/api/auth/registro", "/api/auth/registro-admin", "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/usuarios").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/servicios/**")

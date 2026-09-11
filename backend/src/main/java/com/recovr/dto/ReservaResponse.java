@@ -2,6 +2,7 @@ package com.recovr.dto;
 
 import com.recovr.model.EstadoReserva;
 import com.recovr.model.Reserva;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -10,16 +11,34 @@ import java.time.LocalDateTime;
  * Objeto de transferencia de datos (DTO) para la respuesta de una reserva.
  * Proporciona una vista pública y segura de la reserva confirmada.
  */
+@Schema(description = "Representación pública de una reserva en RECOVR")
 public class ReservaResponse {
 
+    @Schema(description = "Identificador único de la reserva", example = "1")
     private Long id;
+
+    @Schema(description = "Identificador del cliente", example = "1")
     private Long clienteId;
+
+    @Schema(description = "Identificador del especialista", example = "1")
     private Long empleadoId;
+
+    @Schema(description = "Identificador del servicio", example = "1")
     private Long servicioId;
+
+    @Schema(description = "Identificador de la sala", example = "1")
     private Long salaId;
+
+    @Schema(description = "Fecha y hora de inicio de la sesión", example = "2026-10-15T10:00:00")
     private LocalDateTime fechaHora;
+
+    @Schema(description = "Duración en minutos", example = "60")
     private Integer duracionTotalMinutos;
+
+    @Schema(description = "Estado actual de la reserva", example = "PENDIENTE")
     private EstadoReserva estado;
+
+    @Schema(description = "Monto total", example = "55.00")
     private BigDecimal montoTotal;
 
     public ReservaResponse() {

@@ -44,7 +44,7 @@ class ReservaServiceTest {
     void debeCrearReservaConEstadoPendienteCuandoNoHayConflicto() {
         Reserva nuevaReserva = new Reserva(
                 null, 10L, 1L, 2L, 1L,
-                LocalDateTime.of(2026, 9, 10, 14, 0),
+                LocalDateTime.of(2026, 9, 12, 14, 0),
                 60, null, new BigDecimal("55.00")
         );
 
@@ -61,7 +61,7 @@ class ReservaServiceTest {
         // Reserva existente: Especialista 1 de 15:00 a 16:30 (90 min)
         Reserva existente = new Reserva(
                 null, 11L, 1L, 1L, 1L,
-                LocalDateTime.of(2026, 9, 10, 15, 0),
+                LocalDateTime.of(2026, 9, 12, 15, 0),
                 90, EstadoReserva.CONFIRMADA, new BigDecimal("65.00")
         );
         reservaRepository.save(existente);
@@ -69,7 +69,7 @@ class ReservaServiceTest {
         // Intento de nueva reserva con el mismo especialista 1 solapada (15:30 a 16:30)
         Reserva solapada = new Reserva(
                 null, 12L, 1L, 2L, 2L,
-                LocalDateTime.of(2026, 9, 10, 15, 30),
+                LocalDateTime.of(2026, 9, 12, 15, 30),
                 60, null, new BigDecimal("55.00")
         );
 
@@ -85,7 +85,7 @@ class ReservaServiceTest {
         // Reserva existente en Sala 3 de 16:00 a 17:15 (75 min)
         Reserva existente = new Reserva(
                 null, 11L, 2L, 1L, 3L,
-                LocalDateTime.of(2026, 9, 10, 16, 0),
+                LocalDateTime.of(2026, 9, 12, 16, 0),
                 75, EstadoReserva.PENDIENTE, new BigDecimal("65.00")
         );
         reservaRepository.save(existente);
@@ -93,7 +93,7 @@ class ReservaServiceTest {
         // Intento de nueva reserva en la misma Sala 3 solapada (16:30 a 17:30) con otro empleado
         Reserva solapada = new Reserva(
                 null, 13L, 3L, 2L, 3L,
-                LocalDateTime.of(2026, 9, 10, 16, 30),
+                LocalDateTime.of(2026, 9, 12, 16, 30),
                 60, null, new BigDecimal("55.00")
         );
 
@@ -109,7 +109,7 @@ class ReservaServiceTest {
         // Reserva cancelada previa
         Reserva cancelada = new Reserva(
                 null, 11L, 1L, 1L, 1L,
-                LocalDateTime.of(2026, 9, 10, 18, 0),
+                LocalDateTime.of(2026, 9, 12, 18, 0),
                 60, EstadoReserva.CANCELADA, new BigDecimal("65.00")
         );
         reservaRepository.save(cancelada);
@@ -117,7 +117,7 @@ class ReservaServiceTest {
         // Nueva reserva en el mismo horario y sala
         Reserva nueva = new Reserva(
                 null, 14L, 1L, 1L, 1L,
-                LocalDateTime.of(2026, 9, 10, 18, 0),
+                LocalDateTime.of(2026, 9, 12, 18, 0),
                 60, null, new BigDecimal("65.00")
         );
 
