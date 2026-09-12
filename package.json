@@ -1,0 +1,13 @@
+{
+  "name": "recovr",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "npm run build --prefix frontend",
+    "start": "npm run start --prefix frontend",
+    "install:frontend": "npm ci --prefix frontend"
+  }
+}
