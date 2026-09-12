@@ -4,6 +4,7 @@ import { HeroComponent } from '../../components/hero/hero.component';
 import { ServiceCardComponent } from '../../components/service-card/service-card.component';
 import { ProfessionalCardComponent } from '../../components/professional-card/professional-card.component';
 import { SectionDividerComponent } from '../../components/section-divider/section-divider.component';
+import { SmokeEffectComponent } from '../../components/smoke-effect/smoke-effect.component';
 import { CatalogService, VideoReel, ReviewItem } from '../../services/catalog.service';
 import { BookingService } from '../../services/booking.service';
 import { CursorService } from '../../services/cursor.service';
@@ -19,7 +20,8 @@ import { SpaceItem } from '../../models/space.model';
     HeroComponent,
     ServiceCardComponent,
     ProfessionalCardComponent,
-    SectionDividerComponent
+    SectionDividerComponent,
+    SmokeEffectComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']

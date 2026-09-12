@@ -1,0 +1,31 @@
+<div class="smoke-effect-wrapper" #container>
+  <!-- Three.js Canvas Container -->
+  <canvas #smokeCanvas class="smoke-canvas"></canvas>
+
+  <!-- Ambient Gradient Overlays for Seamless Blending -->
+  <div class="smoke-fade-top"></div>
+  <div class="smoke-fade-bottom"></div>
+  <div class="smoke-glow-bottom"></div>
+
+  <!-- Atmospheric Overlay Content -->
+  <div class="smoke-content-overlay">
+    <div class="smoke-badge">
+      <span class="pulse-dot"></span>
+      <span>ATMÓSFERA TÉRMICA &bull; 100% INSONORIZADO</span>
+    </div>
+
+    <h2 class="smoke-heading">
+      DESCONECTA DEL MUNDO EXTERIOR
+    </h2>
+
+    <p class="smoke-subtext">
+      Cabinas climatizadas, aromaterapia botánica, aceites tibios y sábanas satinadas en un ambiente con privacidad y discreción absoluta.
+    </p>
+
+    <div class="smoke-actions">
+      <button class="btn-primary smoke-btn" (click)="onReserveClick()">
+        <span>RESERVAR SESIÓN PRIVADA (S/)</span>
+      </button>
+    </div>
+  </div>
+</div>

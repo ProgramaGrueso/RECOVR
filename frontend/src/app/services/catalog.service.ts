@@ -37,8 +37,7 @@ export class CatalogService {
       description: 'Toques lentos, suaves y continuos por todo el cuerpo con aceites tibios neutros. Máxima relajación muscular y estimulación sensorial de pies a cabeza.',
       durationMinutes: 60,
       price: 200,
-      imageUrl: 'assets/Krea2-155101_00001_.png',
-      videoUrl: 'videos/bubble-facial.mp4',
+      imageUrl: 'assets/img/services/rc-01.jpg',
       featured: true
     },
     {
@@ -49,8 +48,7 @@ export class CatalogService {
       description: 'Masaje cuerpo a cuerpo sobre camilla especial con gel nuru tibio hiperdeslizante. Deslizamientos completos y contacto continuo.',
       durationMinutes: 75,
       price: 280,
-      imageUrl: 'assets/Krea2-155101_00001_.png',
-      videoUrl: 'videos/bubble-massage.mp4',
+      imageUrl: 'assets/img/services/rc-02.jpg',
       featured: true
     },
     {
@@ -61,7 +59,7 @@ export class CatalogService {
       description: 'Presión media y profunda para liberar sobrecargas en espalda, hombros y cuello. Termina con toques suaves de descanso.',
       durationMinutes: 60,
       price: 180,
-      imageUrl: 'assets/Krea2-155101_00001_.png',
+      imageUrl: 'assets/img/services/rc-03.jpg',
       featured: true
     },
     {
@@ -72,7 +70,7 @@ export class CatalogService {
       description: 'Sesión tántrica integral que combina maniobras sensitivas lentas con piedras tibias de cuarzo y aceites aromáticos.',
       durationMinutes: 75,
       price: 250,
-      imageUrl: 'assets/Krea2-155101_00001_.png',
+      imageUrl: 'assets/img/services/rc-04.jpg',
       featured: true
     },
     {
@@ -83,8 +81,7 @@ export class CatalogService {
       description: 'Dos masajistas trabajando al mismo tiempo de manera sincronizada. Relajación total e intensa.',
       durationMinutes: 60,
       price: 380,
-      imageUrl: 'assets/Krea2-155101_00001_.png',
-      videoUrl: 'videos/4manos.mp4',
+      imageUrl: 'assets/img/services/rc-05.jpg',
       featured: true
     },
     {
@@ -95,8 +92,7 @@ export class CatalogService {
       description: 'La sesión más completa: masaje tántrico, técnica cuerpo a cuerpo Nuru y tiempo de tina de hidromasaje privada con microburbujas.',
       durationMinutes: 90,
       price: 450,
-      imageUrl: 'assets/Krea2-155101_00001_.png',
-      videoUrl: 'videos/bubble-hero.mp4',
+      imageUrl: 'assets/img/services/rc-06.jpg',
       featured: true
     }
   ];
@@ -108,7 +104,7 @@ export class CatalogService {
       subtitle: 'Toques lentos y estimulación suave con aceites tibios',
       category: 'TÁNTRICO',
       videoUrl: 'videos/bubble-facial.mp4',
-      posterUrl: 'assets/Krea2-155013_00001_.png',
+      posterUrl: 'assets/img/services/rc-01.jpg',
       tag: '✨ SENSITIVO'
     },
     {
@@ -117,7 +113,7 @@ export class CatalogService {
       subtitle: 'Deslizamientos continuos y contacto cuerpo a cuerpo',
       category: 'NURU',
       videoUrl: 'videos/bubble-massage.mp4',
-      posterUrl: 'assets/Krea2-155101_00001_.png',
+      posterUrl: 'assets/img/services/rc-02.jpg',
       tag: '💖 NURU SLIDE'
     },
     {
@@ -126,7 +122,7 @@ export class CatalogService {
       subtitle: 'Sincronización simultánea de dos masajistas',
       category: '4 MANOS',
       videoUrl: 'videos/4manos.mp4',
-      posterUrl: 'assets/Krea2-194016_00002_.png',
+      posterUrl: 'assets/img/services/rc-05.jpg',
       tag: '✨ 4 MANOS'
     },
     {
@@ -135,7 +131,7 @@ export class CatalogService {
       subtitle: 'Privacidad absoluta y cabinas climatizadas',
       category: 'CABINAS',
       videoUrl: 'videos/bubble-space.mp4',
-      posterUrl: 'assets/Krea2-155023_00001_.png',
+      posterUrl: 'assets/img/cabinapriv.jpg',
       tag: '🌸 CABINAS'
     },
     {
@@ -144,7 +140,7 @@ export class CatalogService {
       subtitle: 'Masaje completo con tina de hidromasaje privada',
       category: 'VIP',
       videoUrl: 'videos/bubble-hero.mp4',
-      posterUrl: 'assets/Krea2-155034_00001_.png',
+      posterUrl: 'assets/img/services/rc-06.jpg',
       tag: '👑 SESIÓN VIP'
     }
   ];
@@ -155,7 +151,8 @@ export class CatalogService {
       name: 'Ely',
       title: 'Especialista en Masaje Tántrico Sensitivo',
       specialty: 'Masaje Tántrico Sensitivo y técnicas suaves',
-      photoUrl: 'assets/Krea2-154110_00001_.png',
+      photoUrl: 'assets/img/ely.png',
+      videoUrl: 'videos/ely.mp4',
       bio: 'Especialista en toques lentos, continuos y suaves por todo el cuerpo con aceites tibios neutros.',
       duties: 'Estimulación sensorial de pies a cabeza y relajación muscular profunda en ambiente tenue.',
       availability: 'Disponible hoy',
@@ -166,7 +163,7 @@ export class CatalogService {
       name: 'Miranda',
       title: 'Experta en Masaje Nuru Body Slide',
       specialty: 'Masaje Nuru Body Slide y cuerpo a cuerpo',
-      photoUrl: 'assets/Krea2-193952_00001_.png',
+      photoUrl: 'assets/img/miranda.png',
       videoUrl: 'videos/mira.mp4',
       bio: 'Especialista en técnicas cuerpo a cuerpo sobre camilla especial con gel nuru tibio hiperdeslizante.',
       duties: 'Deslizamientos corporales completos, contacto continuo y descanso integral.',
@@ -178,7 +175,7 @@ export class CatalogService {
       name: 'Pamela',
       title: 'Especialista en Descontracturante & Cuatro Manos',
       specialty: 'Descontracturante profundo y Masajes a Cuatro Manos',
-      photoUrl: 'assets/Krea2-194000_00001_.png',
+      photoUrl: 'assets/img/pame.png',
       videoUrl: 'videos/sadie.mp4',
       bio: 'Experta en presión media y profunda para liberar sobrecargas musculares y maniobras sincronizadas simultáneas.',
       duties: 'Descompresión de espalda, hombros y cuello, y sesiones dobles a cuatro manos.',
@@ -190,7 +187,8 @@ export class CatalogService {
       name: 'Maria',
       title: 'Atención en Masaje RECOVR VIP',
       specialty: 'Masaje RECOVR VIP y sesiones completas combinadas',
-      photoUrl: 'assets/Krea2-194009_00001_.png',
+      photoUrl: 'assets/img/maria.png',
+      videoUrl: 'videos/maria.mp4',
       bio: 'Atención exclusiva en la sesión más completa: masaje tántrico, técnica Nuru cuerpo a cuerpo e hidromasaje.',
       duties: 'Sesiones integrales VIP con tiempo de tina de hidromasaje privada en suite.',
       availability: 'Disponible hoy',
@@ -206,7 +204,7 @@ export class CatalogService {
       subtitle: 'Cabina privada con iluminación neón tenue',
       description: 'Camilla térmica extra ancha, sábanas satinadas y control de iluminación neón.',
       features: ['Camilla Térmica Extra Ancha', 'Sábanas Satinadas', 'Control de Iluminación Neón'],
-      imageUrl: 'assets/Krea2-155013_00001_.png',
+      imageUrl: 'assets/img/cabinapriv.jpg',
       capacity: '1 Persona'
     },
     {
@@ -216,7 +214,7 @@ export class CatalogService {
       subtitle: 'Especial para masaje cuerpo a cuerpo',
       description: 'Especial para cuerpo a cuerpo, equipada con colchón impermeable y ducha privada de alta presión.',
       features: ['Colchón Impermeable Nuru', 'Ducha Privada Alta Presión', 'Climatización Óptima'],
-      imageUrl: 'assets/Krea2-155013_00001_.png',
+      imageUrl: 'assets/img/cabinapriv.jpg',
       capacity: '1 Persona'
     },
     {
@@ -226,7 +224,7 @@ export class CatalogService {
       subtitle: 'Espacio amplio para sesiones simultáneas',
       description: 'Espacio amplio para sesiones simultáneas con dos masajistas trabajando de manera sincronizada.',
       features: ['Sesiones a Cuatro Manos', 'Espacio Amplio Climatizado', 'Sonido Acústico Envolvente'],
-      imageUrl: 'assets/Krea2-155013_00001_.png',
+      imageUrl: 'assets/img/cabinapriv.jpg',
       capacity: '1-2 Personas'
     },
     {
@@ -236,7 +234,7 @@ export class CatalogService {
       subtitle: 'Camilla especial y tina de hidromasaje privada',
       description: 'Camilla especial y tina de hidromasaje privada en suite con microburbujas para relajación total.',
       features: ['Tina de Hidromasaje Privada', 'Microburbujas Relajantes', 'Máxima Exclusividad & Confort'],
-      imageUrl: 'assets/Krea2-155013_00001_.png',
+      imageUrl: 'assets/img/cabinapriv.jpg',
       capacity: '1 Persona'
     }
   ];

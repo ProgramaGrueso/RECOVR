@@ -19,16 +19,6 @@
   
   <div class="card-image-wrapper">
     <img [src]="service.imageUrl" [alt]="service.name" class="card-image" loading="lazy" />
-    <video
-      #cardVideo
-      *ngIf="service.videoUrl"
-      class="card-video-preview"
-      [class.active]="isHovered"
-      [src]="service.videoUrl"
-      loop
-      playsinline
-      preload="metadata">
-    </video>
     <span class="card-category-badge">{{ service.code }}</span>
     <div class="card-overlay"></div>
   </div>

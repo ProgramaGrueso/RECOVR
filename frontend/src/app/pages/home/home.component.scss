@@ -1,6 +1,8 @@
 @use '../../../styles/tokens' as *;
 
 .home-page {
+  position: relative;
+  z-index: 1;
   width: 100%;
   overflow-x: hidden;
 

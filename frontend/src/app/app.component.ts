@@ -7,6 +7,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { CustomCursorComponent } from './components/custom-cursor/custom-cursor.component';
 
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
+import { SmokeBackgroundComponent } from './components/smoke-background/smoke-background.component';
 
 @Component({
   selector: 'app-root',
@@ -17,7 +18,8 @@ import { SplashScreenComponent } from './components/splash-screen/splash-screen.
     NavbarComponent,
     FooterComponent,
     CustomCursorComponent,
-    SplashScreenComponent
+    SplashScreenComponent,
+    SmokeBackgroundComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
