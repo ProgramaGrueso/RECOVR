@@ -1,0 +1,16 @@
+:host {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.brand-mark-svg {
+  display: block;
+  transition: transform 0.3s ease, color 0.3s ease;
+  vector-effect: non-scaling-stroke;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}

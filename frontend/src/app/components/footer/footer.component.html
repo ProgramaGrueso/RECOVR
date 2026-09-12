@@ -1,0 +1,51 @@
+<footer class="footer-container" id="footer-section">
+  <div class="footer-cta-banner">
+    <app-brand-mark size="lg" color="var(--color-bubble-pink)"></app-brand-mark>
+    <h2 class="footer-headline">MASAJES EXCLUSIVOS &bull; PRIVACIDAD ABSOLUTA</h2>
+
+    <p class="footer-subhead">Atención personalizada en cabinas privadas climatizadas. Elige tu tipo de masaje y a tu masajista favorita.</p>
+    <a (click)="onReserve()" (mouseenter)="setCursor('RESERVAR CITA')" (mouseleave)="resetCursor()" class="btn-primary footer-cta-btn" id="footer-cta-reserve">
+      <span>RESERVAR CITA (S/)</span>
+    </a>
+  </div>
+
+  <div class="footer-divider"></div>
+
+  <div class="footer-main">
+    <div class="footer-col brand-col">
+      <h3 class="footer-wordmark">RECOVR</h3>
+      <p class="brand-tagline">Masajes exclusivos, privacidad absoluta y una experiencia visual diferente.</p>
+      <p class="brand-desc">
+        Sesiones de masaje tántrico sensitivo, técnica nuru cuerpo a cuerpo y cabinas climatizadas con iluminación tenue neón rosa chicle y sábanas satinadas.
+      </p>
+    </div>
+
+    <div class="footer-col">
+      <h4 class="col-title">CARTA DE MASAJES (S/)</h4>
+      <ul class="footer-links">
+        <li><a href="#masajes">Masaje Tántrico Sensitivo (S/ 200)</a></li>
+        <li><a href="#masajes">Masaje Nuru Body Slide (S/ 280)</a></li>
+        <li><a href="#masajes">Masaje Relajante &amp; Descontracturante (S/ 180)</a></li>
+        <li><a href="#masajes">Masaje RECOVR VIP (S/ 450)</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <h4 class="col-title">UBICACIÓN &amp; ATENCIÓN</h4>
+      <p class="info-line">📍 Av. Primavera 1250, Santiago de Surco &bull; Lima, Perú</p>
+      <p class="info-line">⏱ Lunes a Sábado — 10:00 a 22:00</p>
+      <p class="info-line">🚗 Solo con cita confirmada &bull; Estacionamiento privado</p>
+      <div class="footer-admin-link-box">
+        <a routerLink="/admin/login" [queryParams]="{ mode: 'staff' }" class="footer-admin-link">
+          <span>Acceso Staff &bull; Centro de Control ↗</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p class="copyright">&copy; RECOVR. Todos los derechos reservados. Tarifas en Soles (S/).</p>
+    <p class="credits">PRIVACIDAD ABSOLUTA &bull; CABINAS CLIMATIZADAS</p>
+  </div>
+</footer>
+

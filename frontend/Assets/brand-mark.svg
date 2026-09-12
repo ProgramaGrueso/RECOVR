@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" stroke="currentColor">
+  <rect x="2.5" y="2.5" width="35" height="35" rx="1" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.85" />
+  <circle cx="6" cy="6" r="0.9" fill="currentColor" />
+  <circle cx="34" cy="6" r="0.9" fill="currentColor" />
+  <circle cx="6" cy="34" r="0.9" fill="currentColor" />
+  <circle cx="34" cy="34" r="0.9" fill="currentColor" />
+  <path d="M18.5 8h3v9.5H31v3h-9.5V30h-3v-9.5H9v-3h9.5V8z" fill="currentColor" />
+  <polygon points="20,4.5 22.5,8 17.5,8" fill="currentColor" />
+  <polygon points="20,35.5 22.5,32 17.5,32" fill="currentColor" />
+  <polygon points="4.5,20 8,17.5 8,22.5" fill="currentColor" />
+  <polygon points="35.5,20 32,17.5 32,22.5" fill="currentColor" />
+</svg>

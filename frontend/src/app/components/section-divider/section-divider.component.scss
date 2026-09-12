@@ -1,0 +1,44 @@
+@use '../../../styles/tokens' as *;
+
+.section-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 0;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  .line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(184, 180, 176, 0.25),
+      rgba(92, 26, 43, 0.4),
+      rgba(184, 180, 176, 0.25),
+      transparent
+    );
+  }
+
+  .symbol-container {
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+
+    .gothic-cross-icon {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      filter: brightness(0.9) contrast(1.1);
+      opacity: 0.85;
+      transition: transform 0.4s $transition-smooth, opacity 0.4s $transition-smooth;
+
+      &:hover {
+        opacity: 1;
+        transform: scale(1.1);
+      }
+    }
+  }
+}
