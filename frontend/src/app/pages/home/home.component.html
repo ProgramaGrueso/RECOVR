@@ -143,9 +143,10 @@
             class="staff-video"
             [src]="prof.videoUrl"
             loop
+            muted
             [muted]="true"
             playsinline
-            preload="none">
+            preload="metadata">
           </video>
         </div>
         <div class="staff-info">
@@ -255,14 +256,7 @@
     </div>
   </section>
 
-  <app-section-divider></app-section-divider>
 
-  <!-- 8. EFECTO SMOKE 3D CON THREE.JS DESDE ABAJO DEL LANDING (DIFERIDO) -->
-  @defer (on viewport) {
-    <app-smoke-effect></app-smoke-effect>
-  } @placeholder {
-    <div class="smoke-placeholder" style="min-height: 480px;"></div>
-  }
 
   <!-- MODAL DE REPRODUCTOR DE VIDEO REEL -->
   <div class="video-modal-backdrop" *ngIf="showVideoModal && activeReel" (click)="closeVideoModal()">

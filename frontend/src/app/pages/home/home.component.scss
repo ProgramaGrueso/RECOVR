@@ -637,8 +637,9 @@
             transform: scale(1.08);
           }
 
-          .staff-video {
-            opacity: 1;
+          .staff-media-wrapper .staff-video {
+            opacity: 1 !important;
+            visibility: visible;
           }
         }
 
@@ -661,6 +662,7 @@
           .staff-video {
             opacity: 0;
             pointer-events: none;
+            z-index: 2;
           }
         }
 

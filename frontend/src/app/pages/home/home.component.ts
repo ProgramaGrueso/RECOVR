@@ -4,7 +4,6 @@ import { HeroComponent } from '../../components/hero/hero.component';
 import { ServiceCardComponent } from '../../components/service-card/service-card.component';
 import { ProfessionalCardComponent } from '../../components/professional-card/professional-card.component';
 import { SectionDividerComponent } from '../../components/section-divider/section-divider.component';
-import { SmokeEffectComponent } from '../../components/smoke-effect/smoke-effect.component';
 import { CatalogService, VideoReel, ReviewItem } from '../../services/catalog.service';
 import { BookingService } from '../../services/booking.service';
 import { CursorService } from '../../services/cursor.service';
@@ -21,7 +20,6 @@ import { CardTiltDirective } from '../../directives/card-tilt.directive';
     CommonModule,
     HeroComponent,
     SectionDividerComponent,
-    SmokeEffectComponent,
     CardTiltDirective
   ],
   templateUrl: './home.component.html',
@@ -162,7 +160,6 @@ export class HomeComponent implements OnInit {
   onStaffVideoHover(video: HTMLVideoElement): void {
     if (video) {
       video.muted = true;
-      video.currentTime = 0;
       video.play().catch(() => {});
     }
   }

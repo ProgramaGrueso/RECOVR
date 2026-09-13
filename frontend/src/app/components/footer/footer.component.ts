@@ -1,14 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
 import { BookingService } from '../../services/booking.service';
 import { CursorService } from '../../services/cursor.service';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule, BrandMarkComponent, RouterLink],
+  imports: [CommonModule],
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss']
 })
