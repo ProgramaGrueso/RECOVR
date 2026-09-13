@@ -79,7 +79,7 @@
         (mouseenter)="setCursor('CABINAS')"
         (mouseleave)="resetCursor()">
         <img
-          src="assets/img/cabinapriv.jpg"
+          src="assets/img/cabinapriv.webp"
           alt="Cabina privada climatizada con iluminación tenue neón"
           class="space-img"
           loading="lazy" />
@@ -246,8 +246,12 @@
 
   <app-section-divider></app-section-divider>
 
-  <!-- 8. EFECTO SMOKE 3D CON THREE.JS DESDE ABAJO DEL LANDING -->
-  <app-smoke-effect></app-smoke-effect>
+  <!-- 8. EFECTO SMOKE 3D CON THREE.JS DESDE ABAJO DEL LANDING (DIFERIDO) -->
+  @defer (on viewport) {
+    <app-smoke-effect></app-smoke-effect>
+  } @placeholder {
+    <div class="smoke-placeholder" style="min-height: 480px;"></div>
+  }
 
   <!-- MODAL DE REPRODUCTOR DE VIDEO REEL -->
   <div class="video-modal-backdrop" *ngIf="showVideoModal && activeReel" (click)="closeVideoModal()">

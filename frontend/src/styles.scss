@@ -20,6 +20,10 @@ html {
   -moz-osx-font-smoothing: grayscale;
 }
 
+section[id] {
+  scroll-margin-top: 90px;
+}
+
 body {
   min-height: 100vh;
   background-color: transparent;

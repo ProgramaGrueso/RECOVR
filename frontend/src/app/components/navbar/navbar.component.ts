@@ -1,4 +1,15 @@
-import { Component, EventEmitter, HostListener, Output, inject, computed } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  OnInit,
+  OnDestroy,
+  Output,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  NgZone,
+  inject,
+  computed
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { BookingService } from '../../services/booking.service';
@@ -9,13 +20,16 @@ import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
 @Component({
   selector: 'app-navbar',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, BrandMarkComponent],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss']
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit, OnDestroy {
   private bookingService = inject(BookingService);
   private cursorService = inject(CursorService);
+  private ngZone = inject(NgZone);
+  private cdr = inject(ChangeDetectorRef);
   auth = inject(AuthService);
 
   currentUser = computed(() => this.auth.currentUser());
@@ -25,9 +39,28 @@ export class NavbarComponent {
   isMobileMenuOpen = false;
   isScrolled = false;
 
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
-    this.isScrolled = window.scrollY > 40;
+  private boundOnScroll = this.onWindowScroll.bind(this);
+
+  ngOnInit(): void {
+    if (typeof window !== 'undefined') {
+      this.ngZone.runOutsideAngular(() => {
+        window.addEventListener('scroll', this.boundOnScroll, { passive: true });
+      });
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('scroll', this.boundOnScroll);
+    }
+  }
+
+  private onWindowScroll(): void {
+    const scrolled = window.scrollY > 40;
+    if (scrolled !== this.isScrolled) {
+      this.isScrolled = scrolled;
+      this.cdr.markForCheck();
+    }
   }
 
   toggleMobileMenu(): void {

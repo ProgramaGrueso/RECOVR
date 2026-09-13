@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { ServiceCardComponent } from '../../components/service-card/service-card.component';
@@ -15,6 +15,7 @@ import { SpaceItem } from '../../models/space.model';
 @Component({
   selector: 'app-home',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     HeroComponent,
@@ -30,6 +31,7 @@ export class HomeComponent implements OnInit {
   private catalogService = inject(CatalogService);
   private bookingService = inject(BookingService);
   private cursorService = inject(CursorService);
+  private cdr = inject(ChangeDetectorRef);
 
   featuredServices: ServiceItem[] = [];
   filteredServices: ServiceItem[] = [];
@@ -46,22 +48,27 @@ export class HomeComponent implements OnInit {
     this.catalogService.getFeaturedServices().subscribe(services => {
       this.featuredServices = services;
       this.filteredServices = services;
+      this.cdr.markForCheck();
     });
 
     this.catalogService.getProfessionals().subscribe(profs => {
       this.professionals = profs;
+      this.cdr.markForCheck();
     });
 
     this.catalogService.getSpaces().subscribe(spaces => {
       this.spaces = spaces;
+      this.cdr.markForCheck();
     });
 
     this.catalogService.getVideoReels().subscribe(reels => {
       this.videoReels = reels;
+      this.cdr.markForCheck();
     });
 
     this.catalogService.getReviews().subscribe(revs => {
       this.reviews = revs;
+      this.cdr.markForCheck();
     });
   }
 
@@ -72,16 +79,19 @@ export class HomeComponent implements OnInit {
     } else {
       this.filteredServices = this.featuredServices.filter(s => s.category.toUpperCase() === category.toUpperCase());
     }
+    this.cdr.markForCheck();
   }
 
   openVideoModal(reel: VideoReel): void {
     this.activeReel = reel;
     this.showVideoModal = true;
+    this.cdr.markForCheck();
   }
 
   closeVideoModal(): void {
     this.showVideoModal = false;
     this.activeReel = null;
+    this.cdr.markForCheck();
   }
 
   onReserve(service?: ServiceItem): void {
@@ -102,17 +112,8 @@ export class HomeComponent implements OnInit {
 
   onReelHover(video: HTMLVideoElement): void {
     if (video) {
-      video.muted = false;
-      video.volume = 1.0;
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          if (video.muted === false) {
-            video.muted = true;
-            video.play().catch(() => {});
-          }
-        });
-      }
+      video.muted = true;
+      video.play().catch(() => {});
     }
   }
 
