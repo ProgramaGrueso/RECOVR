@@ -1,161 +1,172 @@
 <main class="home-page">
   
-  <!-- 1. HERO CON VIDEO RECOVR -->
+  <!-- 1. HERO MONUMENTAL BRUTALISTA -->
   <app-hero (reserveClick)="onReserve()"></app-hero>
 
-  <!-- 2. SECCIÓN VIDEO REELS -->
-  <section class="video-reels-section" id="reels" aria-label="Demostraciones en Video de Masajes">
-    <div class="section-header">
-      <span class="section-subtitle">EXPERIENCIA VISUAL &bull; VIDEO REELS</span>
-      <h2 class="section-title">SESIONES SENSORIALES EN ACCIÓN</h2>
-      <p class="section-description">
-        Descubre nuestras técnicas de masaje sensitivo, cuerpo a cuerpo Nuru y ambientes de relax exclusivo en cabinas privadas.
-      </p>
+  <!-- 2. CARTA DE TRATAMIENTOS (SESIONES SENSORIALES - GRILLA ASIMÉTRICA WARM & FUZZY) -->
+  <section class="work-section" id="masajes" aria-label="Carta de Masajes Exclusivos">
+    <div class="section-head">
+      <div class="section-title-group">
+        <span class="section-subtitle">CARTA DE TRATAMIENTOS &bull; TARIFAS EN SOLES (S/)</span>
+        <h2>SESIONES SENSORIALES</h2>
+      </div>
+
+      <!-- BARRA DE FILTROS INTERACTIVA -->
+      <div class="filter-bar">
+        <button
+          class="filter-btn"
+          [class.active]="activeCategory === 'ALL'"
+          (click)="filterCategory('ALL')"
+          data-cursor="TODOS">
+          TODOS
+        </button>
+        <button
+          class="filter-btn"
+          [class.active]="activeCategory === 'TÁNTRICO'"
+          (click)="filterCategory('TÁNTRICO')"
+          data-cursor="TÁNTRICO">
+          TÁNTRICO
+        </button>
+        <button
+          class="filter-btn"
+          [class.active]="activeCategory === 'NURU'"
+          (click)="filterCategory('NURU')"
+          data-cursor="NURU">
+          NURU BODY SLIDE
+        </button>
+        <button
+          class="filter-btn"
+          [class.active]="activeCategory === '4 MANOS'"
+          (click)="filterCategory('4 MANOS')"
+          data-cursor="4 MANOS">
+          4 MANOS
+        </button>
+        <button
+          class="filter-btn"
+          [class.active]="activeCategory === 'VIP'"
+          (click)="filterCategory('VIP')"
+          data-cursor="VIP">
+          VIP HIDROMASAJE
+        </button>
+      </div>
     </div>
 
-    <div
-      class="reels-grid drag-scroll-container"
-      (mouseenter)="setCursor('REPRODUCIR')"
-      (mouseleave)="resetCursor()">
-      <div
-        class="reel-card"
-        *ngFor="let reel of videoReels"
-        (mouseenter)="onReelHover(reelVideo)"
-        (mouseleave)="onReelLeave(reelVideo)"
-        (click)="openVideoModal(reel)">
-        <div class="reel-video-wrapper">
+    <!-- Asymmetric Editorial Portfolio Grid -->
+    <div class="projects-grid">
+      <article
+        *ngFor="let service of filteredServices; let idx = index"
+        class="project-card"
+        [ngClass]="getSpanClass(idx)"
+        appCardTilt
+        [attr.data-cursor]="'VER ' + service.code"
+        (mouseenter)="onCardVideoHover(cardVid)"
+        (mouseleave)="onCardVideoLeave(cardVid)"
+        (click)="openCinemaModal(service)">
+        <div class="card-media-wrapper">
+          <img [src]="service.posterUrl || service.imageUrl" [alt]="service.name" class="card-img" loading="lazy" />
           <video
-            #reelVideo
-            class="reel-video-preview"
-            [src]="reel.videoUrl"
-            [poster]="reel.posterUrl"
+            #cardVid
+            class="card-video"
+            [src]="service.videoUrl"
             loop
+            [muted]="true"
             playsinline
-            preload="metadata">
+            preload="none">
           </video>
-          <span class="reel-tag">{{ reel.tag }}</span>
-          <div class="reel-play-btn">
-            <span>▶</span>
+          <div class="card-overlay-gradient"></div>
+          <span class="card-tag-pill">{{ service.tag }}</span>
+        </div>
+        <div class="card-info">
+          <div class="card-meta-row">
+            <span>{{ service.code }} &bull; {{ service.category }}</span>
+            <span class="card-price-badge">S/ {{ service.price }}</span>
           </div>
-          <div class="reel-overlay"></div>
+          <h3 class="card-title">{{ service.name }}</h3>
+          <p class="card-desc">{{ service.description }}</p>
+          <div class="card-specs">
+            <span class="spec-tag">⏱ {{ service.durationMinutes }} Min</span>
+            <span class="spec-tag" *ngFor="let feat of service.features">{{ feat }}</span>
+          </div>
         </div>
-        <div class="reel-info">
-          <span class="reel-category">{{ reel.category }}</span>
-          <h4 class="reel-title">{{ reel.title }}</h4>
-          <p class="reel-subtitle">{{ reel.subtitle }}</p>
-        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- 3. CABINAS CLIMATIZADAS SHOWCASE -->
+  <section class="cabinas-section" id="cabinas" aria-label="Cabinas privadas climatizadas">
+    <div class="section-head">
+      <div class="section-title-group">
+        <span class="section-subtitle">ESPACIOS PRIVADOS INSONORIZADOS</span>
+        <h2>CABINAS DE RELAX</h2>
       </div>
     </div>
-  </section>
 
-  <app-section-divider></app-section-divider>
-
-  <!-- 3. CARTA DE TRATAMIENTOS (SOLO MASAJES) -->
-  <section class="protocols-section" id="masajes" aria-label="Carta de Masajes Exclusivos">
-    <div class="section-header">
-      <span class="section-subtitle">CARTA DE MASAJES &bull; TARIFAS EN SOLES (S/)</span>
-      <h2 class="section-title">MASAJES EXCLUSIVOS</h2>
-      <p class="section-description">
-        Toques sensitivos continuos, técnicas cuerpo a cuerpo y máxima relajación en cabinas privadas climatizadas. Elige tu sesión preferida.
-      </p>
-    </div>
-
-    <div class="services-grid">
-      <app-service-card
-        *ngFor="let service of filteredServices"
-        [service]="service"
-        (reserve)="onReserve($event)">
-      </app-service-card>
-    </div>
-  </section>
-
-  <app-section-divider></app-section-divider>
-
-  <!-- 4. CABINAS PRIVADAS -->
-  <section class="space-section" id="cabinas" aria-label="Cabinas privadas climatizadas">
-    <div class="space-container">
+    <div class="cabinas-grid" id="cabinas-grid">
       <div
-        class="space-image-wrapper"
-        (mouseenter)="setCursor('CABINAS')"
-        (mouseleave)="resetCursor()">
-        <img
-          src="assets/img/cabinapriv.webp"
-          alt="Cabina privada climatizada con iluminación tenue neón"
-          class="space-img"
-          loading="lazy" />
-        <div class="space-img-overlay"></div>
-      </div>
-
-      <div class="space-content">
-        <span class="space-badge">PRIVACIDAD ABSOLUTA &bull; AMBIENTE NEÓN</span>
-        <h2 class="space-title">CABINAS PRIVADAS CLIMATIZADAS</h2>
-        <p class="space-lead">
-          Un entorno diseñado para desconectar con iluminación tenue neón rosa chicle, sábanas satinadas, aceites tibios y confort total.
-        </p>
-        <p class="space-body">
-          Cabinas privadas 100% insonorizadas, camillas extra anchas climatizadas y opciones con tina de hidromasaje y ducha privada.
-        </p>
-        <div class="space-stats">
-          <div class="stat-item">
-            <span class="stat-val">100%</span>
-            <span class="stat-lbl">PRIVACIDAD &amp; DISCRECIÓN</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-val">04</span>
-            <span class="stat-lbl">CABINAS PRIVADAS</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CABINAS GRID -->
-    <div class="spaces-grid-container">
-      <h3 class="spaces-grid-title">CABINAS DISPONIBLES</h3>
-      <div
-        class="spaces-grid drag-scroll-container"
-        (mouseenter)="setCursor('DESLIZAR')"
-        (mouseleave)="resetCursor()">
-        <div class="space-card" *ngFor="let spc of spaces">
-          <div class="space-card-header">
-            <span class="space-code">{{ spc.code }}</span>
-            <span class="space-capacity">{{ spc.capacity }}</span>
-          </div>
-          <h4 class="space-card-name">{{ spc.name }}</h4>
-          <span class="space-card-subtitle">{{ spc.subtitle }}</span>
-          <p class="space-card-desc">{{ spc.description }}</p>
-          <div class="space-card-features">
-            <span class="feature-tag" *ngFor="let feat of spc.features">
-              &bull; {{ feat }}
-            </span>
-          </div>
-          <a (click)="onReserve()" class="btn-secondary space-card-btn">RESERVAR CABINA</a>
-        </div>
+        class="cabina-card"
+        *ngFor="let spc of spaces"
+        appCardTilt
+        [attr.data-cursor]="spc.code"
+        (click)="onReserve()">
+        <span class="cabina-code">{{ spc.code }} &bull; {{ spc.capacity }}</span>
+        <h3 class="cabina-name">{{ spc.name }}</h3>
+        <p class="cabina-desc">{{ spc.description }}</p>
+        <ul class="cabina-features">
+          <li *ngFor="let feat of spc.features">{{ feat }}</li>
+        </ul>
       </div>
     </div>
   </section>
 
-  <app-section-divider></app-section-divider>
-
-  <!-- 5. STAFF DE MASAJISTAS -->
-  <section class="team-section" id="staff" aria-label="Staff de masajistas">
-    <div class="section-header">
-      <span class="section-subtitle">STAFF DE MASAJISTAS</span>
-      <h2 class="section-title">MASAJISTAS EXCLUSIVAS</h2>
-      <p class="section-description">
-        Atención personalizada y discreta. Elige a tu masajista favorita para agendar tu cita.
-      </p>
+  <!-- 4. STAFF ROSTER INTERACTIVO -->
+  <section class="staff-section" id="staff" aria-label="Staff de masajistas exclusivas">
+    <div class="section-head">
+      <div class="section-title-group">
+        <span class="section-subtitle">STAFF SELECTO &bull; ATENCIÓN PERSONALIZADA</span>
+        <h2>MASAJISTAS EXCLUSIVAS</h2>
+      </div>
     </div>
 
-    <div class="team-grid">
-      <app-professional-card
+    <div class="staff-grid" id="staff-grid">
+      <article
+        class="staff-card"
         *ngFor="let prof of professionals"
-        [professional]="prof"
-        (selectProfessional)="onSelectProfessional($event)">
-      </app-professional-card>
+        appCardTilt
+        [attr.data-cursor]="'STAFF ' + prof.name"
+        (mouseenter)="onStaffVideoHover(staffVid)"
+        (mouseleave)="onStaffVideoLeave(staffVid)"
+        (click)="onSelectProfessional(prof)">
+        <div class="staff-media-wrapper">
+          <img [src]="prof.photoUrl" [alt]="prof.name" class="staff-img" loading="lazy" />
+          <video
+            #staffVid
+            class="staff-video"
+            [src]="prof.videoUrl"
+            loop
+            [muted]="true"
+            playsinline
+            preload="none">
+          </video>
+        </div>
+        <div class="staff-info">
+          <div class="staff-name-row">
+            <h3 class="staff-name">{{ prof.name }}</h3>
+            <span class="staff-avail">● {{ prof.availability }}</span>
+          </div>
+          <span class="staff-specialty">{{ prof.title }}</span>
+          <p class="staff-bio">{{ prof.bio }}</p>
+        </div>
+      </article>
     </div>
   </section>
 
-  <app-section-divider></app-section-divider>
+  <!-- KINETIC TICKER MARQUEE -->
+  <section class="ticker-section" aria-label="Marquesina Continua RECOVR Sanctum">
+    <div class="ticker-track">
+      <div class="ticker-item">RECOVR <span class="star">✦</span> PRIVACIDAD ABSOLUTA <span class="star">✦</span> SENSORIAL RECOVERY <span class="star">✦</span> CABINAS CLIMATIZADAS <span class="star">✦</span> TARIFA EN SOLES (S/) <span class="star">✦</span> ATENCIÓN CON RESERVA <span class="star">✦</span></div>
+      <div class="ticker-item" aria-hidden="true">RECOVR <span class="star">✦</span> PRIVACIDAD ABSOLUTA <span class="star">✦</span> SENSORIAL RECOVERY <span class="star">✦</span> CABINAS CLIMATIZADAS <span class="star">✦</span> TARIFA EN SOLES (S/) <span class="star">✦</span> ATENCIÓN CON RESERVA <span class="star">✦</span></div>
+    </div>
+  </section>
 
   <!-- 6. NUEVA SECCIÓN: RESEÑAS / TESTIMONIOS DE CLIENTES -->
   <section class="reviews-section" id="resenas" aria-label="Reseñas de clientes">
@@ -168,7 +179,7 @@
     </div>
 
     <div class="reviews-grid">
-      <article class="review-card" *ngFor="let rev of reviews">
+      <article class="review-card" *ngFor="let rev of reviews" appCardTilt data-cursor="RESEÑA">
         <div class="review-card-header">
           <div class="reviewer-meta">
             <div class="reviewer-avatar">{{ rev.clientName.charAt(0) }}</div>
@@ -273,6 +284,44 @@
         <button class="btn-primary modal-cta-btn" (click)="closeVideoModal(); onReserve()">
           <span>Reservar Cita en Soles (S/)</span>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CINEMA MODAL FULLSCREEN (WARM & FUZZY STYLE) -->
+  <div class="cinema-modal" [class.open]="showCinemaModal && cinemaService" (click)="closeCinemaModal()">
+    <div class="modal-content-box" (click)="$event.stopPropagation()" *ngIf="cinemaService">
+      <button class="cinema-close-btn" (click)="closeCinemaModal()">✕ CERRAR</button>
+      
+      <div class="cinema-video-container">
+        <video
+          [src]="cinemaService.videoUrl"
+          autoplay
+          controls
+          playsinline
+          class="cinema-video-player">
+        </video>
+      </div>
+
+      <div class="cinema-meta-container">
+        <div class="cinema-header-meta">
+          <span class="cinema-tag-badge">{{ cinemaService.tag }}</span>
+          <span class="cinema-category-badge">[ {{ cinemaService.category }} &bull; {{ cinemaService.durationMinutes }} MIN ]</span>
+          <span class="cinema-price-tag">S/ {{ cinemaService.price }}</span>
+        </div>
+
+        <h3 class="cinema-service-title">{{ cinemaService.name }}</h3>
+        <p class="cinema-service-desc">{{ cinemaService.description }}</p>
+
+        <div class="cinema-features-list">
+          <span class="cinema-feature-item" *ngFor="let feat of cinemaService.features">✦ {{ feat }}</span>
+        </div>
+
+        <div class="cinema-actions-row">
+          <button class="btn-primary cinema-reserve-cta" (click)="closeCinemaModal(); onReserve(cinemaService)">
+            <span>RESERVAR ESTE MASAJE (S/ {{ cinemaService.price }})</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>

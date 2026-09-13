@@ -1,73 +1,29 @@
-<header class="navbar" [class.scrolled]="isScrolled" id="main-header">
-  <div class="navbar-container">
-    <a routerLink="/" class="brand-logo" (click)="closeMobileMenu()" (mouseenter)="setCursor('RECOVR')" (mouseleave)="resetCursor()">
-      <app-brand-mark size="sm" color="var(--color-bubble-pink)"></app-brand-mark>
-      <div class="brand-text-group">
-        <span class="brand-text">RECOVR</span>
-        <span class="brand-subtext">MASAJES SENSITIVOS</span>
-      </div>
+<header class="site-header" [class.scrolled]="isScrolled" id="main-header">
+  <div class="header-left">
+    <a routerLink="/" class="brand-mark" (click)="closeMobileMenu()" data-cursor="RECOVR">
+      <span>RECOVR</span>
+      <span class="brand-badge">SANCTUM</span>
     </a>
+  </div>
 
-    <div class="navbar-actions">
-      <!-- Botón de menú -->
-      <button
-        class="menu-toggle-btn"
-        (click)="toggleMobileMenu()"
-        (mouseenter)="setCursor('MENÚ')"
-        (mouseleave)="resetCursor()"
-        [attr.aria-expanded]="isMobileMenuOpen"
-        aria-label="Menú principal">
-        <span *ngIf="!isMobileMenuOpen">MENU +</span>
-        <span *ngIf="isMobileMenuOpen">✕ CERRAR</span>
-      </button>
+  <div class="header-center">
+    <div class="live-status">
+      <span class="pulse-dot"></span>
+      <span>SANCTUM OPEN &bull; ATENCIÓN PRIVADA</span>
     </div>
+    <div class="live-clock">
+      <span>LIMA, PE {{ limaTimeStr() }}</span>
+    </div>
+  </div>
+
+  <div class="header-right">
+    <a href="#masajes" class="btn-pill" data-cursor="TRATAMIENTOS">Tratamientos</a>
+    <a href="#cabinas" class="btn-pill" data-cursor="CABINAS">Cabinas</a>
+    <a href="#staff" class="btn-pill" data-cursor="MASAJISTAS">Masajistas</a>
+    <a routerLink="/admin/login" class="btn-pill" data-cursor="MI CUENTA">Mi Cuenta</a>
+    <button class="btn-pill primary" (click)="onReserve()" data-cursor="RESERVAR">
+      <span>Reservar Cita (S/)</span>
+    </button>
   </div>
 </header>
-
-<!-- Overlay a Pantalla Completa Satinado -->
-<div class="fullscreen-nav-overlay" [class.open]="isMobileMenuOpen" aria-hidden="!isMobileMenuOpen">
-  <div class="overlay-inner">
-    <div class="overlay-brand">
-      <app-brand-mark size="md" color="var(--color-bubble-pink)"></app-brand-mark>
-      <span class="overlay-wordmark">RECOVR</span>
-    </div>
-
-    <nav class="overlay-menu-links" aria-label="Navegación completa">
-      <a routerLink="/" class="overlay-link" (click)="closeMobileMenu()">
-        INICIO
-      </a>
-      <a routerLink="/" fragment="reels" class="overlay-link" (click)="closeMobileMenu()">
-        VIDEO REELS
-      </a>
-      <a routerLink="/" fragment="masajes" class="overlay-link" (click)="closeMobileMenu()">
-        CARTA DE MASAJES
-      </a>
-      <a routerLink="/" fragment="cabinas" class="overlay-link" (click)="closeMobileMenu()">
-        CABINAS PRIVADAS
-      </a>
-      <a routerLink="/" fragment="staff" class="overlay-link" (click)="closeMobileMenu()">
-        STAFF DE MASAJISTAS
-      </a>
-      <a routerLink="/" fragment="resenas" class="overlay-link" (click)="closeMobileMenu()">
-        OPINIONES Y RESEÑAS
-      </a>
-      <a routerLink="/" fragment="ubicacion" class="overlay-link" (click)="closeMobileMenu()">
-        UBICACIÓN & ACCESO
-      </a>
-      <a (click)="onReserve()" class="overlay-link overlay-cta">
-        RESERVAR CITA (S/)
-      </a>
-      <a routerLink="/admin/login" class="overlay-link overlay-login-link" (click)="closeMobileMenu()">
-        MI CUENTA PACIENTE ↗
-      </a>
-      <a routerLink="/admin/login" [queryParams]="{ mode: 'staff' }" class="overlay-link overlay-login-link" (click)="closeMobileMenu()">
-        ACCESO STAFF ↗
-      </a>
-    </nav>
-
-    <div class="overlay-footer">
-      <span class="sanctum-tag">RECOVR &bull; MASAJES SENSITIVOS &amp; RELAX PREMIUM &bull; TARIFAS EN SOLES (S/)</span>
-    </div>
-  </div>
-</div>
 

@@ -36,7 +36,11 @@
       <p class="info-line">⏱ Lunes a Sábado — 10:00 a 22:00</p>
       <p class="info-line">🚗 Solo con cita confirmada &bull; Estacionamiento privado</p>
       <div class="footer-admin-link-box">
-        <a routerLink="/admin/login" [queryParams]="{ mode: 'staff' }" class="footer-admin-link">
+        <a routerLink="/admin/login" class="footer-admin-link" style="margin-bottom: 0.5rem; display: inline-block;">
+          <span>Mi Cuenta &bull; Portal Pacientes ↗</span>
+        </a>
+        <br />
+        <a routerLink="/admin/login" [queryParams]="{ mode: 'staff' }" class="footer-admin-link" style="display: inline-block;">
           <span>Acceso Staff &bull; Centro de Control ↗</span>
         </a>
       </div>

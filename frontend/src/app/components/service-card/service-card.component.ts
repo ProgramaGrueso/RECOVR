@@ -1,13 +1,14 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ViewChild, ElementRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ServiceItem } from '../../models/service.model';
 import { BookingService } from '../../services/booking.service';
 import { CursorService } from '../../services/cursor.service';
+import { CardTiltDirective } from '../../directives/card-tilt.directive';
 
 @Component({
   selector: 'app-service-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CardTiltDirective],
   templateUrl: './service-card.component.html',
   styleUrls: ['./service-card.component.scss']
 })
@@ -19,16 +20,28 @@ export class ServiceCardComponent {
   @Input() isLoading = false;
   @Output() reserve = new EventEmitter<ServiceItem>();
 
+  @ViewChild('cardVideo') cardVideoRef?: ElementRef<HTMLVideoElement>;
+
   isHovered = false;
 
   onMouseEnter(): void {
     this.isHovered = true;
     this.setCursor(this.service?.code || 'MASAJE');
+    const video = this.cardVideoRef?.nativeElement;
+    if (video) {
+      video.muted = true;
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    }
   }
 
   onMouseLeave(): void {
     this.isHovered = false;
     this.resetCursor();
+    const video = this.cardVideoRef?.nativeElement;
+    if (video) {
+      video.pause();
+    }
   }
 
   onReserve(): void {

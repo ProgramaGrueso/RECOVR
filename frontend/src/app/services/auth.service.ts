@@ -275,7 +275,7 @@ export class AuthService {
     }
 
     const user = DEMO_USERS[role];
-    if (!user || user.id !== userId.trim() || user.password !== password) return false;
+    if (!user || (user.id.toLowerCase() !== trimmedId && user.email.toLowerCase() !== trimmedId) || user.password !== password) return false;
 
     this.persistUser(user, rememberMe);
     return true;

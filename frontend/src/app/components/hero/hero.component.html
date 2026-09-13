@@ -1,71 +1,25 @@
-<section
-  class="hero-container"
-  (mouseenter)="setCursor('RECOVR')"
-  (mouseleave)="resetCursor()"
-  aria-label="Sección principal de RECOVR">
-  
-  @if (showVideo) {
-    <div class="video-wrapper" [class.video-failed]="isVideoFailed">
-      <video
-        #heroVideo
-        class="hero-video"
-        poster="assets/img/cabinapriv.webp"
-        [src]="videoSource"
-        autoplay
-        [muted]="true"
-        loop
-        playsinline
-        preload="metadata"
-        (error)="onVideoError()"
-        aria-hidden="true">
-        Tu navegador no soporta el elemento de video.
-      </video>
-      <div class="video-overlay"></div>
-    </div>
-  } @else {
-    <div class="video-wrapper">
-      <img src="assets/img/cabinapriv.webp" alt="RECOVR Background" style="width: 100%; height: 100%; object-fit: cover;">
-      <div class="video-overlay"></div>
-    </div>
-  }
-
-  <div class="hero-content">
-    <div class="hero-badge-pill">
-      <span class="hero-badge">MASAJES SENSITIVOS &bull; RELAX PREMIUM</span>
-    </div>
-
-    <h1 class="hero-wordmark">RECOVR</h1>
-
-    <h2 class="hero-tagline">Masajes exclusivos, privacidad absoluta y una experiencia visual diferente.</h2>
-
-    <p class="hero-subline">Atención personalizada en cabinas privadas climatizadas. Elige tu tipo de masaje y a tu masajista favorita.</p>
-
-    <div class="hero-pricing-pill">
-      <span>Masajes desde <strong>S/ 180 Soles</strong> &bull; Atención exclusiva con reserva</span>
-    </div>
-
-    <div class="hero-actions">
-      <a
-        (click)="onReserve()"
-        (mouseenter)="setCursor('RESERVAR CITA')"
-        (mouseleave)="resetCursor()"
-        class="btn-primary"
-        id="hero-cta-reserve">
-        <span>RESERVAR CITA (S/)</span>
-      </a>
-      <a
-        href="#reels"
-        class="btn-secondary"
-        (mouseenter)="setCursor('VER VIDEOS')"
-        (mouseleave)="resetCursor()">
-        <span>VER VIDEO REELS</span>
-      </a>
-    </div>
+<section class="hero-section" aria-label="Estudio Sensorial RECOVR Sanctum">
+  <div class="hero-top-info">
+    <span class="meta-label">Estudio Sensorial de Alta Gama &bull; Lima, Perú</span>
   </div>
 
-  <div class="hero-scroll-indicator">
-    <span class="scroll-label">EXPLORAR</span>
-    <div class="scroll-line-vertical"></div>
+  <h1 class="hero-main-title" data-cursor="SANCTUM">
+    RECOVR
+  </h1>
+
+  <div class="hero-sub-grid">
+    <p class="hero-lead-text">
+      Toques sensitivos continuos, técnica Nuru cuerpo a cuerpo y privacidad absoluta en cabinas climatizadas con iluminación tenue neón.
+    </p>
+
+    <div class="hero-meta-item">
+      <span class="meta-label">Ubicación Sanctum</span>
+      <span class="meta-val">Av. Primavera 1250, Surco</span>
+    </div>
+
+    <div class="hero-meta-item">
+      <span class="meta-label">Acceso Exclusivo</span>
+      <span class="meta-val">Estacionamiento Vigilado</span>
+    </div>
   </div>
 </section>
-

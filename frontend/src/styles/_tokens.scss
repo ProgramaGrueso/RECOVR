@@ -2,37 +2,38 @@
 // Tokens de diseño RECOVR — Estética Bubblegum Spa & Jelly Glow (Refined v2)
 
 :root {
-  // Paleta Bubblegum Spa — fondos más profundos y ricos
-  --color-bg: #080510;
-  --color-bg-alt: #110a1e;
-  --color-bg-card: rgba(255, 255, 255, 0.045);
-  --color-bg-card-hover: rgba(255, 255, 255, 0.09);
-  --color-card-border: rgba(255, 105, 180, 0.24);
-  --color-card-border-hover: rgba(255, 105, 180, 0.6);
+  // Paleta Bubblegum Spa / Dark Luxury Editorial
+  --color-bg: #05030a;
+  --color-bg-alt: #0d0718;
+  --color-bg-card: rgba(14, 8, 26, 0.65);
+  --color-bg-card-hover: rgba(26, 15, 46, 0.85);
+  --color-card-border: rgba(255, 42, 133, 0.22);
+  --color-card-border-hover: rgba(255, 42, 133, 0.75);
 
-  // Acentos Bubblegum — más vibrantes y con mayor saturación
-  --color-bubble-pink: #ff6eaa;
+  // Acentos Bubblegum / Neon — más vibrantes y con mayor saturación
+  --color-bubble-pink: #ff2a85;
   --color-bubble-hotpink: #ff1f98;
   --color-bubble-magenta: #e42c7f;
-  --color-bubble-purple: #b05cf7;
+  --color-bubble-purple: #a855f7;
   --color-bubble-lavender: #c98dff;
-  --color-bubble-cyan: #42c8f5;
+  --color-bubble-cyan: #00f0ff;
   --color-bubble-mint: #3ddbaa;
-  --color-bubble-glow: rgba(255, 110, 170, 0.38);
+  --color-bubble-glow: rgba(255, 42, 133, 0.38);
 
-  --color-accent: #ff6eaa;
-  --color-accent-soft: #ff96c8;
+  --color-accent: #ff2a85;
+  --color-accent-soft: #ff6eaa;
   --color-text: #fff8fa;
   --color-text-muted: #d4bfd2;
   --color-metal: #e8dae6;
 
   // Degradados Bubblegum — más dinámicos y expresivos
-  --gradient-bubble: linear-gradient(135deg, #ff6eaa 0%, #c98dff 50%, #42c8f5 100%);
-  --gradient-bubble-soft: linear-gradient(135deg, rgba(255, 110, 170, 0.18) 0%, rgba(176, 92, 247, 0.14) 100%);
-  --gradient-bubble-btn: linear-gradient(135deg, #ff6eaa 0%, #ff1f98 50%, #b05cf7 100%);
-  --gradient-bubble-glow: radial-gradient(circle at center, rgba(255, 110, 170, 0.3) 0%, transparent 70%);
+  --gradient-bubble: linear-gradient(135deg, #ff2a85 0%, #c98dff 50%, #00f0ff 100%);
+  --gradient-bubble-soft: linear-gradient(135deg, rgba(255, 42, 133, 0.18) 0%, rgba(168, 85, 247, 0.14) 100%);
+  --gradient-bubble-btn: linear-gradient(135deg, #ff2a85 0%, #ff1f98 50%, #a855f7 100%);
+  --gradient-bubble-glow: radial-gradient(circle at center, rgba(255, 42, 133, 0.3) 0%, transparent 70%);
 
-  // Tipografía RECOVR — moderna, nítida y consistente
+  // Tipografía RECOVR — monumental editorial y legible
+  --font-hero: 'Syne', 'Outfit', sans-serif;
   --font-display: 'Outfit', sans-serif;
   --font-heading: 'Outfit', sans-serif;
   --font-body: 'Plus Jakarta Sans', sans-serif;
@@ -63,6 +64,7 @@ $color-text: var(--color-text);
 $color-text-muted: var(--color-text-muted);
 $color-metal: var(--color-metal);
 
+$font-hero: var(--font-hero);
 $font-display: var(--font-display);
 $font-heading: var(--font-heading);
 $font-body: var(--font-body);

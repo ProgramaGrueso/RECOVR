@@ -8,6 +8,8 @@
   "scripts": {
     "build": "npm run build --prefix frontend",
     "start": "npm run start --prefix frontend",
-    "install:frontend": "npm ci --prefix frontend"
+    "install:frontend": "npm ci --prefix frontend",
+    "dev:prototipo": "npm run dev --prefix Prototipo",
+    "start:prototipo": "npm run dev --prefix Prototipo"
   }
 }

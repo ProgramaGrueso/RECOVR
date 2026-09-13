@@ -11,6 +11,7 @@ import { CursorService } from '../../services/cursor.service';
 import { ServiceItem } from '../../models/service.model';
 import { Professional } from '../../models/professional.model';
 import { SpaceItem } from '../../models/space.model';
+import { CardTiltDirective } from '../../directives/card-tilt.directive';
 
 @Component({
   selector: 'app-home',
@@ -19,10 +20,9 @@ import { SpaceItem } from '../../models/space.model';
   imports: [
     CommonModule,
     HeroComponent,
-    ServiceCardComponent,
-    ProfessionalCardComponent,
     SectionDividerComponent,
-    SmokeEffectComponent
+    SmokeEffectComponent,
+    CardTiltDirective
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
@@ -43,6 +43,9 @@ export class HomeComponent implements OnInit {
 
   activeReel: VideoReel | null = null;
   showVideoModal: boolean = false;
+
+  cinemaService: ServiceItem | null = null;
+  showCinemaModal: boolean = false;
 
   ngOnInit(): void {
     this.catalogService.getFeaturedServices().subscribe(services => {
@@ -77,9 +80,16 @@ export class HomeComponent implements OnInit {
     if (category === 'ALL') {
       this.filteredServices = this.featuredServices;
     } else {
-      this.filteredServices = this.featuredServices.filter(s => s.category.toUpperCase() === category.toUpperCase());
+      this.filteredServices = this.featuredServices.filter(s =>
+        s.category && s.category.toUpperCase().includes(category.toUpperCase())
+      );
     }
     this.cdr.markForCheck();
+  }
+
+  getSpanClass(index: number): string {
+    const spans = ['span-7 tall', 'span-5', 'span-6', 'span-6', 'span-5', 'span-7 tall'];
+    return spans[index % spans.length];
   }
 
   openVideoModal(reel: VideoReel): void {
@@ -91,6 +101,18 @@ export class HomeComponent implements OnInit {
   closeVideoModal(): void {
     this.showVideoModal = false;
     this.activeReel = null;
+    this.cdr.markForCheck();
+  }
+
+  openCinemaModal(service: ServiceItem): void {
+    this.cinemaService = service;
+    this.showCinemaModal = true;
+    this.cdr.markForCheck();
+  }
+
+  closeCinemaModal(): void {
+    this.showCinemaModal = false;
+    this.cinemaService = null;
     this.cdr.markForCheck();
   }
 
@@ -118,6 +140,34 @@ export class HomeComponent implements OnInit {
   }
 
   onReelLeave(video: HTMLVideoElement): void {
+    if (video) {
+      video.pause();
+    }
+  }
+
+  onCardVideoHover(video: HTMLVideoElement): void {
+    if (video) {
+      video.muted = true;
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    }
+  }
+
+  onCardVideoLeave(video: HTMLVideoElement): void {
+    if (video) {
+      video.pause();
+    }
+  }
+
+  onStaffVideoHover(video: HTMLVideoElement): void {
+    if (video) {
+      video.muted = true;
+      video.currentTime = 0;
+      video.play().catch(() => {});
+    }
+  }
+
+  onStaffVideoLeave(video: HTMLVideoElement): void {
     if (video) {
       video.pause();
     }

@@ -14,24 +14,42 @@
 <article
   class="service-card"
   *ngIf="!isLoading && service"
+  appCardTilt
+  [attr.data-cursor]="service.name"
   (mouseenter)="onMouseEnter()"
   (mouseleave)="onMouseLeave()">
   
   <div class="card-image-wrapper">
     <img [src]="service.imageUrl" [alt]="service.name" class="card-image" loading="lazy" />
-    <span class="card-category-badge">{{ service.code }}</span>
+    <video
+      #cardVideo
+      *ngIf="service.videoUrl"
+      class="card-video-preview"
+      [class.active]="isHovered"
+      [src]="service.videoUrl"
+      loop
+      muted
+      playsinline
+      preload="none">
+    </video>
+    <span class="card-category-badge">{{ service.tag || service.code }}</span>
     <div class="card-overlay"></div>
   </div>
 
   <div class="card-content">
     <div class="card-header">
-      <span class="card-code">{{ service.code }}</span>
+      <span class="card-code">{{ service.code }} &bull; {{ service.category }}</span>
       <span class="card-duration">⏱ {{ service.durationMinutes }} MIN</span>
     </div>
 
     <h3 class="card-title">{{ service.name }}</h3>
 
     <p class="card-description">{{ service.description }}</p>
+
+    <!-- Features chips si están disponibles -->
+    <div class="card-features-chips" *ngIf="service.features && service.features.length">
+      <span class="feat-chip" *ngFor="let feat of service.features">&bull; {{ feat }}</span>
+    </div>
 
     <div class="card-footer">
       <div class="card-price">
@@ -42,10 +60,10 @@
       <a
         (click)="onReserve()"
         class="btn-primary card-cta"
-        [id]="'btn-reserve-' + service.id">
+        [id]="'btn-reserve-' + service.id"
+        data-cursor="RESERVAR">
         <span>RESERVAR (S/)</span>
       </a>
     </div>
   </div>
 </article>
-

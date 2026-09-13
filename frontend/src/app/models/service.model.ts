@@ -1,8 +1,8 @@
-export type ServiceCategory = 'FACIAL' | 'MASAJE' | 'PODOLOGÍA' | 'CORPORAL' | 'ALL' | string;
+export type ServiceCategory = 'TÁNTRICO' | 'NURU' | 'DESCONTRACTURANTE' | '4 MANOS' | 'VIP' | 'MASAJE' | 'FACIAL' | 'ALL' | string;
 
 export interface ServiceItem {
   id: string;
-  code: string; // e.g. '🫧 BUBBLE 01'
+  code: string; // e.g. 'RC-01'
   name: string;
   category: ServiceCategory;
   description: string;
@@ -10,6 +10,8 @@ export interface ServiceItem {
   price: number;
   imageUrl: string;
   videoUrl?: string;
+  posterUrl?: string;
+  tag?: string;
+  features?: string[];
   featured?: boolean;
 }
-

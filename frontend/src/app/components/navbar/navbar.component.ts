@@ -15,25 +15,38 @@ import { RouterLink } from '@angular/router';
 import { BookingService } from '../../services/booking.service';
 import { CursorService } from '../../services/cursor.service';
 import { AuthService } from '../../services/auth.service';
-import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
+import { ServerTimeService } from '../../services/server-time.service';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, BrandMarkComponent],
+  imports: [CommonModule, RouterLink],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   private bookingService = inject(BookingService);
   private cursorService = inject(CursorService);
+  private serverTimeService = inject(ServerTimeService);
   private ngZone = inject(NgZone);
   private cdr = inject(ChangeDetectorRef);
   auth = inject(AuthService);
 
   currentUser = computed(() => this.auth.currentUser());
   clientPoints = computed(() => this.auth.getClientPoints());
+
+  limaTimeStr = computed(() => {
+    const date = this.serverTimeService.serverTimeSignal();
+    const options: Intl.DateTimeFormatOptions = {
+      timeZone: 'America/Lima',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    };
+    return date.toLocaleTimeString('es-PE', options);
+  });
 
   @Output() reserveClick = new EventEmitter<void>();
   isMobileMenuOpen = false;
