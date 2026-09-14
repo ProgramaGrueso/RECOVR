@@ -18,10 +18,22 @@ html {
   line-height: 1.65;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  @media (max-width: 768px) {
+    font-size: 15px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 14px;
+  }
 }
 
 section[id] {
   scroll-margin-top: 90px;
+
+  @media (max-width: 768px) {
+    scroll-margin-top: 70px;
+  }
 }
 
 body {
@@ -82,6 +94,16 @@ button {
   gap: 0.55rem;
   transition: all 0.35s var(--ease-bubble);
 
+  @media (max-width: 768px) {
+    padding: 0.85rem 1.8rem;
+    font-size: 0.82rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.75rem 1.4rem;
+    font-size: 0.75rem;
+  }
+
   &::before {
     content: '';
     position: absolute;
@@ -124,6 +146,16 @@ button {
   gap: 0.55rem;
   transition: all 0.35s var(--ease-bubble);
 
+  @media (max-width: 768px) {
+    padding: 0.8rem 1.8rem;
+    font-size: 0.82rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.7rem 1.4rem;
+    font-size: 0.75rem;
+  }
+
   &:hover {
     background: rgba(255, 110, 170, 0.18);
     border-color: var(--color-bubble-pink);
@@ -151,6 +183,11 @@ button {
   font-weight: 600;
   color: var(--color-bubble-pink);
   letter-spacing: 0.04em;
+
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+    padding: 0.4rem 0.9rem;
+  }
 }
 
 .bracket-text {
@@ -160,6 +197,10 @@ button {
   letter-spacing: 0.08em;
   color: var(--color-bubble-pink);
   text-transform: uppercase;
+
+  @media (max-width: 768px) {
+    font-size: 0.75rem;
+  }
 }
 
 // Drag Scroll Contenedor
@@ -172,6 +213,11 @@ button {
   -webkit-overflow-scrolling: touch;
   gap: 1.6rem;
   padding-bottom: 1rem;
+
+  @media (max-width: 768px) {
+    gap: 1.2rem;
+    padding-bottom: 0.75rem;
+  }
 
   &::-webkit-scrollbar {
     height: 6px;
