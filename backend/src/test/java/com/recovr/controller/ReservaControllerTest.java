@@ -27,6 +27,7 @@ class ReservaControllerTest {
     private MockMvc mockMvc;
     private ReservaRepository reservaRepository;
     private ObjectMapper objectMapper;
+    private LocalDateTime fechaFutura;
 
     @BeforeEach
     void setUp() {
@@ -40,6 +41,8 @@ class ReservaControllerTest {
 
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
+
+        fechaFutura = LocalDateTime.now().plusDays(5).withHour(10).withMinute(0).withSecond(0).withNano(0);
     }
 
     @Test
@@ -47,7 +50,7 @@ class ReservaControllerTest {
     void debeCrearReservaYRetornar201() throws Exception {
         CrearReservaRequest request = new CrearReservaRequest(
                 1L, 2L, 3L, 4L,
-                LocalDateTime.of(2026, 9, 15, 10, 0),
+                fechaFutura,
                 60, new BigDecimal("65.00")
         );
 
@@ -66,7 +69,7 @@ class ReservaControllerTest {
         // Reserva previa existente para el empleado 2L
         Reserva previa = new Reserva(
                 null, 1L, 2L, 3L, 4L,
-                LocalDateTime.of(2026, 9, 15, 10, 0),
+                fechaFutura,
                 60, EstadoReserva.CONFIRMADA, new BigDecimal("65.00")
         );
         reservaRepository.save(previa);
@@ -74,7 +77,7 @@ class ReservaControllerTest {
         // Intento de nueva reserva en el mismo horario con el mismo especialista
         CrearReservaRequest requestSolapado = new CrearReservaRequest(
                 2L, 2L, 3L, 5L,
-                LocalDateTime.of(2026, 9, 15, 10, 30),
+                fechaFutura.withMinute(30),
                 60, new BigDecimal("65.00")
         );
 
@@ -90,7 +93,7 @@ class ReservaControllerTest {
     void debeObtenerReservaExistenteYRetornar200() throws Exception {
         Reserva existente = new Reserva(
                 null, 1L, 2L, 3L, 4L,
-                LocalDateTime.of(2026, 9, 15, 12, 0),
+                fechaFutura.withHour(12),
                 60, EstadoReserva.PENDIENTE, new BigDecimal("55.00")
         );
         Reserva guardada = reservaRepository.save(existente);
@@ -114,7 +117,7 @@ class ReservaControllerTest {
     void debeConfirmarReservaYRetornar200() throws Exception {
         Reserva pendiente = new Reserva(
                 null, 1L, 2L, 3L, 4L,
-                LocalDateTime.of(2026, 9, 15, 14, 0),
+                fechaFutura.withHour(14),
                 60, EstadoReserva.PENDIENTE, new BigDecimal("65.00")
         );
         Reserva guardada = reservaRepository.save(pendiente);
@@ -129,7 +132,7 @@ class ReservaControllerTest {
     void debeCancelarReservaYRetornar200() throws Exception {
         Reserva pendiente = new Reserva(
                 null, 1L, 2L, 3L, 4L,
-                LocalDateTime.of(2026, 9, 15, 16, 0),
+                fechaFutura.withHour(16),
                 60, EstadoReserva.PENDIENTE, new BigDecimal("65.00")
         );
         Reserva guardada = reservaRepository.save(pendiente);
@@ -158,8 +161,8 @@ class ReservaControllerTest {
     @Test
     @DisplayName("GET /api/reservas debe retornar HTTP 200 OK con la lista de todas las reservas")
     void debeListarTodasLasReservasYRetornar200() throws Exception {
-        Reserva r1 = new Reserva(null, 1L, 1L, 1L, 1L, LocalDateTime.of(2026, 9, 20, 10, 0), 60, EstadoReserva.PENDIENTE, new BigDecimal("50.00"));
-        Reserva r2 = new Reserva(null, 2L, 2L, 2L, 2L, LocalDateTime.of(2026, 9, 20, 12, 0), 60, EstadoReserva.CONFIRMADA, new BigDecimal("75.00"));
+        Reserva r1 = new Reserva(null, 1L, 1L, 1L, 1L, fechaFutura.plusDays(1).withHour(10), 60, EstadoReserva.PENDIENTE, new BigDecimal("50.00"));
+        Reserva r2 = new Reserva(null, 2L, 2L, 2L, 2L, fechaFutura.plusDays(1).withHour(12), 60, EstadoReserva.CONFIRMADA, new BigDecimal("75.00"));
         reservaRepository.save(r1);
         reservaRepository.save(r2);
 
@@ -175,7 +178,7 @@ class ReservaControllerTest {
     void debeEliminarReservaYRetornar204() throws Exception {
         Reserva pendiente = new Reserva(
                 null, 1L, 2L, 3L, 4L,
-                LocalDateTime.of(2026, 9, 20, 14, 0),
+                fechaFutura.plusDays(1).withHour(14),
                 60, EstadoReserva.PENDIENTE, new BigDecimal("65.00")
         );
         Reserva guardada = reservaRepository.save(pendiente);

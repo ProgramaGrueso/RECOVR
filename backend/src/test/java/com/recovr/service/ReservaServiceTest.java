@@ -20,23 +20,25 @@ class ReservaServiceTest {
 
     private ReservaService reservaService;
     private ReservaRepository reservaRepository;
+    private LocalDateTime fechaFutura;
 
     @BeforeEach
     void setUp() {
         reservaRepository = new InMemoryReservaRepository();
         reservaService = new ReservaService(reservaRepository);
+        fechaFutura = LocalDateTime.now().plusDays(5).withHour(10).withMinute(0).withSecond(0).withNano(0);
     }
 
     @Test
     @DisplayName("Debe calcular la hora de finalización del bloque sumando duración del servicio y tiempo de limpieza")
     void debeCalcularHoraFinBloqueSumandoDuracionYLimpieza() {
         Servicio servicio = new Servicio(1L, "Descompresión Miofascial Profunda", 75, 15, new BigDecimal("65.00"));
-        LocalDateTime inicio = LocalDateTime.of(2026, 9, 10, 10, 0);
+        LocalDateTime inicio = fechaFutura;
 
         LocalDateTime finBloque = reservaService.calcularFinBloque(inicio, servicio);
 
         assertNotNull(finBloque);
-        assertEquals(LocalDateTime.of(2026, 9, 10, 11, 30), finBloque);
+        assertEquals(inicio.plusMinutes(90), finBloque);
     }
 
     @Test
@@ -44,7 +46,7 @@ class ReservaServiceTest {
     void debeCrearReservaConEstadoPendienteCuandoNoHayConflicto() {
         Reserva nuevaReserva = new Reserva(
                 null, 10L, 1L, 2L, 1L,
-                LocalDateTime.of(2026, 9, 12, 14, 0),
+                fechaFutura.withHour(14),
                 60, null, new BigDecimal("55.00")
         );
 
@@ -61,7 +63,7 @@ class ReservaServiceTest {
         // Reserva existente: Especialista 1 de 15:00 a 16:30 (90 min)
         Reserva existente = new Reserva(
                 null, 11L, 1L, 1L, 1L,
-                LocalDateTime.of(2026, 9, 12, 15, 0),
+                fechaFutura.withHour(15),
                 90, EstadoReserva.CONFIRMADA, new BigDecimal("65.00")
         );
         reservaRepository.save(existente);
@@ -69,7 +71,7 @@ class ReservaServiceTest {
         // Intento de nueva reserva con el mismo especialista 1 solapada (15:30 a 16:30)
         Reserva solapada = new Reserva(
                 null, 12L, 1L, 2L, 2L,
-                LocalDateTime.of(2026, 9, 12, 15, 30),
+                fechaFutura.withHour(15).withMinute(30),
                 60, null, new BigDecimal("55.00")
         );
 
@@ -85,7 +87,7 @@ class ReservaServiceTest {
         // Reserva existente en Sala 3 de 16:00 a 17:15 (75 min)
         Reserva existente = new Reserva(
                 null, 11L, 2L, 1L, 3L,
-                LocalDateTime.of(2026, 9, 12, 16, 0),
+                fechaFutura.withHour(16),
                 75, EstadoReserva.PENDIENTE, new BigDecimal("65.00")
         );
         reservaRepository.save(existente);
@@ -93,7 +95,7 @@ class ReservaServiceTest {
         // Intento de nueva reserva en la misma Sala 3 solapada (16:30 a 17:30) con otro empleado
         Reserva solapada = new Reserva(
                 null, 13L, 3L, 2L, 3L,
-                LocalDateTime.of(2026, 9, 12, 16, 30),
+                fechaFutura.withHour(16).withMinute(30),
                 60, null, new BigDecimal("55.00")
         );
 
@@ -109,7 +111,7 @@ class ReservaServiceTest {
         // Reserva cancelada previa
         Reserva cancelada = new Reserva(
                 null, 11L, 1L, 1L, 1L,
-                LocalDateTime.of(2026, 9, 12, 18, 0),
+                fechaFutura.withHour(18),
                 60, EstadoReserva.CANCELADA, new BigDecimal("65.00")
         );
         reservaRepository.save(cancelada);
@@ -117,7 +119,7 @@ class ReservaServiceTest {
         // Nueva reserva en el mismo horario y sala
         Reserva nueva = new Reserva(
                 null, 14L, 1L, 1L, 1L,
-                LocalDateTime.of(2026, 9, 12, 18, 0),
+                fechaFutura.withHour(18),
                 60, null, new BigDecimal("65.00")
         );
 
@@ -130,7 +132,7 @@ class ReservaServiceTest {
     void debeConfirmarReservaExitosamente() {
         Reserva pendiente = new Reserva(
                 null, 15L, 1L, 1L, 1L,
-                LocalDateTime.of(2026, 9, 11, 10, 0),
+                fechaFutura.withHour(10),
                 60, EstadoReserva.PENDIENTE, new BigDecimal("65.00")
         );
         Reserva guardada = reservaRepository.save(pendiente);
@@ -145,7 +147,7 @@ class ReservaServiceTest {
     void debeRechazarConfirmacionSiReservaEstaCancelada() {
         Reserva cancelada = new Reserva(
                 null, 15L, 1L, 1L, 1L,
-                LocalDateTime.of(2026, 9, 11, 10, 0),
+                fechaFutura.withHour(10),
                 60, EstadoReserva.CANCELADA, new BigDecimal("65.00")
         );
         Reserva guardada = reservaRepository.save(cancelada);
@@ -161,7 +163,7 @@ class ReservaServiceTest {
     void debeCancelarReservaExitosamente() {
         Reserva activa = new Reserva(
                 null, 16L, 2L, 2L, 2L,
-                LocalDateTime.of(2026, 9, 11, 12, 0),
+                fechaFutura.withHour(12),
                 60, EstadoReserva.CONFIRMADA, new BigDecimal("55.00")
         );
         Reserva guardada = reservaRepository.save(activa);
@@ -176,7 +178,7 @@ class ReservaServiceTest {
     void debeRechazarCancelacionSiReservaYaFueCompletada() {
         Reserva completada = new Reserva(
                 null, 16L, 2L, 2L, 2L,
-                LocalDateTime.of(2026, 9, 11, 12, 0),
+                fechaFutura.withHour(12),
                 60, EstadoReserva.COMPLETADA, new BigDecimal("55.00")
         );
         Reserva guardada = reservaRepository.save(completada);
@@ -216,7 +218,7 @@ class ReservaServiceTest {
         // Falta clienteId y empleadoId
         Reserva incompleta = new Reserva(
                 null, null, null, 1L, 1L,
-                LocalDateTime.of(2026, 9, 20, 10, 0),
+                fechaFutura.withHour(10),
                 60, null, new BigDecimal("65.00")
         );
 
@@ -231,7 +233,7 @@ class ReservaServiceTest {
     void debeRechazarReservaCuandoDuracionEsInvalida() {
         Reserva duracionNegativa = new Reserva(
                 null, 1L, 1L, 1L, 1L,
-                LocalDateTime.of(2026, 9, 20, 10, 0),
+                fechaFutura.withHour(10),
                 -15, null, new BigDecimal("65.00")
         );
 
@@ -246,7 +248,7 @@ class ReservaServiceTest {
     void debeRechazarReservaCuandoMontoEsNegativo() {
         Reserva montoInvalido = new Reserva(
                 null, 1L, 1L, 1L, 1L,
-                LocalDateTime.of(2026, 9, 20, 10, 0),
+                fechaFutura.withHour(10),
                 60, null, new BigDecimal("-10.00")
         );
 
@@ -262,7 +264,7 @@ class ReservaServiceTest {
         // Turno 1: 10:00 a 11:30 (90 min)
         Reserva turno1 = new Reserva(
                 null, 1L, 1L, 1L, 1L,
-                LocalDateTime.of(2026, 9, 20, 10, 0),
+                fechaFutura.withHour(10),
                 90, EstadoReserva.CONFIRMADA, new BigDecimal("65.00")
         );
         reservaRepository.save(turno1);
@@ -270,7 +272,7 @@ class ReservaServiceTest {
         // Turno 2 en la misma sala y especialista que inicia exactamente a las 11:30 (no debe solaparse)
         Reserva turno2 = new Reserva(
                 null, 2L, 1L, 2L, 1L,
-                LocalDateTime.of(2026, 9, 20, 11, 30),
+                fechaFutura.withHour(11).withMinute(30),
                 60, null, new BigDecimal("55.00")
         );
 
@@ -282,8 +284,8 @@ class ReservaServiceTest {
     @Test
     @DisplayName("Debe listar todas las reservas almacenadas")
     void debeListarTodasLasReservas() {
-        reservaRepository.save(new Reserva(null, 1L, 1L, 1L, 1L, LocalDateTime.of(2026, 9, 21, 9, 0), 60, EstadoReserva.PENDIENTE, new BigDecimal("40.00")));
-        reservaRepository.save(new Reserva(null, 2L, 2L, 2L, 2L, LocalDateTime.of(2026, 9, 21, 11, 0), 60, EstadoReserva.CONFIRMADA, new BigDecimal("50.00")));
+        reservaRepository.save(new Reserva(null, 1L, 1L, 1L, 1L, fechaFutura.withHour(9), 60, EstadoReserva.PENDIENTE, new BigDecimal("40.00")));
+        reservaRepository.save(new Reserva(null, 2L, 2L, 2L, 2L, fechaFutura.withHour(11), 60, EstadoReserva.CONFIRMADA, new BigDecimal("50.00")));
 
         assertEquals(2, reservaService.listarTodas().size());
     }
