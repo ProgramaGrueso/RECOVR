@@ -222,3 +222,7 @@ npm run build
 ## 📄 Licencia
 
 Este proyecto ha sido desarrollado con fines académicos y de demostración tecnológica de alto nivel. Todos los derechos reservados &copy; 2026 RECOVR Sanctum.
+
+---
+
+> **Nota sobre credenciales:** los usuarios de `frontend/src/app/services/auth.service.ts` (`DEMO_USERS`) y las credenciales de `docker-compose.yml` son **datos de demostración** para la exposición académica. No corresponden a ningún sistema real.
