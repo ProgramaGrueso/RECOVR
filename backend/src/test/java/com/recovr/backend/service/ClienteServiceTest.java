@@ -86,6 +86,7 @@ public class ClienteServiceTest {
     @Test
     @DisplayName("Debe eliminar cliente por ID")
     void debeEliminarCliente() {
+        given(clienteRepository.existsById(1L)).willReturn(true);
         clienteService.eliminar(1L);
         verify(clienteRepository).deleteById(1L);
     }

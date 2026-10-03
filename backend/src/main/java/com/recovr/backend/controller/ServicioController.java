@@ -11,6 +11,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.recovr.backend.dto.ServicioRequest;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,15 +57,16 @@ public class ServicioController {
 
     @Operation(summary = "Crear nuevo servicio", description = "Agrega una nueva terapia o tratamiento al catálogo. Requiere rol ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Servicio creado exitosamente",
+            @ApiResponse(responseCode = "201", description = "Servicio creado exitosamente",
                     content = @Content(schema = @Schema(implementation = Servicio.class))),
             @ApiResponse(responseCode = "400", description = "Datos de servicio inválidos", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @PostMapping
-    public Servicio crear(@RequestBody Servicio servicio) {
-        return servicioService.crear(servicio);
+    @ResponseStatus(HttpStatus.CREATED)
+    public Servicio crear(@Valid @RequestBody ServicioRequest request) {
+        return servicioService.crear(request.aEntidad());
     }
 
     @Operation(summary = "Actualizar servicio existente", description = "Modifica duración, tiempo de limpieza, precio o nombre. Requiere rol ADMIN.")
@@ -76,18 +80,19 @@ public class ServicioController {
     @PutMapping("/{id}")
     public Servicio actualizar(
             @Parameter(description = "ID del servicio a actualizar", example = "1") @PathVariable Long id,
-            @RequestBody Servicio servicio) {
-        return servicioService.actualizar(id, servicio);
+            @Valid @RequestBody ServicioRequest request) {
+        return servicioService.actualizar(id, request.aEntidad());
     }
 
     @Operation(summary = "Eliminar servicio", description = "Elimina un servicio del catálogo. Requiere rol ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Servicio eliminado exitosamente"),
+            @ApiResponse(responseCode = "204", description = "Servicio eliminado exitosamente"),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Servicio no encontrado", content = @Content)
     })
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@Parameter(description = "ID del servicio a eliminar", example = "1") @PathVariable Long id) {
         servicioService.eliminar(id);
     }

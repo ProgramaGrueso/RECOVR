@@ -11,6 +11,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.recovr.backend.dto.PagoRequest;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,25 +53,27 @@ public class PagoController {
 
     @Operation(summary = "Registrar un pago", description = "Registra manualmente un pago para una reserva. Requiere rol ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Pago registrado exitosamente",
+            @ApiResponse(responseCode = "201", description = "Pago registrado exitosamente",
                     content = @Content(schema = @Schema(implementation = Pago.class))),
             @ApiResponse(responseCode = "400", description = "Datos de pago inválidos", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @PostMapping
-    public Pago crear(@RequestBody Pago pago) {
-        return pagoService.crear(pago);
+    @ResponseStatus(HttpStatus.CREATED)
+    public Pago crear(@Valid @RequestBody PagoRequest request) {
+        return pagoService.crear(request);
     }
 
     @Operation(summary = "Eliminar un registro de pago", description = "Elimina una transacción de pago por su ID. Requiere rol ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Pago eliminado exitosamente"),
+            @ApiResponse(responseCode = "204", description = "Pago eliminado exitosamente"),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Pago no encontrado", content = @Content)
     })
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@Parameter(description = "ID del pago a eliminar", example = "1") @PathVariable Long id) {
         pagoService.eliminar(id);
     }

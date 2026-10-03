@@ -25,11 +25,19 @@ public class Empleado {
     @Schema(description = "Teléfono de contacto", example = "911222333")
     private String telefono;
 
+    // Usuario ESPECIALISTA vinculado (opcional). Se guarda como ID, igual que en Cliente.
+    @Schema(description = "Identificador del usuario ESPECIALISTA vinculado", accessMode = Schema.AccessMode.READ_ONLY, example = "3")
+    @Column(name = "usuario_id", unique = true)
+    private Long usuarioId;
+
     @JsonIgnore
-    @OneToMany(mappedBy = "empleado", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "empleado")
     private List<Reserva> reservas;
 
     public Empleado() {}
+
+    public Long getUsuarioId() { return usuarioId; }
+    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

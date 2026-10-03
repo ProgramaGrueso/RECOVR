@@ -164,19 +164,22 @@ npm run dev
 
 ## 🔐 Matriz de Seguridad y Endpoints REST
 
-| Método | Endpoint | Rol Mínimo Requerido | Descripción de la Operación |
+| Método | Endpoint | Rol requerido | Descripción de la operación |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | *Público* | Autenticación con usuario/clave; emite token JWT con tiempo de expiración. |
-| `POST` | `/api/auth/registro` | *Público* | Registro de nuevos clientes con rol `ROLE_CLIENTE`. |
-| `GET` | `/api/servicios` | *Público* | Consulta del catálogo completo de masajes y tarifas en Soles. |
-| `GET` | `/api/servicios/{id}` | *Público* | Detalle, duración y características de una sesión específica. |
-| `POST` | `/api/reservas` | `ROLE_CLIENTE` | Creación de reserva con validación de disponibilidad horaria y cabina. |
-| `GET` | `/api/reservas/mis-citas`| `ROLE_CLIENTE` | Historial y estado de las citas solicitadas por el cliente logueado. |
-| `GET` | `/api/reservas` | `ROLE_RECEPCION` | Lista global de reservas con filtros por fecha, estado y terapeuta. |
-| `PATCH`| `/api/reservas/{id}/estado`| `ROLE_RECEPCION` | Transición de estado (PENDIENTE → CONFIRMADA → EN_CURSO → FINALIZADA). |
-| `GET` | `/api/profesionales` | `ROLE_CLIENTE` | Roster de terapeutas disponibles, especialidad y estado de turnos. |
-| `POST` | `/api/admin/servicios` | `ROLE_ADMIN` | Alta o modificación de tratamientos, tarifas y recursos técnicos. |
-| `GET` | `/api/admin/metricas` | `ROLE_ADMIN` | Métricas financieras (ingresos en S/), índice de ocupación y fidelización. |
+| `POST` | `/api/auth/registro`, `/api/auth/registro-admin`, `/api/auth/login` | *Público* | Registro de clientes, alta del primer ADMIN e inicio de sesión (emiten JWT). |
+| `POST` | `/api/auth/usuarios` | `ADMIN` | Alta de RECEPCIONISTA o ESPECIALISTA (opcionalmente vinculado a un empleado con `empleadoId`). |
+| `GET` | `/api/servicios`, `/api/servicios/{id}` | Cualquier rol autenticado | Catálogo de terapias con duración, tiempo de limpieza y precio. |
+| `POST` `PUT` `DELETE` | `/api/servicios/**` | `ADMIN` | CRUD del catálogo (201 al crear, 204 al eliminar). |
+| `*` | `/api/clientes/**`, `/api/empleados/**`, `/api/salas/**`, `/api/pagos/**` | `ADMIN` | CRUD de administración; `GET /api/salas/disponibles` y `/api/empleados/disponibles` consideran duración + limpieza. |
+| `POST` | `/api/db/reservas` | `CLIENTE`, `RECEPCIONISTA`, `ADMIN` | Crea una reserva PENDIENTE; responde 409 si la sala o el especialista ya tienen una sesión que se cruza. |
+| `GET` | `/api/db/reservas/mias` | `CLIENTE` | Historial del cliente autenticado. |
+| `GET` | `/api/db/reservas/agenda` | `ESPECIALISTA` | Agenda futura del especialista autenticado. |
+| `GET` | `/api/db/reservas/cliente/{id}` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Historial de un cliente. |
+| `POST` | `/api/db/reservas/{id}/confirmar-y-pagar` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Confirma la reserva y registra el pago en una transacción. |
+| `GET` `PUT` `DELETE` | `/api/db/reservas`, `/api/db/reservas/{id}`, `/api/db/reservas/buscar` | `RECEPCIONISTA`, `ADMIN` | Gestión completa y búsqueda JPQL por rango de fechas y estado. |
+| `*` | `/api/reservas/**` | Según rol | *Core Engine* TDD del APF1 (repositorio en memoria). |
+
+Códigos de error: `400` datos inválidos (con detalle por campo), `401` sin token o token inválido, `403` rol sin permiso, `404` recurso inexistente, `409` cruce de horario o registro duplicado.
 
 ---
 
