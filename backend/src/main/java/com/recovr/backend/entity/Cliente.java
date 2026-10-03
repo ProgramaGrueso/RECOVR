@@ -32,7 +32,7 @@ public class Cliente {
     private Long usuarioId;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "cliente", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "cliente")
     private List<Reserva> reservas;
 
     public Cliente() {}
