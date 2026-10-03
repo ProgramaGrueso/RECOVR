@@ -2,7 +2,6 @@ import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject }
 import { CommonModule } from '@angular/common';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { ServiceCardComponent } from '../../components/service-card/service-card.component';
-import { ProfessionalCardComponent } from '../../components/professional-card/professional-card.component';
 import { SectionDividerComponent } from '../../components/section-divider/section-divider.component';
 import { CatalogService, VideoReel, ReviewItem } from '../../services/catalog.service';
 import { BookingService } from '../../services/booking.service';
