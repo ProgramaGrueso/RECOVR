@@ -28,7 +28,7 @@ public class Cliente {
 
     // Referencia al usuario de Auth. Se mantiene como ID para evitar ciclos de serializacion JSON.
     @Schema(description = "Identificador del usuario de autenticación vinculado", accessMode = Schema.AccessMode.READ_ONLY, example = "2")
-    @Column(name = "usuario_id")
+    @Column(name = "usuario_id", unique = true)
     private Long usuarioId;
 
     @JsonIgnore
