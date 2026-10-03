@@ -1,7 +1,9 @@
 package com.recovr.backend.controller;
 
+import com.recovr.backend.dto.PagoRequest;
+import com.recovr.backend.dto.ReservaRequest;
+import com.recovr.backend.dto.ReservaResponse;
 import com.recovr.backend.entity.EstadoReserva;
-import com.recovr.backend.entity.Pago;
 import com.recovr.backend.entity.Reserva;
 import com.recovr.backend.service.ReservaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,9 +14,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
@@ -30,68 +34,77 @@ public class ReservaController {
     @Qualifier("jpaReservaService")
     private ReservaService reservaService;
 
-    @Operation(summary = "Listar todas las reservas (DB)", description = "Retorna todas las reservas persistidas en el sistema. Requiere autenticación.")
+    @Operation(summary = "Listar todas las reservas (DB)", description = "Retorna todas las reservas persistidas. Requiere rol ADMIN o RECEPCIONISTA.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado de reservas",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Reserva.class)))),
-            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content)
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponse.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere ADMIN o RECEPCIONISTA)", content = @Content)
     })
     @GetMapping
-    public List<Reserva> listar() {
-        return reservaService.listarTodos();
+    public List<ReservaResponse> listar() {
+        return aRespuesta(reservaService.listarTodos());
     }
 
-    @Operation(summary = "Obtener reserva por ID (DB)", description = "Consulta una reserva persistida según su ID. Requiere autenticación.")
+    @Operation(summary = "Obtener reserva por ID (DB)", description = "Consulta una reserva persistida según su ID. Requiere rol ADMIN o RECEPCIONISTA.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Reserva encontrada",
-                    content = @Content(schema = @Schema(implementation = Reserva.class))),
+                    content = @Content(schema = @Schema(implementation = ReservaResponse.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado", content = @Content),
             @ApiResponse(responseCode = "404", description = "Reserva no encontrada", content = @Content)
     })
     @GetMapping("/{id}")
-    public Reserva obtener(@Parameter(description = "ID de la reserva", example = "1") @PathVariable Long id) {
-        return reservaService.buscarPorId(id);
+    public ReservaResponse obtener(@Parameter(description = "ID de la reserva", example = "1") @PathVariable Long id) {
+        return ReservaResponse.de(reservaService.buscarPorId(id));
     }
 
     @Operation(
-            summary = "Crear reserva para el usuario autenticado",
-            description = "Crea una reserva vinculando al cliente autenticado o permitiendo asignación a cualquier cliente si es ADMIN."
+            summary = "Crear reserva",
+            description = "Un CLIENTE reserva siempre a su nombre (se ignora clienteId). ADMIN y RECEPCIONISTA deben indicar clienteId. "
+                    + "Se valida que la sala y el especialista no tengan otra reserva activa que se cruce, considerando duración y tiempo de limpieza."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Reserva creada exitosamente",
-                    content = @Content(schema = @Schema(implementation = Reserva.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos o inconsistentes", content = @Content),
+            @ApiResponse(responseCode = "201", description = "Reserva creada en estado PENDIENTE",
+                    content = @Content(schema = @Schema(implementation = ReservaResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o fecha en el pasado", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Cliente, especialista, servicio o sala inexistente", content = @Content),
             @ApiResponse(responseCode = "409", description = "Conflicto por solapamiento de horario", content = @Content)
     })
     @PostMapping
-    public Reserva crear(@RequestBody Reserva reserva, Authentication authentication) {
-        boolean esAdmin = authentication.getAuthorities().stream()
-                .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
-        return reservaService.crearParaUsuarioAutenticado(reserva, authentication.getName(), esAdmin);
+    @ResponseStatus(HttpStatus.CREATED)
+    public ReservaResponse crear(@Valid @RequestBody ReservaRequest request, Authentication authentication) {
+        return ReservaResponse.de(reservaService.crearDesdeRequest(
+                request, authentication.getName(), esGestionDeReservas(authentication)));
     }
 
-    @Operation(summary = "Actualizar reserva", description = "Modifica una reserva existente en base de datos. Requiere autenticación.")
+    @Operation(summary = "Actualizar reserva", description = "Modifica una reserva existente (incluido su estado). Requiere rol ADMIN o RECEPCIONISTA.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Reserva actualizada",
-                    content = @Content(schema = @Schema(implementation = Reserva.class))),
+                    content = @Content(schema = @Schema(implementation = ReservaResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Reserva no encontrada", content = @Content)
+            @ApiResponse(responseCode = "403", description = "Acceso denegado", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Reserva no encontrada", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Conflicto por solapamiento de horario", content = @Content)
     })
     @PutMapping("/{id}")
-    public Reserva actualizar(
+    public ReservaResponse actualizar(
             @Parameter(description = "ID de la reserva", example = "1") @PathVariable Long id,
-            @RequestBody Reserva reserva) {
-        return reservaService.actualizar(id, reserva);
+            @Valid @RequestBody ReservaRequest request) {
+        return ReservaResponse.de(reservaService.actualizar(id, request));
     }
 
-    @Operation(summary = "Eliminar reserva", description = "Elimina una reserva de la base de datos por su ID.")
+    @Operation(summary = "Eliminar reserva", description = "Elimina una reserva de la base de datos por su ID. Requiere rol ADMIN o RECEPCIONISTA.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Reserva eliminada"),
+            @ApiResponse(responseCode = "204", description = "Reserva eliminada"),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado", content = @Content),
             @ApiResponse(responseCode = "404", description = "Reserva no encontrada", content = @Content)
     })
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@Parameter(description = "ID de la reserva", example = "1") @PathVariable Long id) {
         reservaService.eliminar(id);
     }
@@ -102,63 +115,84 @@ public class ReservaController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista de reservas del cliente",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Reserva.class)))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponse.class)))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso no autorizado al historial de otro cliente", content = @Content)
     })
     @GetMapping("/cliente/{clienteId}")
-    public List<Reserva> porCliente(
+    public List<ReservaResponse> porCliente(
             @Parameter(description = "ID del cliente", example = "1") @PathVariable Long clienteId,
             Authentication authentication) {
-        return reservaService.buscarPorClienteParaUsuario(clienteId, authentication.getName(), esGestionDeReservas(authentication));
+        return aRespuesta(reservaService.buscarPorClienteParaUsuario(clienteId, authentication.getName(), esGestionDeReservas(authentication)));
     }
 
     @Operation(summary = "Obtener mis reservas (Cliente autenticado)", description = "Devuelve el historial de reservas pertenecientes al CLIENTE en sesión.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista de reservas propias",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Reserva.class)))),
-            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content)
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponse.class)))),
+            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Solo para rol CLIENTE", content = @Content)
     })
     @GetMapping("/mias")
-    public List<Reserva> misReservas(Authentication authentication) {
-        return reservaService.buscarMisReservas(authentication.getName());
+    public List<ReservaResponse> misReservas(Authentication authentication) {
+        return aRespuesta(reservaService.buscarMisReservas(authentication.getName()));
     }
 
-    @Operation(summary = "Buscar reservas por rango de fecha y estado", description = "Filtra reservas entre fechas de inicio y fin según su estado.")
+    @Operation(summary = "Agenda del especialista autenticado", description = "Devuelve las reservas futuras del ESPECIALISTA en sesión, ordenadas por fecha.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Agenda del especialista",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponse.class)))),
+            @ApiResponse(responseCode = "400", description = "El usuario no está vinculado a un especialista", content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Solo para rol ESPECIALISTA", content = @Content)
+    })
+    @GetMapping("/agenda")
+    public List<ReservaResponse> agenda(Authentication authentication) {
+        return aRespuesta(reservaService.buscarAgendaEspecialista(authentication.getName()));
+    }
+
+    @Operation(summary = "Buscar reservas por rango de fecha y estado", description = "Filtra reservas entre fechas de inicio y fin según su estado. Requiere rol ADMIN o RECEPCIONISTA.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista de reservas filtradas",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Reserva.class)))),
-            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content)
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponse.class)))),
+            @ApiResponse(responseCode = "400", description = "Rango de fechas inválido", content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado", content = @Content)
     })
     @GetMapping("/buscar")
-    public List<Reserva> porRangoYEstado(
+    public List<ReservaResponse> porRangoYEstado(
             @Parameter(description = "Fecha/hora inicio (ISO-8601)", example = "2026-10-01T08:00:00")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
             @Parameter(description = "Fecha/hora fin (ISO-8601)", example = "2026-10-31T20:00:00")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin,
             @Parameter(description = "Estado de la reserva", example = "CONFIRMADA")
             @RequestParam EstadoReserva estado) {
-        return reservaService.buscarPorRangoYEstado(inicio, fin, estado);
+        return aRespuesta(reservaService.buscarPorRangoYEstado(inicio, fin, estado));
     }
 
     @Operation(
             summary = "Confirmar y registrar pago de una reserva",
-            description = "Transaccionalmente confirma la reserva y emite el pago correspondiente."
+            description = "Transaccionalmente confirma una reserva PENDIENTE y registra el pago correspondiente. Un CLIENTE solo puede pagar las suyas."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Reserva confirmada y pago registrado",
-                    content = @Content(schema = @Schema(implementation = Reserva.class))),
-            @ApiResponse(responseCode = "400", description = "Datos de pago inválidos o estado inconsistente", content = @Content),
+                    content = @Content(schema = @Schema(implementation = ReservaResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Datos de pago inválidos o reserva no PENDIENTE", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado", content = @Content),
             @ApiResponse(responseCode = "404", description = "Reserva no encontrada", content = @Content)
     })
     @PostMapping("/{id}/confirmar-y-pagar")
-    public Reserva confirmarYPagar(
+    public ReservaResponse confirmarYPagar(
             @Parameter(description = "ID de la reserva a confirmar y pagar", example = "1") @PathVariable Long id,
-            @RequestBody Pago pago,
+            @Valid @RequestBody PagoRequest pago,
             Authentication authentication) {
-        return reservaService.confirmarYPagarParaUsuario(id, pago, authentication.getName(), esGestionDeReservas(authentication));
+        return ReservaResponse.de(reservaService.confirmarYPagarParaUsuario(
+                id, pago, authentication.getName(), esGestionDeReservas(authentication)));
+    }
+
+    private List<ReservaResponse> aRespuesta(List<Reserva> reservas) {
+        return reservas.stream().map(ReservaResponse::de).toList();
     }
 
     private boolean esGestionDeReservas(Authentication authentication) {

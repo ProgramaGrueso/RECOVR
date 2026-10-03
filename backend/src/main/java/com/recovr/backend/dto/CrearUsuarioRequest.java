@@ -16,5 +16,8 @@ public record CrearUsuarioRequest(
         @NotBlank @Size(min = 6) String password,
 
         @Schema(description = "Rol asignado dentro del sistema", example = "RECEPCIONISTA", requiredMode = Schema.RequiredMode.REQUIRED)
-        @NotNull Rol rol
+        @NotNull Rol rol,
+
+        @Schema(description = "Solo para ESPECIALISTA: ID del empleado que se vincula a este usuario", example = "1")
+        Long empleadoId
 ) {}
