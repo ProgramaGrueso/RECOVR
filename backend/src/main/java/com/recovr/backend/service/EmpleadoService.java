@@ -2,6 +2,7 @@ package com.recovr.backend.service;
 
 import com.recovr.backend.entity.Empleado;
 import com.recovr.backend.repository.EmpleadoRepository;
+import com.recovr.backend.exception.RecursoNoEncontradoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,7 @@ public class EmpleadoService {
 
     public Empleado buscarPorId(Long id) {
         return empleadoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Empleado no encontrado con id " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", id));
     }
 
     public Empleado crear(Empleado empleado) {
@@ -36,10 +37,14 @@ public class EmpleadoService {
     }
 
     public void eliminar(Long id) {
+        if (!empleadoRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Empleado", id);
+        }
         empleadoRepository.deleteById(id);
     }
 
     public List<Empleado> buscarDisponibles(LocalDateTime inicio, LocalDateTime fin) {
+        ReservaService.validarRango(inicio, fin);
         return empleadoRepository.buscarDisponibles(inicio, fin);
     }
 }

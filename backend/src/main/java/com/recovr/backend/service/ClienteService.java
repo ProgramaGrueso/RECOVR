@@ -2,6 +2,7 @@ package com.recovr.backend.service;
 
 import com.recovr.backend.entity.Cliente;
 import com.recovr.backend.repository.ClienteRepository;
+import com.recovr.backend.exception.RecursoNoEncontradoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class ClienteService {
 
     public Cliente buscarPorId(Long id) {
         return clienteRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con id " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Cliente", id));
     }
 
     public Cliente crear(Cliente cliente) {
@@ -31,11 +32,13 @@ public class ClienteService {
         cliente.setNombre(datos.getNombre());
         cliente.setCorreo(datos.getCorreo());
         cliente.setTelefono(datos.getTelefono());
-        cliente.setUsuarioId(datos.getUsuarioId());
         return clienteRepository.save(cliente);
     }
 
     public void eliminar(Long id) {
+        if (!clienteRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Cliente", id);
+        }
         clienteRepository.deleteById(id);
     }
 }

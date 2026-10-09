@@ -2,6 +2,7 @@ package com.recovr.backend.service;
 
 import com.recovr.backend.entity.Sala;
 import com.recovr.backend.repository.SalaRepository;
+import com.recovr.backend.exception.RecursoNoEncontradoException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,7 @@ public class SalaService {
 
     public Sala buscarPorId(Long id) {
         return salaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sala no encontrada con id " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Sala", id));
     }
 
     public Sala crear(Sala sala) {
@@ -35,10 +36,14 @@ public class SalaService {
     }
 
     public void eliminar(Long id) {
+        if (!salaRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Sala", id);
+        }
         salaRepository.deleteById(id);
     }
 
     public List<Sala> buscarDisponibles(LocalDateTime inicio, LocalDateTime fin) {
+        ReservaService.validarRango(inicio, fin);
         return salaRepository.buscarDisponibles(inicio, fin);
     }
 }

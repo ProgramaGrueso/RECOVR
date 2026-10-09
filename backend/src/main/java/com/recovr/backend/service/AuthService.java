@@ -6,9 +6,12 @@ import com.recovr.backend.dto.LoginRequest;
 import com.recovr.backend.dto.RegistroRequest;
 import com.recovr.backend.dto.UsuarioCreadoResponse;
 import com.recovr.backend.entity.Cliente;
+import com.recovr.backend.entity.Empleado;
 import com.recovr.backend.entity.Rol;
 import com.recovr.backend.entity.Usuario;
+import com.recovr.backend.exception.RecursoNoEncontradoException;
 import com.recovr.backend.repository.ClienteRepository;
+import com.recovr.backend.repository.EmpleadoRepository;
 import com.recovr.backend.repository.UsuarioRepository;
 import com.recovr.backend.security.CustomUserDetailsService;
 import com.recovr.backend.security.JwtService;
@@ -25,15 +28,17 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final CustomUserDetailsService userDetailsService;
     private final JwtService jwtService;
+    private final EmpleadoRepository empleadoRepository;
 
     public AuthService(UsuarioRepository usuarioRepository, ClienteRepository clienteRepository,
                        PasswordEncoder passwordEncoder, CustomUserDetailsService userDetailsService,
-                       JwtService jwtService) {
+                       JwtService jwtService, EmpleadoRepository empleadoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.clienteRepository = clienteRepository;
         this.passwordEncoder = passwordEncoder;
         this.userDetailsService = userDetailsService;
         this.jwtService = jwtService;
+        this.empleadoRepository = empleadoRepository;
     }
 
     @Transactional
@@ -64,6 +69,7 @@ public class AuthService {
         return respuesta(usuario);
     }
 
+    @Transactional
     public UsuarioCreadoResponse crearUsuarioPersonal(CrearUsuarioRequest request) {
         if (request.rol() == Rol.CLIENTE) {
             throw new IllegalArgumentException("Los clientes deben registrarse mediante /api/auth/registro");
@@ -76,7 +82,25 @@ public class AuthService {
         usuario.setPassword(passwordEncoder.encode(request.password()));
         usuario.setRol(request.rol());
         usuario = usuarioRepository.save(usuario);
+        vincularEspecialista(usuario, request);
         return new UsuarioCreadoResponse(usuario.getId(), usuario.getCorreo(), usuario.getRol().name());
+    }
+
+    // Un ESPECIALISTA puede vincularse a su ficha de Empleado para consultar su agenda.
+    private void vincularEspecialista(Usuario usuario, CrearUsuarioRequest request) {
+        if (request.empleadoId() == null) {
+            return;
+        }
+        if (request.rol() != Rol.ESPECIALISTA) {
+            throw new IllegalArgumentException("Solo un usuario ESPECIALISTA puede vincularse a un empleado");
+        }
+        Empleado empleado = empleadoRepository.findById(request.empleadoId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", request.empleadoId()));
+        if (empleado.getUsuarioId() != null) {
+            throw new IllegalStateException("El empleado " + empleado.getId() + " ya tiene un usuario vinculado");
+        }
+        empleado.setUsuarioId(usuario.getId());
+        empleadoRepository.save(empleado);
     }
 
     private Usuario crearUsuario(RegistroRequest request, Rol rol) {

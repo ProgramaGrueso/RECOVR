@@ -23,7 +23,7 @@ public class Sala {
     private Integer capacidad;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "sala", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "sala")
     private List<Reserva> reservas;
 
     public Sala() {}

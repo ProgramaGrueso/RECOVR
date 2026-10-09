@@ -29,13 +29,22 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                        // Autenticado pero sin el rol requerido: 403 (antes terminaba en 401 vía /error)
+                        .accessDeniedHandler((request, response, ex) -> {
+                            response.setStatus(HttpStatus.FORBIDDEN.value());
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.getWriter().write("{\"status\":403,\"error\":\"Acceso denegado\","
+                                    + "\"message\":\"No tiene permisos para acceder a este recurso\"}");
+                        }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**"
                         ).permitAll()
+                        // /error debe ser público para que los errores 400/404/409 no se conviertan en 401
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/auth/registro", "/api/auth/registro-admin", "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/usuarios").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/servicios/**")
@@ -52,6 +61,17 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/reservas/**")
                             .hasAnyRole("ADMIN", "RECEPCIONISTA")
                         .requestMatchers(HttpMethod.GET, "/api/reservas/**")
+                            .hasAnyRole("ADMIN", "RECEPCIONISTA")
+                        // Motor de reservas persistente (/api/db/reservas): reglas por rol
+                        .requestMatchers(HttpMethod.GET, "/api/db/reservas/mias").hasRole("CLIENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/db/reservas/agenda").hasRole("ESPECIALISTA")
+                        .requestMatchers(HttpMethod.GET, "/api/db/reservas/cliente/**")
+                            .hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/db/reservas/*/confirmar-y-pagar")
+                            .hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/db/reservas")
+                            .hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
+                        .requestMatchers("/api/db/reservas", "/api/db/reservas/**")
                             .hasAnyRole("ADMIN", "RECEPCIONISTA")
                         .requestMatchers("/api/clientes/**", "/api/empleados/**", "/api/salas/**", "/api/pagos/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/servicios/**").hasRole("ADMIN")

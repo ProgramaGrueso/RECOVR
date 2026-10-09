@@ -12,6 +12,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import com.recovr.backend.dto.EmpleadoRequest;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -52,15 +55,16 @@ public class EmpleadoController {
 
     @Operation(summary = "Registrar nuevo especialista", description = "Registra un nuevo especialista en la plataforma. Requiere rol ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Empleado creado exitosamente",
+            @ApiResponse(responseCode = "201", description = "Empleado creado exitosamente",
                     content = @Content(schema = @Schema(implementation = Empleado.class))),
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @PostMapping
-    public Empleado crear(@RequestBody Empleado empleado) {
-        return empleadoService.crear(empleado);
+    @ResponseStatus(HttpStatus.CREATED)
+    public Empleado crear(@Valid @RequestBody EmpleadoRequest request) {
+        return empleadoService.crear(request.aEntidad());
     }
 
     @Operation(summary = "Actualizar datos del especialista", description = "Actualiza información como nombre, especialidad o teléfono. Requiere rol ADMIN.")
@@ -74,18 +78,19 @@ public class EmpleadoController {
     @PutMapping("/{id}")
     public Empleado actualizar(
             @Parameter(description = "ID del empleado a actualizar", example = "1") @PathVariable Long id,
-            @RequestBody Empleado empleado) {
-        return empleadoService.actualizar(id, empleado);
+            @Valid @RequestBody EmpleadoRequest request) {
+        return empleadoService.actualizar(id, request.aEntidad());
     }
 
     @Operation(summary = "Eliminar especialista", description = "Elimina un empleado por su ID. Requiere rol ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Empleado eliminado"),
+            @ApiResponse(responseCode = "204", description = "Empleado eliminado"),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Empleado no encontrado", content = @Content)
     })
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@Parameter(description = "ID del empleado a eliminar", example = "1") @PathVariable Long id) {
         empleadoService.eliminar(id);
     }

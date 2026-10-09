@@ -33,7 +33,7 @@ public class Servicio {
     private BigDecimal precio;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "servicio", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "servicio")
     private List<Reserva> reservas;
 
     public Servicio() {}

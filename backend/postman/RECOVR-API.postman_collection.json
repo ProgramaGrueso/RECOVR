@@ -6,15 +6,42 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080" },
-    { "key": "adminToken", "value": "" },
-    { "key": "recepcionistaToken", "value": "" },
-    { "key": "especialistaToken", "value": "" },
-    { "key": "clienteToken", "value": "" },
-    { "key": "clienteId", "value": "1" },
-    { "key": "empleadoId", "value": "1" },
-    { "key": "salaId", "value": "1" },
-    { "key": "servicioId", "value": "1" }
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "recepcionistaToken",
+      "value": ""
+    },
+    {
+      "key": "especialistaToken",
+      "value": ""
+    },
+    {
+      "key": "clienteToken",
+      "value": ""
+    },
+    {
+      "key": "clienteId",
+      "value": "1"
+    },
+    {
+      "key": "empleadoId",
+      "value": "1"
+    },
+    {
+      "key": "salaId",
+      "value": "1"
+    },
+    {
+      "key": "servicioId",
+      "value": "1"
+    }
   ],
   "item": [
     {
@@ -24,57 +51,153 @@
           "name": "Registro primer admin (solo una vez)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Administrador RECOVR\",\n  \"correo\": \"admin@recovr.com\",\n  \"password\": \"Admin123\",\n  \"telefono\": \"999999999\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Administrador RECOVR\",\n  \"correo\": \"admin@recovr.com\",\n  \"password\": \"Admin123\",\n  \"telefono\": \"999999999\"\n}"
+            },
             "url": "{{baseUrl}}/api/auth/registro-admin"
           },
-          "event": [{ "listen": "test", "script": { "exec": ["const body = pm.response.json();", "pm.collectionVariables.set('adminToken', body.token);"] } }]
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('adminToken', body.token);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Registro cliente",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Ana Cliente\",\n  \"correo\": \"ana@recovr.com\",\n  \"password\": \"Cliente123\",\n  \"telefono\": \"988888888\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Ana Cliente\",\n  \"correo\": \"ana@recovr.com\",\n  \"password\": \"Cliente123\",\n  \"telefono\": \"988888888\"\n}"
+            },
             "url": "{{baseUrl}}/api/auth/registro"
           },
-          "event": [{ "listen": "test", "script": { "exec": ["const body = pm.response.json();", "pm.collectionVariables.set('clienteToken', body.token);"] } }]
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('clienteToken', body.token);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Login admin",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"correo\": \"admin@recovr.com\",\n  \"password\": \"Admin123\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"admin@recovr.com\",\n  \"password\": \"Admin123\"\n}"
+            },
             "url": "{{baseUrl}}/api/auth/login"
           },
-          "event": [{ "listen": "test", "script": { "exec": ["const body = pm.response.json();", "pm.collectionVariables.set('adminToken', body.token);"] } }]
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('adminToken', body.token);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Login cliente",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"correo\": \"ana@recovr.com\",\n  \"password\": \"Cliente123\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"ana@recovr.com\",\n  \"password\": \"Cliente123\"\n}"
+            },
             "url": "{{baseUrl}}/api/auth/login"
           },
-          "event": [{ "listen": "test", "script": { "exec": ["const body = pm.response.json();", "pm.collectionVariables.set('clienteToken', body.token);"] } }]
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('clienteToken', body.token);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Crear recepcionista (requiere ADMIN)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"correo\": \"recepcion@recovr.com\",\n  \"password\": \"Recepcion123\",\n  \"rol\": \"RECEPCIONISTA\"\n}" },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"recepcion@recovr.com\",\n  \"password\": \"Recepcion123\",\n  \"rol\": \"RECEPCIONISTA\"\n}"
+            },
             "url": "{{baseUrl}}/api/auth/usuarios"
           }
         },
         {
-          "name": "Crear especialista (requiere ADMIN)",
+          "name": "Crear especialista vinculado a un empleado (requiere ADMIN y crear antes el empleado)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"correo\": \"especialista@recovr.com\",\n  \"password\": \"Especialista123\",\n  \"rol\": \"ESPECIALISTA\"\n}" },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"especialista@recovr.com\",\n  \"password\": \"Especialista123\",\n  \"rol\": \"ESPECIALISTA\",\n  \"empleadoId\": {{empleadoId}}\n}"
+            },
             "url": "{{baseUrl}}/api/auth/usuarios"
           }
         },
@@ -82,21 +205,57 @@
           "name": "Login recepcionista",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"correo\": \"recepcion@recovr.com\",\n  \"password\": \"Recepcion123\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"recepcion@recovr.com\",\n  \"password\": \"Recepcion123\"\n}"
+            },
             "url": "{{baseUrl}}/api/auth/login"
           },
-          "event": [{ "listen": "test", "script": { "exec": ["const body = pm.response.json();", "pm.collectionVariables.set('recepcionistaToken', body.token);"] } }]
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('recepcionistaToken', body.token);"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Login especialista",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"correo\": \"especialista@recovr.com\",\n  \"password\": \"Especialista123\"\n}" },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"especialista@recovr.com\",\n  \"password\": \"Especialista123\"\n}"
+            },
             "url": "{{baseUrl}}/api/auth/login"
           },
-          "event": [{ "listen": "test", "script": { "exec": ["const body = pm.response.json();", "pm.collectionVariables.set('especialistaToken', body.token);"] } }]
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const body = pm.response.json();",
+                  "pm.collectionVariables.set('especialistaToken', body.token);"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -107,8 +266,20 @@
           "name": "Crear empleado",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Marco Terapeuta\",\n  \"especialidad\": \"Masaje deportivo\",\n  \"telefono\": \"977777777\"\n}" },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Marco Terapeuta\",\n  \"especialidad\": \"Masaje deportivo\",\n  \"telefono\": \"977777777\"\n}"
+            },
             "url": "{{baseUrl}}/api/empleados"
           }
         },
@@ -116,8 +287,20 @@
           "name": "Crear sala",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Sala Obsidiana\",\n  \"capacidad\": 1\n}" },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Sala Obsidiana\",\n  \"capacidad\": 1\n}"
+            },
             "url": "{{baseUrl}}/api/salas"
           }
         },
@@ -125,9 +308,47 @@
           "name": "Crear servicio",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Masaje deportivo\",\n  \"duracionMinutos\": 60,\n  \"precio\": 120.00\n}" },
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Masaje deportivo\",\n  \"duracionMinutos\": 60,\n  \"tiempoLimpiezaMinutos\": 15,\n  \"precio\": 120.00\n}"
+            },
             "url": "{{baseUrl}}/api/servicios"
+          }
+        },
+        {
+          "name": "Salas disponibles en un intervalo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/salas/disponibles?inicio=2026-10-15T10:00:00&fin=2026-10-15T11:00:00"
+          }
+        },
+        {
+          "name": "Especialistas disponibles en un intervalo",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/empleados/disponibles?inicio=2026-10-15T10:00:00&fin=2026-10-15T11:00:00"
           }
         }
       ]
@@ -136,20 +357,136 @@
       "name": "3. Cliente (rol CLIENTE)",
       "item": [
         {
-          "name": "Crear mi reserva",
+          "name": "Crear mi reserva (201; 409 si se cruza el horario)",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{clienteToken}}" }, { "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"empleado\": { \"id\": {{empleadoId}} },\n  \"sala\": { \"id\": {{salaId}} },\n  \"servicio\": { \"id\": {{servicioId}} },\n  \"fechaHora\": \"2026-09-15T10:00:00\"\n}" },
-            "url": "{{baseUrl}}/api/reservas"
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clienteToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/db/reservas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"empleadoId\": {{empleadoId}},\n  \"servicioId\": {{servicioId}},\n  \"salaId\": {{salaId}},\n  \"fechaHora\": \"2026-10-15T10:00:00\"\n}"
+            }
           }
         },
         {
           "name": "Ver mis reservas",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{clienteToken}}" }],
-            "url": "{{baseUrl}}/api/reservas/mias"
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clienteToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/db/reservas/mias"
+          }
+        },
+        {
+          "name": "Confirmar y pagar mi reserva",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clienteToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/db/reservas/1/confirmar-y-pagar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"monto\": 120.00,\n  \"metodoPago\": \"TARJETA\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Listar todas las reservas como CLIENTE (esperado 403)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{clienteToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/db/reservas"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Recepcion y especialista",
+      "item": [
+        {
+          "name": "Listar todas las reservas (RECEPCIONISTA)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{recepcionistaToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/db/reservas"
+          }
+        },
+        {
+          "name": "Buscar reservas por rango y estado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{recepcionistaToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/db/reservas/buscar?inicio=2026-10-01T00:00:00&fin=2026-10-31T23:59:59&estado=PENDIENTE"
+          }
+        },
+        {
+          "name": "Crear reserva para un cliente (RECEPCIONISTA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{recepcionistaToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/db/reservas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": {{clienteId}},\n  \"empleadoId\": {{empleadoId}},\n  \"servicioId\": {{servicioId}},\n  \"salaId\": {{salaId}},\n  \"fechaHora\": \"2026-10-15T12:00:00\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Mi agenda (ESPECIALISTA)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{especialistaToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/db/reservas/agenda"
           }
         }
       ]

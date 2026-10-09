@@ -10,9 +10,11 @@ import java.util.List;
 
 public interface SalaRepository extends JpaRepository<Sala, Long> {
 
-    @Query("SELECT s FROM Sala s WHERE s.id NOT IN (" +
-           "SELECT r.sala.id FROM Reserva r " +
-           "WHERE r.fechaHora BETWEEN :inicio AND :fin " +
-           "AND r.estado <> com.recovr.backend.entity.EstadoReserva.CANCELADA)")
+    /**
+     * Salas sin reservas activas cuyo bloque (duración + limpieza) se solape con [inicio, fin).
+     */
+    @Query("SELECT s FROM Sala s WHERE NOT EXISTS (" +
+           "SELECT r FROM Reserva r WHERE r.sala = s AND " + ReservaRepository.ACTIVA +
+           " AND r.fechaHora < :fin AND " + ReservaRepository.FIN_BLOQUE + " > :inicio)")
     List<Sala> buscarDisponibles(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 }

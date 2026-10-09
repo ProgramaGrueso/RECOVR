@@ -7,12 +7,17 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
 
-    @Query("SELECT e FROM Empleado e WHERE e.id NOT IN (" +
-           "SELECT r.empleado.id FROM Reserva r " +
-           "WHERE r.fechaHora BETWEEN :inicio AND :fin " +
-           "AND r.estado <> com.recovr.backend.entity.EstadoReserva.CANCELADA)")
+    /**
+     * Especialistas sin reservas activas cuyo bloque (duración + limpieza) se solape con [inicio, fin).
+     */
+    @Query("SELECT e FROM Empleado e WHERE NOT EXISTS (" +
+           "SELECT r FROM Reserva r WHERE r.empleado = e AND " + ReservaRepository.ACTIVA +
+           " AND r.fechaHora < :fin AND " + ReservaRepository.FIN_BLOQUE + " > :inicio)")
     List<Empleado> buscarDisponibles(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+
+    Optional<Empleado> findByUsuarioId(Long usuarioId);
 }

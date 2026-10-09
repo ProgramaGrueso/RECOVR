@@ -12,6 +12,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import com.recovr.backend.dto.SalaRequest;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -52,15 +55,16 @@ public class SalaController {
 
     @Operation(summary = "Crear nueva sala", description = "Registra una nueva sala o suite terapéutica. Requiere rol ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Sala creada",
+            @ApiResponse(responseCode = "201", description = "Sala creada",
                     content = @Content(schema = @Schema(implementation = Sala.class))),
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @PostMapping
-    public Sala crear(@RequestBody Sala sala) {
-        return salaService.crear(sala);
+    @ResponseStatus(HttpStatus.CREATED)
+    public Sala crear(@Valid @RequestBody SalaRequest request) {
+        return salaService.crear(request.aEntidad());
     }
 
     @Operation(summary = "Actualizar sala", description = "Actualiza nombre o capacidad de una sala. Requiere rol ADMIN.")
@@ -74,18 +78,19 @@ public class SalaController {
     @PutMapping("/{id}")
     public Sala actualizar(
             @Parameter(description = "ID de la sala a actualizar", example = "1") @PathVariable Long id,
-            @RequestBody Sala sala) {
-        return salaService.actualizar(id, sala);
+            @Valid @RequestBody SalaRequest request) {
+        return salaService.actualizar(id, request.aEntidad());
     }
 
     @Operation(summary = "Eliminar sala", description = "Elimina una sala del sistema. Requiere rol ADMIN.")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Sala eliminada"),
+            @ApiResponse(responseCode = "204", description = "Sala eliminada"),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Sala no encontrada", content = @Content)
     })
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminar(@Parameter(description = "ID de la sala a eliminar", example = "1") @PathVariable Long id) {
         salaService.eliminar(id);
     }
