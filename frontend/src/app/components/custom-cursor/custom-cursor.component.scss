@@ -19,15 +19,15 @@
     opacity: 1;
   }
 
-  @media (max-width: 768px) {
-    display: none !important; // Desactivar en pantallas táctiles móviles
+  @media (max-width: 768px), (hover: none), (pointer: coarse) {
+    display: none !important; // Sin cursor en pantallas táctiles
   }
 }
 
 .cursor-dot {
   width: 9px;
   height: 9px;
-  background-color: #ffffff;
+  background-color: #ff2a85;
   border-radius: 50%;
   box-shadow: 0 0 10px var(--color-bubble-pink), 0 0 20px rgba(176, 92, 247, 0.6);
   transition: transform 0.25s var(--ease-bubble), background-color 0.25s ease;

@@ -13,7 +13,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 0.5rem;
-      background: rgba(17, 10, 30, 0.78);
+      background: rgba(255, 240, 248, 0.78);
       backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 110, 170, 0.28);
       border-radius: 9999px;
@@ -113,7 +113,7 @@
       height: 32px;
       border-radius: 50%;
       background: #ef4444;
-      color: #fff;
+      color: var(--color-text);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -147,7 +147,7 @@
 
   // Tarjeta contenedora de formulario
   .flow-card {
-    background: rgba(17, 10, 30, 0.78);
+    background: rgba(255, 240, 248, 0.78);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border: 1px solid rgba(255, 110, 170, 0.28);
@@ -183,7 +183,7 @@
     }
 
     .service-item-option {
-      background: rgba(8, 5, 16, 0.68);
+      background: rgba(255, 240, 248, 0.68);
       border: 1px solid rgba(255, 110, 170, 0.22);
       border-radius: 18px;
       padding: 1.5rem;
@@ -229,7 +229,7 @@
         font-weight: 700;
         margin-bottom: 0.5rem;
         line-height: 1.35;
-        color: #ffffff;
+        color: var(--color-text);
       }
 
       .option-desc {
@@ -289,7 +289,7 @@
     }
 
     .prof-item-option {
-      background: rgba(10, 10, 11, 0.6);
+      background: rgba(255, 240, 248, 0.6);
       border: 1px solid rgba(184, 180, 176, 0.12);
       padding: 1.25rem;
       cursor: pointer;
@@ -402,7 +402,7 @@
 
       .form-input, .form-textarea {
         width: 100%;
-        background: rgba(10, 10, 11, 0.8);
+        background: rgba(255, 240, 248, 0.8);
         border: 1px solid rgba(184, 180, 176, 0.2);
         color: var(--color-text);
         padding: 0.9rem 1.25rem;
@@ -435,7 +435,7 @@
 
       .slot-btn {
         padding: 0.8rem 0.5rem;
-        background: rgba(10, 10, 11, 0.8);
+        background: rgba(255, 240, 248, 0.8);
         border: 1px solid rgba(184, 180, 176, 0.2);
         color: var(--color-metal);
         font-family: var(--font-body);
@@ -565,7 +565,7 @@
       }
 
       .summary-box {
-        background: rgba(10, 10, 11, 0.8);
+        background: rgba(255, 240, 248, 0.8);
         border: 1px solid rgba(184, 180, 176, 0.15);
         padding: 1.75rem;
         max-width: 540px;
@@ -673,7 +673,7 @@
         font-family: var(--font-display);
         font-size: 1.05rem;
         letter-spacing: 0.15em;
-        color: #f5e6a3;
+        color: #b8890f;
         margin-bottom: 0.35rem;
       }
 
@@ -683,7 +683,7 @@
         line-height: 1.4;
 
         strong {
-          color: #fff;
+          color: var(--color-text);
         }
       }
     }
@@ -700,7 +700,7 @@
   .auth-gate-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(5, 5, 6, 0.88);
+    background: rgba(255, 240, 248, 0.88);
     backdrop-filter: blur(8px);
     z-index: 9999;
     display: flex;
@@ -709,7 +709,7 @@
     padding: 1.5rem;
 
     .auth-gate-modal {
-      background: #0d0d0f;
+      background: #ffe8f4;
       border: 1px solid rgba(184, 180, 176, 0.25);
       max-width: 520px;
       width: 100%;
@@ -752,7 +752,7 @@
           transition: color 0.2s;
 
           &:hover {
-            color: #fff;
+            color: var(--color-text);
           }
         }
       }
@@ -800,7 +800,7 @@
           &.active {
             background: var(--color-accent);
             border-color: var(--color-accent-soft);
-            color: #fff;
+            color: var(--color-text);
           }
         }
       }
@@ -833,7 +833,7 @@
           border: 1px dashed rgba(212, 175, 55, 0.4);
           padding: 0.65rem 1rem;
           font-size: 0.82rem;
-          color: #f5e6a3;
+          color: #b8890f;
         }
 
         .form-group {
@@ -850,9 +850,9 @@
 
           .form-input {
             width: 100%;
-            background: rgba(5, 5, 6, 0.9);
+            background: rgba(255, 240, 248, 0.9);
             border: 1px solid rgba(184, 180, 176, 0.25);
-            color: #fff;
+            color: var(--color-text);
             padding: 0.8rem 1rem;
             font-size: 0.9rem;
             outline: none;

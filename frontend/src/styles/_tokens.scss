@@ -3,31 +3,31 @@
 
 :root {
   // Paleta Bubblegum Spa / Dark Luxury Editorial
-  --color-bg: #05030a;
-  --color-bg-alt: #0d0718;
-  --color-bg-card: rgba(14, 8, 26, 0.65);
-  --color-bg-card-hover: rgba(26, 15, 46, 0.85);
-  --color-card-border: rgba(255, 42, 133, 0.22);
-  --color-card-border-hover: rgba(255, 42, 133, 0.75);
+  --color-bg: #ffe3f1;
+  --color-bg-alt: #ffd0e8;
+  --color-bg-card: rgba(255, 255, 255, 0.62);
+  --color-bg-card-hover: rgba(255, 255, 255, 0.85);
+  --color-card-border: rgba(255, 255, 255, 0.9);
+  --color-card-border-hover: rgba(255, 42, 133, 0.6);
 
   // Acentos Bubblegum / Neon — más vibrantes y con mayor saturación
   --color-bubble-pink: #ff2a85;
   --color-bubble-hotpink: #ff1f98;
   --color-bubble-magenta: #e42c7f;
   --color-bubble-purple: #a855f7;
-  --color-bubble-lavender: #c98dff;
-  --color-bubble-cyan: #00f0ff;
+  --color-bubble-lavender: #a45be0;
+  --color-bubble-cyan: #17aee0;
   --color-bubble-mint: #3ddbaa;
   --color-bubble-glow: rgba(255, 42, 133, 0.38);
 
   --color-accent: #ff2a85;
   --color-accent-soft: #ff6eaa;
-  --color-text: #fff8fa;
-  --color-text-muted: #d4bfd2;
-  --color-metal: #e8dae6;
+  --color-text: #4a1d46;
+  --color-text-muted: #8a4f86;
+  --color-metal: #6b2a66;
 
   // Degradados Bubblegum — más dinámicos y expresivos
-  --gradient-bubble: linear-gradient(135deg, #ff2a85 0%, #c98dff 50%, #00f0ff 100%);
+  --gradient-bubble: linear-gradient(135deg, #ff4fa3 0%, #c98dff 50%, #5ad8ff 100%);
   --gradient-bubble-soft: linear-gradient(135deg, rgba(255, 42, 133, 0.18) 0%, rgba(168, 85, 247, 0.14) 100%);
   --gradient-bubble-btn: linear-gradient(135deg, #ff2a85 0%, #ff1f98 50%, #a855f7 100%);
   --gradient-bubble-glow: radial-gradient(circle at center, rgba(255, 42, 133, 0.3) 0%, transparent 70%);
@@ -108,7 +108,7 @@ $breakpoint-lg: 1024px;
 }
 
 @mixin bubble-glass-card {
-  background: rgba(17, 10, 30, 0.72);
+  background: rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--color-card-border);
@@ -149,22 +149,22 @@ $breakpoint-lg: 1024px;
 
 @keyframes skeleton-bubble-pulse {
   0% {
-    background-color: #140d22;
+    background-color: #ffd0e8;
     border-color: rgba(255, 110, 170, 0.15);
   }
   50% {
-    background-color: #201340;
+    background-color: #ffe8f4;
     border-color: rgba(255, 110, 170, 0.38);
   }
   100% {
-    background-color: #140d22;
+    background-color: #ffd0e8;
     border-color: rgba(255, 110, 170, 0.15);
   }
 }
 
 .skeleton-dark {
   animation: skeleton-bubble-pulse 1.8s ease-in-out infinite;
-  background-color: #140d22;
+  background-color: #ffd0e8;
   border: 1px solid rgba(255, 110, 170, 0.22);
   border-radius: 14px;
 }

@@ -3,6 +3,9 @@
   <!-- 1. HERO MONUMENTAL BRUTALISTA -->
   <app-hero (reserveClick)="onReserve()"></app-hero>
 
+  <!-- 1b. SCROLL NARRATIVO ANCLADO -->
+  <app-scroll-showcase></app-scroll-showcase>
+
   <!-- 2. CARTA DE TRATAMIENTOS (SESIONES SENSORIALES - GRILLA ASIMÉTRICA WARM & FUZZY) -->
   <section class="work-section" id="masajes" aria-label="Carta de Masajes Exclusivos">
     <div class="section-head">
@@ -65,6 +68,7 @@
         <div class="card-media-wrapper">
           <img [src]="service.posterUrl || service.imageUrl" [alt]="service.name" class="card-img" loading="lazy" />
           <video
+            appInViewVideo
             #cardVid
             class="card-video"
             [src]="service.videoUrl"
@@ -139,6 +143,7 @@
         <div class="staff-media-wrapper">
           <img [src]="prof.photoUrl" [alt]="prof.name" class="staff-img" loading="lazy" />
           <video
+            appInViewVideo
             #staffVid
             class="staff-video"
             [src]="prof.videoUrl"

@@ -39,7 +39,7 @@ export class CatalogService {
       price: 200,
       imageUrl: 'assets/img/services/rc-01.webp',
       posterUrl: 'assets/img/services/rc-01.webp',
-      videoUrl: 'videos/bubble-facial.mp4',
+      videoUrl: 'videos/tr-rc-01.mp4',
       tag: '✨ SENSITIVO FLORAL',
       features: ['Aceites Tibios Neutros', 'Estimulación Sensorial Continua', 'Cabina Climatizada'],
       featured: true
@@ -54,7 +54,7 @@ export class CatalogService {
       price: 280,
       imageUrl: 'assets/img/services/rc-02.webp',
       posterUrl: 'assets/img/services/rc-02.webp',
-      videoUrl: 'videos/bubble-massage.mp4',
+      videoUrl: 'videos/tr-rc-02.mp4',
       tag: '💖 NURU BODY SLIDE',
       features: ['Gel Nuru Hiperdeslizante', 'Contacto Cuerpo a Cuerpo', 'Ducha de Alta Presión'],
       featured: true
@@ -69,7 +69,7 @@ export class CatalogService {
       price: 180,
       imageUrl: 'assets/img/services/rc-03.webp',
       posterUrl: 'assets/img/services/rc-03.webp',
-      videoUrl: 'videos/bubble-space.mp4',
+      videoUrl: 'videos/tr-rc-03.mp4',
       tag: '⚡ DESCONTRACTURANTE',
       features: ['Descompresión Cervical', 'Puntos Gatillo', 'Aromaterapia Relax'],
       featured: true
@@ -84,7 +84,7 @@ export class CatalogService {
       price: 250,
       imageUrl: 'assets/img/services/rc-04.webp',
       posterUrl: 'assets/img/services/rc-04.webp',
-      videoUrl: 'videos/bubble-hero.mp4',
+      videoUrl: 'videos/tr-rc-04.mp4',
       tag: '🔮 TÁNTRICO INTEGRAL',
       features: ['Piedras Tibias de Cuarzo', 'Estimulación de Chakras', 'Música Binaural'],
       featured: true
@@ -114,7 +114,7 @@ export class CatalogService {
       price: 450,
       imageUrl: 'assets/img/services/rc-06.webp',
       posterUrl: 'assets/img/services/rc-06.webp',
-      videoUrl: 'videos/video-project-27.mp4',
+      videoUrl: 'videos/tr-rc-06.mp4',
       tag: '💎 EXPERIENCIA VIP',
       features: ['Tina Privada con Hidromasaje', 'Cuerpo a Cuerpo Nuru', 'Champagne & Frutas'],
       featured: true
@@ -127,7 +127,7 @@ export class CatalogService {
       title: 'Masaje Tántrico Sensitivo',
       subtitle: 'Toques lentos y estimulación suave con aceites tibios',
       category: 'TÁNTRICO',
-      videoUrl: 'videos/bubble-facial.mp4',
+      videoUrl: 'videos/tr-rc-01.mp4',
       posterUrl: 'assets/img/services/rc-01.webp',
       tag: '✨ SENSITIVO'
     },
@@ -136,7 +136,7 @@ export class CatalogService {
       title: 'Masaje Nuru Body Slide',
       subtitle: 'Deslizamientos continuos y contacto cuerpo a cuerpo',
       category: 'NURU',
-      videoUrl: 'videos/bubble-massage.mp4',
+      videoUrl: 'videos/tr-rc-02.mp4',
       posterUrl: 'assets/img/services/rc-02.webp',
       tag: '💖 NURU SLIDE'
     },
@@ -163,7 +163,7 @@ export class CatalogService {
       title: 'Experiencia RECOVR VIP',
       subtitle: 'Masaje completo con tina de hidromasaje privada',
       category: 'VIP',
-      videoUrl: 'videos/bubble-hero.mp4',
+      videoUrl: 'videos/tr-rc-06.mp4',
       posterUrl: 'assets/img/services/rc-06.webp',
       tag: '👑 SESIÓN VIP'
     }

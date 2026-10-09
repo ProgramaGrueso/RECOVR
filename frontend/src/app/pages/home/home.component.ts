@@ -1,6 +1,7 @@
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HeroComponent } from '../../components/hero/hero.component';
+import { ScrollShowcaseComponent } from '../../components/scroll-showcase/scroll-showcase.component';
 import { ServiceCardComponent } from '../../components/service-card/service-card.component';
 import { ProfessionalCardComponent } from '../../components/professional-card/professional-card.component';
 import { SectionDividerComponent } from '../../components/section-divider/section-divider.component';
@@ -11,6 +12,7 @@ import { ServiceItem } from '../../models/service.model';
 import { Professional } from '../../models/professional.model';
 import { SpaceItem } from '../../models/space.model';
 import { CardTiltDirective } from '../../directives/card-tilt.directive';
+import { InViewVideoDirective } from '../../directives/in-view-video.directive';
 
 @Component({
   selector: 'app-home',
@@ -19,8 +21,10 @@ import { CardTiltDirective } from '../../directives/card-tilt.directive';
   imports: [
     CommonModule,
     HeroComponent,
+    ScrollShowcaseComponent,
     SectionDividerComponent,
-    CardTiltDirective
+    CardTiltDirective,
+    InViewVideoDirective
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']

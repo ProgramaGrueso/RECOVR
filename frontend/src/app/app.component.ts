@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
+import { SmoothScrollService } from './services/smooth-scroll.service';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { CustomCursorComponent } from './components/custom-cursor/custom-cursor.component';
@@ -32,6 +33,7 @@ export class AppComponent {
   private cdr = inject(ChangeDetectorRef);
 
   constructor() {
+    inject(SmoothScrollService).start();
     this.isAdminRoute = this.router.url.startsWith('/admin');
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))

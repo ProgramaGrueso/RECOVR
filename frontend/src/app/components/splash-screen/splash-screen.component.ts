@@ -16,14 +16,18 @@ export class SplashScreenComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     const hasVisited = sessionStorage.getItem('recovr_visited');
-    if (!hasVisited) {
+    const conn = (navigator as any).connection;
+    const lite = !!conn?.saveData || /(^|-)2g$/.test(conn?.effectiveType || '') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!hasVisited && !lite) {
       this.showSplash = true;
-      sessionStorage.setItem('recovr_visited', 'true');
+      (window as any).__recovrSplash = true;
     }
+    sessionStorage.setItem('recovr_visited', 'true');
   }
 
   ngAfterViewInit(): void {
-    if (this.showSplash && this.videoRef) {
+    if (!this.showSplash) return;
+    if (this.videoRef) {
       const video = this.videoRef.nativeElement;
       
       const tryPlay = () => {
@@ -44,9 +48,10 @@ export class SplashScreenComponent implements OnInit, AfterViewInit {
       }
 
       // Fallback if video takes too long or fails to emit ended event
+      // La intro dura como máximo 7 s (el video completo son ~15 s; hay botón "Saltar")
       setTimeout(() => {
         this.finishSplash();
-      }, 16000); // Max 16 seconds duration (bubble-hero is ~15s)
+      }, 7000);
     }
   }
 
@@ -59,6 +64,8 @@ export class SplashScreenComponent implements OnInit, AfterViewInit {
     this.isFadingOut = true;
     setTimeout(() => {
       this.showSplash = false;
+      (window as any).__recovrSplash = false;
+      window.dispatchEvent(new Event('recovr:splash-done'));
     }, 600); // 600ms para coincidir con la transición de CSS
   }
 }
