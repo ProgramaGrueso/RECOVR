@@ -1,9 +1,11 @@
----
-name: premium-web-3d
-description: Rediseñar un frontend web a nivel "premium/Awwwards" con 3D (Three.js), scroll narrativo (GSAP+Lenis), assets generados con ComfyUI (Krea2 + MiniMax H3 y LoRAs de personajes) y optimización móvil verificada. Úsala cuando pidan una web "de vanguardia", "con efectos 3D", un rediseño visual completo o assets de imagen/video para una web. Probada en RECOVR (Angular 22), 2026-10-09.
----
+# Guía: rediseño web premium con 3D + assets IA (RECOVR)
 
-# Rediseño web premium con 3D + assets IA
+> Copia versionada de la skill `premium-web-3d` (canónica en `~/.claude/skills/premium-web-3d/`, donde también están los scripts de auditoría y la plantilla de cola ComfyUI). Las rutas `reference/` de abajo equivalen al código real de este repo:
+> - `reference/hero-orb.component.ts` → `src/app/components/hero-orb/hero-orb.component.ts`
+> - `reference/scroll-showcase.component.ts` → `src/app/components/scroll-showcase/scroll-showcase.component.ts`
+> - `reference/in-view-video.directive.ts` → `src/app/directives/in-view-video.directive.ts`
+> - `reference/smooth-scroll.service.ts` → `src/app/services/smooth-scroll.service.ts`
+> - `scripts/*` (auditoría responsive, capturas, plantilla ComfyUI): solo en la skill local.
 
 Receta validada en RECOVR (rama `redesign/awwwards-3d`, ~1 jornada). Código de referencia en `reference/`, scripts en `scripts/`. Aprendizajes en español; prompts de modelos en inglés.
 
