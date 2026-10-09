@@ -1,5 +1,14 @@
 @use '../../../styles/tokens' as *;
 
+:host {
+  // El panel de administración conserva su tema oscuro: tokens de texto claros solo aquí
+  --color-text: #fff8fa;
+  --color-text-muted: #d4bfd2;
+  --color-metal: #e8dae6;
+  --color-bubble-cyan: #00f0ff;
+  --color-bubble-lavender: #c98dff;
+}
+
 .login-wrapper {
   min-height: 100vh;
   width: 100%;

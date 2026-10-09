@@ -16,7 +16,7 @@ export class CardTiltDirective implements OnInit, OnDestroy {
   private boundOnMouseLeave = this.onMouseLeave.bind(this);
 
   ngOnInit(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || matchMedia('(hover: none)').matches) return;
 
     const nativeEl = this.el.nativeElement;
     nativeEl.style.transition = 'transform 0.15s ease-out';

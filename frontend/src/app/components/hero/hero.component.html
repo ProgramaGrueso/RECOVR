@@ -1,4 +1,7 @@
-<section class="hero-section" aria-label="Estudio Sensorial RECOVR Sanctum">
+<section class="hero-section" #heroEl aria-label="Estudio Sensorial RECOVR Sanctum">
+  @defer (on idle) {
+    <app-hero-orb></app-hero-orb>
+  }
   <div class="hero-top-info">
     <span class="meta-label">Estudio Sensorial de Alta Gama &bull; Lima, Perú</span>
   </div>

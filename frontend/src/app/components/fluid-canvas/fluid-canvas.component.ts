@@ -43,7 +43,7 @@ export class FluidCanvasComponent implements AfterViewInit, OnDestroy {
   private particles!: THREE.Points;
   private particlePositions!: Float32Array;
   private particleSpeeds!: Float32Array;
-  private particleCount = 65;
+  private particleCount = (typeof window !== 'undefined' && (matchMedia('(hover: none)').matches || window.innerWidth < 768)) ? 24 : 65;
 
   private animationFrameId: number | null = null;
   private boundOnMouseMove = this.onMouseMove.bind(this);
@@ -84,12 +84,12 @@ export class FluidCanvasComponent implements AfterViewInit, OnDestroy {
 
     this.renderer = new THREE.WebGLRenderer({
       powerPreference: 'high-performance',
-      antialias: true,
+      antialias: false,
       alpha: true
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.setPixelRatio(this.pixelRatio());
     this.renderer.setSize(width, height);
-    this.renderer.setClearColor(0x05030a, 1);
+    this.renderer.setClearColor(0xffd0e8, 1);
     container.appendChild(this.renderer.domElement);
 
     const vertexShader = `
@@ -110,6 +110,7 @@ export class FluidCanvasComponent implements AfterViewInit, OnDestroy {
       vec3 permute(vec3 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
       vec4 permute(vec4 x) { return mod(((x*34.0)+1.0)*x, 289.0); }
       vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+      vec3 taylorInvSqrt(vec3 r) { return 1.79284291400159 - 0.85373472095314 * r; }
 
       float snoise(vec2 v) {
         const vec4 C = vec4(0.211324865405187, 0.366025403784439,
@@ -149,26 +150,28 @@ export class FluidCanvasComponent implements AfterViewInit, OnDestroy {
         float n2 = snoise(uvCorrected * 3.4 - vec2(uTime * 0.06, uTime * 0.15));
         float fluidDistort = (n1 * 0.6 + n2 * 0.4) + mouseInfluence * 0.4;
 
-        vec3 deepOnyx = vec3(0.02, 0.012, 0.04);
-        vec3 bubblePink = vec3(1.0, 0.16, 0.55);   // #ff2a85
-        vec3 orchidPurple = vec3(0.66, 0.33, 0.97); // #a855f7
-        vec3 electricCyan = vec3(0.0, 0.94, 1.0);  // #00f0ff
+        vec3 cottonPink = vec3(1.0, 0.82, 0.92);
+        vec3 bubblePink = vec3(1.0, 0.45, 0.72);
+        vec3 lilac = vec3(0.83, 0.68, 1.0);
+        vec3 babyBlue = vec3(0.60, 0.88, 1.0);
 
-        vec3 color = deepOnyx;
+        vec3 color = cottonPink;
 
         float tendril1 = smoothstep(0.15, 0.75, n1 + fluidDistort * 0.5);
         float tendril2 = smoothstep(0.25, 0.85, n2 - fluidDistort * 0.3);
 
-        color = mix(color, orchidPurple * 0.45, tendril1 * 0.5);
-        color = mix(color, bubblePink * 0.65, tendril2 * 0.4);
+        color = mix(color, lilac, tendril1 * 0.7);
+        color = mix(color, babyBlue, tendril2 * 0.45);
+        color = mix(color, bubblePink, smoothstep(0.55, 1.0, n1 * n2 + 0.5) * 0.35);
 
         float mouseGlow = exp(-distToMouse * 5.2) * (1.0 + length(uVelocity) * 12.0);
-        color += mix(bubblePink, electricCyan, sin(uTime * 1.5) * 0.5 + 0.5) * mouseGlow * 0.75;
+        color += mix(vec3(1.0, 0.6, 0.85), vec3(0.7, 0.95, 1.0), sin(uTime * 1.5) * 0.5 + 0.5) * mouseGlow * 0.45;
 
-        float vignette = 1.0 - length(st - 0.5) * 0.85;
+        float vignette = 1.0 - length(st - 0.5) * 0.18;
         color *= vignette;
+        color = min(color, vec3(1.0));
 
-        gl_FragColor = vec4(color, 0.92);
+        gl_FragColor = vec4(color, 1.0);
       }
     `;
 
@@ -243,17 +246,24 @@ export class FluidCanvasComponent implements AfterViewInit, OnDestroy {
     this.targetMouse.y = 1.0 - (e.clientY / window.innerHeight);
   }
 
+  /** El fondo es un degradado suave: a menor resolución se ve igual y cuesta mucho menos (clave en móviles). */
+  private pixelRatio(): number {
+    const touch = matchMedia('(hover: none)').matches || window.innerWidth < 768;
+    return touch ? 0.5 : Math.min(window.devicePixelRatio, 1);
+  }
+
   private onResize(): void {
     if (!this.renderer || !this.fluidMaterial) return;
     const width = window.innerWidth;
     const height = window.innerHeight;
+    this.renderer.setPixelRatio(this.pixelRatio());
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.fluidMaterial.uniforms['uResolution'].value.set(width, height);
   }
 
   private animate = (): void => {
     this.animationFrameId = requestAnimationFrame(this.animate);
+    if (document.hidden) return;
 
     const elapsedTime = this.clock.getElapsedTime();
 

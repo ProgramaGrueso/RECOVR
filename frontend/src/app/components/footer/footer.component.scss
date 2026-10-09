@@ -10,7 +10,7 @@
 .site-footer {
   padding: 8rem 3rem 4rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(5, 3, 10, 0.95);
+  background: rgba(255, 240, 248, 0.95);
   position: relative;
   z-index: 10;
   box-sizing: border-box;
@@ -38,7 +38,7 @@
     font-weight: 800;
     letter-spacing: -0.02em;
     text-transform: uppercase;
-    color: #ffffff;
+    color: var(--color-text);
     margin: 0;
   }
 }
@@ -48,7 +48,7 @@
   font-size: 0.88rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #ffffff;
+  color: var(--color-text);
   padding: 0.75rem 2rem;
   border-radius: 999px;
   text-transform: uppercase;
@@ -94,7 +94,7 @@
   p {
     font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
     font-size: 0.9rem;
-    color: #a39bb0;
+    color: var(--color-text-muted);
     line-height: 1.6;
     margin: 0;
   }
@@ -105,7 +105,7 @@
   justify-content: space-between;
   align-items: center;
   font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--color-text-muted);
   letter-spacing: 0.05em;
   font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
   flex-wrap: wrap;
