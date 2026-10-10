@@ -1,4 +1,4 @@
-package com.recovr.exception;
+package com.recovr.backend.exception;
 
 /**
  * Excepción de negocio lanzada cuando existe un conflicto de agenda

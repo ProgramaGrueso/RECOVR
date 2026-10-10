@@ -4,6 +4,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -14,11 +16,26 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    @Value("${app.jwt.secret}")
-    private String secret;
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class);
 
-    @Value("${app.jwt.expiration-ms}")
-    private long expirationMs;
+    private final SecretKey clave;
+    private final long expirationMs;
+
+    /**
+     * La clave sale de JWT_SECRET (Base64, mínimo 32 bytes). Si no está definida se genera una clave
+     * aleatoria solo para esta ejecución: los tokens dejan de valer al reiniciar, nunca hay un secreto
+     * por defecto versionado en el repositorio.
+     */
+    public JwtService(@Value("${app.jwt.secret:}") String secret,
+                      @Value("${app.jwt.expiration-ms}") long expirationMs) {
+        this.expirationMs = expirationMs;
+        if (secret.isBlank()) {
+            log.warn("JWT_SECRET no definida: se usa una clave temporal (los tokens se invalidan al reiniciar).");
+            this.clave = Jwts.SIG.HS256.key().build();
+        } else {
+            this.clave = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        }
+    }
 
     public String generarToken(UserDetails userDetails) {
         return Jwts.builder()
@@ -43,6 +60,6 @@ public class JwtService {
     }
 
     private SecretKey clave() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
+        return clave;
     }
 }

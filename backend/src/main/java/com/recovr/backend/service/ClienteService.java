@@ -3,7 +3,6 @@ package com.recovr.backend.service;
 import com.recovr.backend.entity.Cliente;
 import com.recovr.backend.repository.ClienteRepository;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,8 +10,11 @@ import java.util.List;
 @Service
 public class ClienteService {
 
-    @Autowired
-    private ClienteRepository clienteRepository;
+    private final ClienteRepository clienteRepository;
+
+    public ClienteService(ClienteRepository clienteRepository) {
+        this.clienteRepository = clienteRepository;
+    }
 
     public List<Cliente> listarTodos() {
         return clienteRepository.findAll();

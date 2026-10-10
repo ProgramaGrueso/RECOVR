@@ -15,8 +15,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -30,9 +28,11 @@ import java.util.List;
 @Tag(name = "Reservas (Persistencia DB)", description = "Gestión de reservas persistidas en base de datos con reglas de rol y usuario autenticado")
 public class ReservaController {
 
-    @Autowired
-    @Qualifier("jpaReservaService")
-    private ReservaService reservaService;
+    private final ReservaService reservaService;
+
+    public ReservaController(ReservaService reservaService) {
+        this.reservaService = reservaService;
+    }
 
     @Operation(summary = "Listar todas las reservas (DB)", description = "Retorna todas las reservas persistidas. Requiere rol ADMIN o RECEPCIONISTA.")
     @ApiResponses({

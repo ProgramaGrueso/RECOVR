@@ -19,9 +19,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Manejador global de errores de la capa persistente.
- * Complementa a ReservaControllerAdvice (Core Engine), que ya traduce
- * ReservaConflictException (409), IllegalStateException e IllegalArgumentException (400).
+ * Manejador global de errores de la API: traduce las excepciones de negocio y de validación
+ * a respuestas HTTP con un cuerpo JSON uniforme.
  */
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -46,6 +45,21 @@ public class ApiExceptionHandler {
     @ExceptionHandler(RecursoNoEncontradoException.class)
     public ResponseEntity<Map<String, Object>> handleNoEncontrado(RecursoNoEncontradoException ex) {
         return respuesta(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage());
+    }
+
+    @ExceptionHandler(ReservaConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleConflictoAgenda(ReservaConflictException ex) {
+        return respuesta(HttpStatus.CONFLICT, "Conflicto de Agenda", ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleOperacionNoPermitida(IllegalStateException ex) {
+        return respuesta(HttpStatus.BAD_REQUEST, "Operación no permitida", ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleSolicitudInvalida(IllegalArgumentException ex) {
+        return respuesta(HttpStatus.BAD_REQUEST, "Solicitud Inválida", ex.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)

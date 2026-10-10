@@ -177,7 +177,6 @@ npm run dev
 | `GET` | `/api/db/reservas/cliente/{id}` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Historial de un cliente. |
 | `POST` | `/api/db/reservas/{id}/confirmar-y-pagar` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Confirma la reserva y registra el pago en una transacción. |
 | `GET` `PUT` `DELETE` | `/api/db/reservas`, `/api/db/reservas/{id}`, `/api/db/reservas/buscar` | `RECEPCIONISTA`, `ADMIN` | Gestión completa y búsqueda JPQL por rango de fechas y estado. |
-| `*` | `/api/reservas/**` | Según rol | *Core Engine* TDD del APF1 (repositorio en memoria). |
 
 Códigos de error: `400` datos inválidos (con detalle por campo), `401` sin token o token inválido, `403` rol sin permiso, `404` recurso inexistente, `409` cruce de horario o registro duplicado.
 

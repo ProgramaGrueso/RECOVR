@@ -1,6 +1,6 @@
 package com.recovr.backend.controller;
 
-import com.recovr.backend.entity.Sala;
+import com.recovr.backend.dto.SalaResponse;
 import com.recovr.backend.service.SalaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import com.recovr.backend.dto.SalaRequest;
 import jakarta.validation.Valid;
@@ -25,61 +24,64 @@ import java.util.List;
 @Tag(name = "Salas", description = "Gestión de suites y salas de tratamiento de RECOVR (Requiere ADMIN)")
 public class SalaController {
 
-    @Autowired
-    private SalaService salaService;
+    private final SalaService salaService;
+
+    public SalaController(SalaService salaService) {
+        this.salaService = salaService;
+    }
 
     @Operation(summary = "Listar todas las salas", description = "Retorna el listado de salas y cabinas terapéuticas. Requiere rol ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado de salas obtenido",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Sala.class)))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = SalaResponse.class)))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @GetMapping
-    public List<Sala> listar() {
-        return salaService.listarTodos();
+    public List<SalaResponse> listar() {
+        return salaService.listarTodos().stream().map(SalaResponse::de).toList();
     }
 
     @Operation(summary = "Obtener sala por ID", description = "Obtiene los datos de una sala por su ID. Requiere rol ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Sala encontrada",
-                    content = @Content(schema = @Schema(implementation = Sala.class))),
+                    content = @Content(schema = @Schema(implementation = SalaResponse.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Sala no encontrada", content = @Content)
     })
     @GetMapping("/{id}")
-    public Sala obtener(@Parameter(description = "ID de la sala", example = "1") @PathVariable Long id) {
-        return salaService.buscarPorId(id);
+    public SalaResponse obtener(@Parameter(description = "ID de la sala", example = "1") @PathVariable Long id) {
+        return SalaResponse.de(salaService.buscarPorId(id));
     }
 
     @Operation(summary = "Crear nueva sala", description = "Registra una nueva sala o suite terapéutica. Requiere rol ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Sala creada",
-                    content = @Content(schema = @Schema(implementation = Sala.class))),
+                    content = @Content(schema = @Schema(implementation = SalaResponse.class))),
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Sala crear(@Valid @RequestBody SalaRequest request) {
-        return salaService.crear(request.aEntidad());
+    public SalaResponse crear(@Valid @RequestBody SalaRequest request) {
+        return SalaResponse.de(salaService.crear(request.aEntidad()));
     }
 
     @Operation(summary = "Actualizar sala", description = "Actualiza nombre o capacidad de una sala. Requiere rol ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Sala actualizada exitosamente",
-                    content = @Content(schema = @Schema(implementation = Sala.class))),
+                    content = @Content(schema = @Schema(implementation = SalaResponse.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Sala no encontrada", content = @Content)
     })
     @PutMapping("/{id}")
-    public Sala actualizar(
+    public SalaResponse actualizar(
             @Parameter(description = "ID de la sala a actualizar", example = "1") @PathVariable Long id,
             @Valid @RequestBody SalaRequest request) {
-        return salaService.actualizar(id, request.aEntidad());
+        return SalaResponse.de(salaService.actualizar(id, request.aEntidad()));
     }
 
     @Operation(summary = "Eliminar sala", description = "Elimina una sala del sistema. Requiere rol ADMIN.")
@@ -101,17 +103,17 @@ public class SalaController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista de salas disponibles",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Sala.class)))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = SalaResponse.class)))),
             @ApiResponse(responseCode = "400", description = "Parámetros de fecha/hora incorrectos", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @GetMapping("/disponibles")
-    public List<Sala> disponibles(
+    public List<SalaResponse> disponibles(
             @Parameter(description = "Fecha/hora de inicio (ISO-8601)", example = "2026-10-15T09:00:00")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
             @Parameter(description = "Fecha/hora de fin (ISO-8601)", example = "2026-10-15T11:00:00")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin) {
-        return salaService.buscarDisponibles(inicio, fin);
+        return salaService.buscarDisponibles(inicio, fin).stream().map(SalaResponse::de).toList();
     }
 }

@@ -16,8 +16,7 @@ import com.recovr.backend.repository.ReservaRepository;
 import com.recovr.backend.repository.SalaRepository;
 import com.recovr.backend.repository.ServicioRepository;
 import com.recovr.backend.repository.UsuarioRepository;
-import com.recovr.exception.ReservaConflictException;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.recovr.backend.exception.ReservaConflictException;
 import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,29 +24,26 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Service("jpaReservaService")
+@Service
 public class ReservaService {
 
-    @Autowired
-    private ReservaRepository reservaRepository;
+    private final ReservaRepository reservaRepository;
+    private final PagoRepository pagoRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final ClienteRepository clienteRepository;
+    private final EmpleadoRepository empleadoRepository;
+    private final ServicioRepository servicioRepository;
+    private final SalaRepository salaRepository;
 
-    @Autowired
-    private PagoRepository pagoRepository;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private ClienteRepository clienteRepository;
-
-    @Autowired
-    private EmpleadoRepository empleadoRepository;
-
-    @Autowired
-    private ServicioRepository servicioRepository;
-
-    @Autowired
-    private SalaRepository salaRepository;
+    public ReservaService(ReservaRepository reservaRepository, PagoRepository pagoRepository, UsuarioRepository usuarioRepository, ClienteRepository clienteRepository, EmpleadoRepository empleadoRepository, ServicioRepository servicioRepository, SalaRepository salaRepository) {
+        this.reservaRepository = reservaRepository;
+        this.pagoRepository = pagoRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.clienteRepository = clienteRepository;
+        this.empleadoRepository = empleadoRepository;
+        this.servicioRepository = servicioRepository;
+        this.salaRepository = salaRepository;
+    }
 
     public List<Reserva> listarTodos() {
         return reservaRepository.findAll();

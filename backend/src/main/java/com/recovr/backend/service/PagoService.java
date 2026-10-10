@@ -6,7 +6,6 @@ import com.recovr.backend.entity.Reserva;
 import com.recovr.backend.repository.ReservaRepository;
 import com.recovr.backend.repository.PagoRepository;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,8 +14,13 @@ import java.util.List;
 @Service
 public class PagoService {
 
-    @Autowired
-    private PagoRepository pagoRepository;
+    private final PagoRepository pagoRepository;
+    private final ReservaRepository reservaRepository;
+
+    public PagoService(PagoRepository pagoRepository, ReservaRepository reservaRepository) {
+        this.pagoRepository = pagoRepository;
+        this.reservaRepository = reservaRepository;
+    }
 
     public List<Pago> listarTodos() {
         return pagoRepository.findAll();
@@ -26,9 +30,6 @@ public class PagoService {
         return pagoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Pago", id));
     }
-
-    @Autowired
-    private ReservaRepository reservaRepository;
 
     /** Registra un pago directo (ADMIN). Cada reserva admite un único pago. */
     public Pago crear(PagoRequest request) {

@@ -3,7 +3,6 @@ package com.recovr.backend.service;
 import com.recovr.backend.entity.Empleado;
 import com.recovr.backend.repository.EmpleadoRepository;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -12,8 +11,11 @@ import java.util.List;
 @Service
 public class EmpleadoService {
 
-    @Autowired
-    private EmpleadoRepository empleadoRepository;
+    private final EmpleadoRepository empleadoRepository;
+
+    public EmpleadoService(EmpleadoRepository empleadoRepository) {
+        this.empleadoRepository = empleadoRepository;
+    }
 
     public List<Empleado> listarTodos() {
         return empleadoRepository.findAll();

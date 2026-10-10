@@ -8,7 +8,7 @@ import com.recovr.backend.entity.Sala;
 import com.recovr.backend.entity.Servicio;
 import com.recovr.backend.repository.PagoRepository;
 import com.recovr.backend.repository.ReservaRepository;
-import com.recovr.exception.ReservaConflictException;
+import com.recovr.backend.exception.ReservaConflictException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

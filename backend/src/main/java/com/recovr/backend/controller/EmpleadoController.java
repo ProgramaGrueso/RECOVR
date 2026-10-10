@@ -1,6 +1,6 @@
 package com.recovr.backend.controller;
 
-import com.recovr.backend.entity.Empleado;
+import com.recovr.backend.dto.EmpleadoResponse;
 import com.recovr.backend.service.EmpleadoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import com.recovr.backend.dto.EmpleadoRequest;
 import jakarta.validation.Valid;
@@ -25,61 +24,64 @@ import java.util.List;
 @Tag(name = "Empleados", description = "Gestión del equipo de especialistas y terapeutas de recuperación (Requiere ADMIN)")
 public class EmpleadoController {
 
-    @Autowired
-    private EmpleadoService empleadoService;
+    private final EmpleadoService empleadoService;
+
+    public EmpleadoController(EmpleadoService empleadoService) {
+        this.empleadoService = empleadoService;
+    }
 
     @Operation(summary = "Listar todos los especialistas", description = "Retorna el listado completo de terapeutas/empleados. Requiere rol ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista de empleados recuperada",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Empleado.class)))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = EmpleadoResponse.class)))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @GetMapping
-    public List<Empleado> listar() {
-        return empleadoService.listarTodos();
+    public List<EmpleadoResponse> listar() {
+        return empleadoService.listarTodos().stream().map(EmpleadoResponse::de).toList();
     }
 
     @Operation(summary = "Obtener especialista por ID", description = "Obtiene los detalles del especialista según su ID. Requiere rol ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Empleado encontrado",
-                    content = @Content(schema = @Schema(implementation = Empleado.class))),
+                    content = @Content(schema = @Schema(implementation = EmpleadoResponse.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Empleado no encontrado", content = @Content)
     })
     @GetMapping("/{id}")
-    public Empleado obtener(@Parameter(description = "ID del empleado", example = "1") @PathVariable Long id) {
-        return empleadoService.buscarPorId(id);
+    public EmpleadoResponse obtener(@Parameter(description = "ID del empleado", example = "1") @PathVariable Long id) {
+        return EmpleadoResponse.de(empleadoService.buscarPorId(id));
     }
 
     @Operation(summary = "Registrar nuevo especialista", description = "Registra un nuevo especialista en la plataforma. Requiere rol ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Empleado creado exitosamente",
-                    content = @Content(schema = @Schema(implementation = Empleado.class))),
+                    content = @Content(schema = @Schema(implementation = EmpleadoResponse.class))),
             @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Empleado crear(@Valid @RequestBody EmpleadoRequest request) {
-        return empleadoService.crear(request.aEntidad());
+    public EmpleadoResponse crear(@Valid @RequestBody EmpleadoRequest request) {
+        return EmpleadoResponse.de(empleadoService.crear(request.aEntidad()));
     }
 
     @Operation(summary = "Actualizar datos del especialista", description = "Actualiza información como nombre, especialidad o teléfono. Requiere rol ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Empleado actualizado",
-                    content = @Content(schema = @Schema(implementation = Empleado.class))),
+                    content = @Content(schema = @Schema(implementation = EmpleadoResponse.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Empleado no encontrado", content = @Content)
     })
     @PutMapping("/{id}")
-    public Empleado actualizar(
+    public EmpleadoResponse actualizar(
             @Parameter(description = "ID del empleado a actualizar", example = "1") @PathVariable Long id,
             @Valid @RequestBody EmpleadoRequest request) {
-        return empleadoService.actualizar(id, request.aEntidad());
+        return EmpleadoResponse.de(empleadoService.actualizar(id, request.aEntidad()));
     }
 
     @Operation(summary = "Eliminar especialista", description = "Elimina un empleado por su ID. Requiere rol ADMIN.")
@@ -101,17 +103,17 @@ public class EmpleadoController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Lista de empleados disponibles",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Empleado.class)))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = EmpleadoResponse.class)))),
             @ApiResponse(responseCode = "400", description = "Parámetros de fecha/hora incorrectos", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @GetMapping("/disponibles")
-    public List<Empleado> disponibles(
+    public List<EmpleadoResponse> disponibles(
             @Parameter(description = "Fecha/hora de inicio (ISO-8601)", example = "2026-10-15T09:00:00")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
             @Parameter(description = "Fecha/hora de fin (ISO-8601)", example = "2026-10-15T11:00:00")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fin) {
-        return empleadoService.buscarDisponibles(inicio, fin);
+        return empleadoService.buscarDisponibles(inicio, fin).stream().map(EmpleadoResponse::de).toList();
     }
 }

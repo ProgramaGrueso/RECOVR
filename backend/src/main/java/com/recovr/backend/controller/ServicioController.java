@@ -1,6 +1,6 @@
 package com.recovr.backend.controller;
 
-import com.recovr.backend.entity.Servicio;
+import com.recovr.backend.dto.ServicioResponse;
 import com.recovr.backend.service.ServicioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.beans.factory.annotation.Autowired;
 import com.recovr.backend.dto.ServicioRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -23,8 +22,11 @@ import java.util.List;
 @Tag(name = "Servicios", description = "Catálogo de servicios y terapias de recuperación (Lectura para usuarios autenticados; mutaciones para ADMIN)")
 public class ServicioController {
 
-    @Autowired
-    private ServicioService servicioService;
+    private final ServicioService servicioService;
+
+    public ServicioController(ServicioService servicioService) {
+        this.servicioService = servicioService;
+    }
 
     @Operation(
             summary = "Listar catálogo de servicios",
@@ -32,12 +34,12 @@ public class ServicioController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Catálogo de servicios recuperado",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Servicio.class)))),
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ServicioResponse.class)))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content)
     })
     @GetMapping
-    public List<Servicio> listar() {
-        return servicioService.listarTodos();
+    public List<ServicioResponse> listar() {
+        return servicioService.listarTodos().stream().map(ServicioResponse::de).toList();
     }
 
     @Operation(
@@ -46,42 +48,42 @@ public class ServicioController {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Servicio encontrado",
-                    content = @Content(schema = @Schema(implementation = Servicio.class))),
+                    content = @Content(schema = @Schema(implementation = ServicioResponse.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "404", description = "Servicio no encontrado", content = @Content)
     })
     @GetMapping("/{id}")
-    public Servicio obtener(@Parameter(description = "ID del servicio", example = "1") @PathVariable Long id) {
-        return servicioService.buscarPorId(id);
+    public ServicioResponse obtener(@Parameter(description = "ID del servicio", example = "1") @PathVariable Long id) {
+        return ServicioResponse.de(servicioService.buscarPorId(id));
     }
 
     @Operation(summary = "Crear nuevo servicio", description = "Agrega una nueva terapia o tratamiento al catálogo. Requiere rol ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Servicio creado exitosamente",
-                    content = @Content(schema = @Schema(implementation = Servicio.class))),
+                    content = @Content(schema = @Schema(implementation = ServicioResponse.class))),
             @ApiResponse(responseCode = "400", description = "Datos de servicio inválidos", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Servicio crear(@Valid @RequestBody ServicioRequest request) {
-        return servicioService.crear(request.aEntidad());
+    public ServicioResponse crear(@Valid @RequestBody ServicioRequest request) {
+        return ServicioResponse.de(servicioService.crear(request.aEntidad()));
     }
 
     @Operation(summary = "Actualizar servicio existente", description = "Modifica duración, tiempo de limpieza, precio o nombre. Requiere rol ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Servicio actualizado exitosamente",
-                    content = @Content(schema = @Schema(implementation = Servicio.class))),
+                    content = @Content(schema = @Schema(implementation = ServicioResponse.class))),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content),
             @ApiResponse(responseCode = "404", description = "Servicio no encontrado", content = @Content)
     })
     @PutMapping("/{id}")
-    public Servicio actualizar(
+    public ServicioResponse actualizar(
             @Parameter(description = "ID del servicio a actualizar", example = "1") @PathVariable Long id,
             @Valid @RequestBody ServicioRequest request) {
-        return servicioService.actualizar(id, request.aEntidad());
+        return ServicioResponse.de(servicioService.actualizar(id, request.aEntidad()));
     }
 
     @Operation(summary = "Eliminar servicio", description = "Elimina un servicio del catálogo. Requiere rol ADMIN.")
