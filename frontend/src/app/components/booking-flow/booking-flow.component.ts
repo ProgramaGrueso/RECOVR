@@ -14,9 +14,6 @@ import { ServerTimeService } from '../../services/server-time.service';
 
 import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
 
-/** Cuenta de cliente de los datos de demostración del backend (SEED_DEMO_DATA). */
-const DEMO_API_CLIENT = { correo: 'cliente.demo@recovr.test', password: 'Demo12345!' };
-
 @Component({
   selector: 'app-booking-flow',
   standalone: true,
@@ -261,7 +258,6 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
 
   quickLoginDemoClient(): void {
     this.auth.loginAsRole('CLIENTE');
-    this.api.login(DEMO_API_CLIENT.correo, DEMO_API_CLIENT.password).subscribe();
     this.fillClientDataIfLoggedIn();
     this.showAuthGateModal = false;
     this.currentStep = 4;

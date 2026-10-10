@@ -5,7 +5,7 @@ import { BookingRequest, BookingResponse } from '../models/booking.model';
 
 const TOKEN_KEY = 'recovr-api-token';
 const URL_KEY = 'recovr-api-url';
-const DEFAULT_API_URL = 'http://localhost:8080/api';
+const DEFAULT_API_URL = 'http://localhost:8095/api';
 
 interface ServicioApi { id: number; nombre: string; precio: number; }
 interface EmpleadoApi { id: number; nombre: string; }
@@ -22,7 +22,7 @@ export class ApiBusinessError extends Error {}
 
 /**
  * Cliente de la API REST Spring Boot. Guarda el JWT del backend y crea las reservas reales.
- * La URL se puede cambiar con localStorage['recovr-api-url'] (por defecto http://localhost:8080/api).
+ * La URL se puede cambiar con localStorage['recovr-api-url'] (por defecto http://localhost:8095/api).
  */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
