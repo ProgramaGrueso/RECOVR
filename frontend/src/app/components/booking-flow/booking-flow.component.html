@@ -175,7 +175,7 @@
   <div class="dark-error-banner" *ngIf="hasError">
     <div class="error-icon">!</div>
     <div class="error-info">
-      <h4 class="error-title">SISTEMA TEMPORALMENTE NO DISPONIBLE</h4>
+      <h4 class="error-title">{{ bookingErrorTitle }}</h4>
       <p class="error-msg">{{ errorMessage }}</p>
     </div>
     <button type="button" class="btn-secondary btn-sm" (click)="loadInitialData()">
@@ -189,7 +189,7 @@
       <app-brand-mark size="lg" color="var(--color-bubble-pink)"></app-brand-mark>
     </div>
 
-    <h3 class="success-title">CITA CONFIRMADA CON ÉXITO</h3>
+    <h3 class="success-title">{{ bookingSuccess.status === 'PENDIENTE' ? 'CITA REGISTRADA CON ÉXITO' : 'CITA CONFIRMADA CON ÉXITO' }}</h3>
     <p class="success-code">CÓDIGO DE SEGUIMIENTO: <strong>{{ bookingSuccess.id }}</strong></p>
 
     <!-- Tarjeta de Puntos Ganados -->

@@ -1,5 +1,6 @@
 import { Injectable, signal, inject } from '@angular/core';
 import { ServerTimeService } from './server-time.service';
+import { ApiService } from './api.service';
 import { CanActivateFn, Router } from '@angular/router';
 import { AdminRole, AdminUser, ClientBookingItem } from '../models/rbac.model';
 
@@ -92,6 +93,7 @@ export const DEMO_USERS: Record<string, AdminUser & { password: string }> = {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private serverTimeService = inject(ServerTimeService);
+  private api = inject(ApiService);
   private readonly storageKey = 'recovr-admin-session';
   private readonly clientsStorageKey = 'recovr-registered-clients';
   private readonly pointsStorageKey = 'recovr-points-history';
@@ -329,6 +331,7 @@ export class AuthService {
     localStorage.removeItem(this.storageKey);
     sessionStorage.removeItem(this.storageKey);
     localStorage.removeItem(this.originalStorageKey);
+    this.api.clearSession();
     // Asignar null o usuario demo por defecto para que la SPA responda
     this.currentUser.set(null);
     this.originalUser.set(null);

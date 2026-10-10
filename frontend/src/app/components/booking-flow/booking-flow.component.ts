@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Input, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -6,12 +6,16 @@ import { Subscription } from 'rxjs';
 import { BookingService } from '../../services/booking.service';
 import { CatalogService } from '../../services/catalog.service';
 import { AuthService } from '../../services/auth.service';
+import { ApiService, ApiBusinessError } from '../../services/api.service';
 import { ServiceItem } from '../../models/service.model';
 import { Professional } from '../../models/professional.model';
 import { BookingResponse } from '../../models/booking.model';
 import { ServerTimeService } from '../../services/server-time.service';
 
 import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
+
+/** Cuenta de cliente de los datos de demostración del backend (SEED_DEMO_DATA). */
+const DEMO_API_CLIENT = { correo: 'cliente.demo@recovr.test', password: 'Demo12345!' };
 
 @Component({
   selector: 'app-booking-flow',
@@ -31,6 +35,8 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
   private router = inject(Router);
   private serverTimeService = inject(ServerTimeService);
+  private api = inject(ApiService);
+  private cdr = inject(ChangeDetectorRef);
 
   currentStep = 1;
   isSubmitting = false;
@@ -38,6 +44,7 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
   isLoadingProfessionals = true;
   hasError = false;
   errorMessage = '';
+  bookingErrorTitle = 'SISTEMA TEMPORALMENTE NO DISPONIBLE';
   bookingSuccess: BookingResponse | null = null;
   earnedPoints = 0;
   totalClientPoints = 0;
@@ -171,7 +178,8 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
   get filteredProfessionals(): Professional[] {
     const srv = this.selectedService;
     if (!srv) return this.professionals;
-    return this.professionals.filter(p => p.category === srv.category);
+    // Las terapeutas de categoría MASAJE atienden todas las líneas del catálogo (tántrico, nuru, 4 manos, VIP...).
+    return this.professionals.filter(p => p.category === srv.category || p.category === 'MASAJE');
   }
 
   selectService(service: ServiceItem): void {
@@ -253,6 +261,7 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
 
   quickLoginDemoClient(): void {
     this.auth.loginAsRole('CLIENTE');
+    this.api.login(DEMO_API_CLIENT.correo, DEMO_API_CLIENT.password).subscribe();
     this.fillClientDataIfLoggedIn();
     this.showAuthGateModal = false;
     this.currentStep = 4;
@@ -266,6 +275,7 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     }
     const success = this.auth.login(this.authModalEmail, this.authModalPassword);
     if (success && this.auth.currentUser()?.role === 'CLIENTE') {
+      this.api.login(this.authModalEmail, this.authModalPassword).subscribe();
       this.fillClientDataIfLoggedIn();
       this.showAuthGateModal = false;
       this.currentStep = 4;
@@ -286,6 +296,7 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     });
 
     if (res.success) {
+      this.api.registrar(this.authModalName, this.authModalEmail, this.authModalPassword, this.authModalPhone).subscribe();
       this.fillClientDataIfLoggedIn();
       this.showAuthGateModal = false;
       this.currentStep = 4;
@@ -306,10 +317,12 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     }
 
     this.isSubmitting = true;
-    this.bookingService.submitBooking(this.bookingForm.value).subscribe({
+    this.hasError = false;
+    this.bookingService.submitBooking(this.bookingForm.value, this.selectedService?.code, this.selectedProfessional?.name).subscribe({
       next: (response) => {
         this.isSubmitting = false;
         this.bookingSuccess = response;
+        this.cdr.markForCheck();
         this.earnedPoints = 100;
         this.totalClientPoints = this.auth.addClientPoints(100, `Reserva confirmada: ${this.selectedService?.name || 'Protocolo'}`);
         this.auth.addClientBooking({
@@ -320,14 +333,19 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
           date: response.date,
           time: response.timeSlot,
           price: this.selectedService?.price || 65000,
-          status: 'CONFIRMADA',
+          status: response.status === 'PENDIENTE' ? 'EN ESPERA' : response.status,
           notes: this.bookingForm.value.notes
         });
       },
       error: (err) => {
         this.isSubmitting = false;
         this.hasError = true;
-        this.errorMessage = 'Ocurrió un fallo al confirmar la reserva. Intenta nuevamente.';
+        this.bookingErrorTitle = err instanceof ApiBusinessError ? 'NO SE PUDO RESERVAR ESE TURNO' : 'SISTEMA TEMPORALMENTE NO DISPONIBLE';
+        this.errorMessage = err instanceof ApiBusinessError
+          ? err.message
+          : 'Ocurrió un fallo al confirmar la reserva. Intenta nuevamente.';
+        this.cdr.markForCheck();
+        this.cdr.detectChanges();
       }
     });
   }

@@ -7,6 +7,7 @@ import com.recovr.backend.entity.Empleado;
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Pago;
 import com.recovr.backend.entity.Reserva;
+import com.recovr.backend.entity.Sala;
 import com.recovr.backend.entity.Usuario;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
 import com.recovr.backend.repository.ClienteRepository;
@@ -207,9 +208,23 @@ public class ReservaService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", request.empleadoId())));
         reserva.setServicio(servicioRepository.findById(request.servicioId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Servicio", request.servicioId())));
-        reserva.setSala(salaRepository.findById(request.salaId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Sala", request.salaId())));
         reserva.setFechaHora(request.fechaHora());
+        if (request.salaId() != null) {
+            reserva.setSala(salaRepository.findById(request.salaId())
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Sala", request.salaId())));
+        } else if (reserva.getSala() == null) {
+            reserva.setSala(asignarSalaLibre(reserva));
+        }
+    }
+
+    /** Sin sala indicada se usa la primera cabina libre durante todo el bloque (duración + limpieza). */
+    private Sala asignarSalaLibre(Reserva reserva) {
+        if (reserva.getFechaHora() == null) {
+            throw new IllegalArgumentException("Debe indicar la fecha y hora de la reserva");
+        }
+        LocalDateTime fin = ReservaResponse.finBloque(reserva.getFechaHora(), reserva.getServicio());
+        return salaRepository.buscarDisponibles(reserva.getFechaHora(), fin).stream().findFirst()
+                .orElseThrow(() -> new ReservaConflictException("No hay cabinas disponibles en el turno solicitado."));
     }
 
     private boolean estaActiva(Reserva r) {

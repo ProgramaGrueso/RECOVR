@@ -1,5 +1,6 @@
 package com.recovr.backend.controller;
 
+import com.recovr.backend.dto.EmpleadoCatalogoResponse;
 import com.recovr.backend.dto.EmpleadoResponse;
 import com.recovr.backend.service.EmpleadoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,6 +41,12 @@ public class EmpleadoController {
     @GetMapping
     public List<EmpleadoResponse> listar() {
         return empleadoService.listarTodos().stream().map(EmpleadoResponse::de).toList();
+    }
+
+    @Operation(summary = "Catálogo de especialistas", description = "Lista id, nombre y especialidad para armar una reserva. Accesible para cualquier usuario autenticado.")
+    @GetMapping("/catalogo")
+    public List<EmpleadoCatalogoResponse> catalogo() {
+        return empleadoService.listarTodos().stream().map(EmpleadoCatalogoResponse::de).toList();
     }
 
     @Operation(summary = "Obtener especialista por ID", description = "Obtiene los detalles del especialista según su ID. Requiere rol ADMIN.")

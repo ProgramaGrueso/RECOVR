@@ -159,7 +159,39 @@ class ReservaPersistenteIntegrationTest {
         mockMvc.perform(auth(post("/api/db/reservas"), tokenCliente).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"fechaHora\":\"" + fmt(manana10) + "\"}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.campos.salaId").exists());
+                .andExpect(jsonPath("$.campos.empleadoId").exists());
+    }
+
+    @Test
+    @DisplayName("Sin salaId el sistema asigna una cabina libre y avisa con 409 si no queda ninguna")
+    void asignaCabinaAutomaticamente() throws Exception {
+        String sinSala = "{\"empleadoId\":" + empleado.getId() + ",\"servicioId\":" + servicio.getId()
+                + ",\"fechaHora\":\"" + fmt(manana10) + "\"}";
+        mockMvc.perform(auth(post("/api/db/reservas"), tokenCliente).contentType(MediaType.APPLICATION_JSON).content(sinSala))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.salaId").value(sala.getId()));
+
+        // Misma hora con otro terapeuta: toma la otra cabina libre
+        String otroTerapeuta = sinSala.replace("\"empleadoId\":" + empleado.getId(), "\"empleadoId\":" + empleado2.getId());
+        mockMvc.perform(auth(post("/api/db/reservas"), tokenCliente).contentType(MediaType.APPLICATION_JSON).content(otroTerapeuta))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.salaId").value(sala2.getId()));
+
+        // Sin cabinas libres en ese turno -> 409 (el terapeuta A ya está ocupado por la primera reserva, usamos un tercero)
+        Empleado tercero = guardarEmpleado("Especialista C");
+        String sinCabinas = sinSala.replace("\"empleadoId\":" + empleado.getId(), "\"empleadoId\":" + tercero.getId());
+        mockMvc.perform(auth(post("/api/db/reservas"), tokenCliente).contentType(MediaType.APPLICATION_JSON).content(sinCabinas))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("El catálogo de terapeutas es visible para el cliente y no expone datos de contacto")
+    void catalogoDeTerapeutas() throws Exception {
+        mockMvc.perform(auth(get("/api/empleados/catalogo"), tokenCliente))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].nombre").exists())
+                .andExpect(jsonPath("$[0].telefono").doesNotExist());
+        mockMvc.perform(auth(get("/api/empleados"), tokenCliente)).andExpect(status().isForbidden());
     }
 
     // ---------- Disponibilidad JPQL (Tarea 2) ----------

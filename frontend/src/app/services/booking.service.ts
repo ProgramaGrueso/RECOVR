@@ -1,9 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, of, throwError } from 'rxjs';
 import { delay } from 'rxjs/operators';
 import { BookingRequest, BookingResponse } from '../models/booking.model';
 import { ServiceItem } from '../models/service.model';
+import { ApiService, ApiBusinessError } from './api.service';
 import { AuthService } from './auth.service';
 import { ServerTimeService } from './server-time.service';
 
@@ -16,6 +17,7 @@ export class BookingService {
 
   private router = inject(Router);
   private auth = inject(AuthService);
+  private api = inject(ApiService);
   private serverTimeService = inject(ServerTimeService);
 
   constructor() {}
@@ -46,7 +48,21 @@ export class BookingService {
     this.navigateToBooking(service);
   }
 
-  submitBooking(request: BookingRequest): Observable<BookingResponse> {
+  /**
+   * Con sesión en el backend crea la reserva real (queda PENDIENTE hasta que se confirme y pague).
+   * Un conflicto de agenda se informa al usuario; si el backend no responde se usa la simulación local
+   * para que la demo publicada siga funcionando.
+   */
+  submitBooking(request: BookingRequest, serviceCode?: string, professionalName?: string): Observable<BookingResponse> {
+    if (this.api.hasSession && serviceCode && professionalName) {
+      return this.api.reservar(request, serviceCode, professionalName).pipe(
+        catchError(err => err instanceof ApiBusinessError ? throwError(() => err) : this.simulatedBooking(request))
+      );
+    }
+    return this.simulatedBooking(request);
+  }
+
+  private simulatedBooking(request: BookingRequest): Observable<BookingResponse> {
     const mockResponse: BookingResponse = {
       id: 'REC-' + Math.floor(100000 + Math.random() * 900000),
       status: 'CONFIRMADA',
@@ -56,9 +72,6 @@ export class BookingService {
       date: request.date,
       timeSlot: request.timeSlot
     };
-
-    // Simulación de delay de API REST Spring Boot
     return of(mockResponse).pipe(delay(800));
   }
 }
-

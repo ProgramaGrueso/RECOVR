@@ -17,8 +17,8 @@ public record ReservaRequest(
         @Schema(description = "ID del servicio", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull Long servicioId,
 
-        @Schema(description = "ID de la sala", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
-        @NotNull Long salaId,
+        @Schema(description = "ID de la sala. Si se omite, el sistema asigna la primera cabina libre en ese horario", example = "1")
+        Long salaId,
 
         @Schema(description = "Fecha y hora de inicio (ISO-8601)", example = "2026-10-15T10:00:00", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull LocalDateTime fechaHora,
