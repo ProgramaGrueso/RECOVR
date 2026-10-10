@@ -126,19 +126,23 @@ cd backend
 docker compose up -d
 cd ..
 ```
-> **Nota:** La base de datos estará disponible en el puerto `3306` con la base `recovr_db`, usuario `recovr_user` y contraseña `recovr_pass`.
+> **Nota:** La base de datos estará disponible en `127.0.0.1:3306` con la base `recovr_db`, usuario `root` y contraseña `root` (credenciales de demostración, ver `backend/docker-compose.yml`).
 
 ### 3. Iniciar el Backend (Spring Boot 3.3.5)
-En la carpeta `backend/`, ejecuta la aplicación mediante el wrapper de Maven:
+Requiere Java 21 y Maven 3.9+ (el repositorio no incluye el wrapper `mvnw`). Con la base de datos ya levantada:
 ```bash
 cd backend
-./mvnw spring-boot:run
+SEED_DEMO_DATA=true DEMO_PASSWORD='Demo12345!' mvn spring-boot:run
 ```
-*(En Windows PowerShell: `.\mvnw.cmd spring-boot:run`)*
+*(En Windows PowerShell: `$env:SEED_DEMO_DATA="true"; $env:DEMO_PASSWORD="Demo12345!"; mvn spring-boot:run`)*
 
-- La API iniciará en: `http://localhost:8080`
-- Documentación Swagger UI interactiva: [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
-- Especificación OpenAPI en formato JSON: `http://localhost:8080/v3/api-docs`
+- La API inicia en: `http://localhost:8095` (se cambia con la variable `SERVER_PORT`).
+- Documentación Swagger UI interactiva: [http://localhost:8095/swagger-ui/index.html](http://localhost:8095/swagger-ui/index.html)
+- Especificación OpenAPI en formato JSON: `http://localhost:8095/v3/api-docs`
+- Variables opcionales: `JWT_SECRET` (clave Base64 de 32 bytes o más; si falta se genera una temporal al arrancar), `DB_USERNAME`, `DB_PASSWORD` y `SHOW_SQL=true`.
+- CORS está abierto a propósito para la exposición: el frontend puede consumir la API desde cualquier origen.
+
+**Datos de demostración (`SEED_DEMO_DATA=true`):** al arrancar por primera vez carga el catálogo oficial (RC-01 a RC-06), las 4 cabinas, las 4 terapeutas, 45 clientes y unas 600 reservas entre el 1 de octubre y el 31 de diciembre de 2026 (rango configurable con `recovr.seed.inicio` y `recovr.seed.fin`). Respeta la regla de negocio: ninguna cabina ni terapeuta tiene dos reservas activas que se crucen (duración + tiempo de limpieza). Las sesiones pasadas quedan COMPLETADAS o CANCELADAS y las futuras CONFIRMADAS (con pago) o PENDIENTES. Es idempotente: si ya hay datos demo, no vuelve a cargarlos. Con `DEMO_PASSWORD` crea además las cuentas `admin.demo@recovr.test`, `recepcion.demo@recovr.test`, `ely.demo@recovr.test` (ESPECIALISTA) y `cliente.demo@recovr.test`.
 
 ### 4. Iniciar el Frontend (Angular Standalone)
 En una nueva terminal, instala las dependencias y corre el servidor de desarrollo:
@@ -148,6 +152,7 @@ npm install
 npm start
 ```
 - La aplicación principal estará disponible en: [http://localhost:4200](http://localhost:4200)
+- **Integración con el backend:** el flujo de reserva (`/reserva`) inicia sesión o registra al cliente en la API y crea reservas reales en MySQL; la cabina la asigna el servidor. La URL de la API (por defecto `http://localhost:8095/api`) se cambia con `localStorage['recovr-api-url']`. Si el backend no responde, el flujo usa una simulación local para que la demo publicada en Vercel siga funcionando. El resto del panel administrativo (`DEMO_USERS`) sigue siendo simulado en el navegador.
 - Acceso directo al **Lab de Experiencias Awwwards**: [http://localhost:4200/PRUEBAS/](http://localhost:4200/PRUEBAS/)
 - Panel de inicio de sesión administrativo: [http://localhost:4200/admin/login](http://localhost:4200/admin/login)
 
@@ -170,8 +175,9 @@ npm run dev
 | `POST` | `/api/auth/usuarios` | `ADMIN` | Alta de RECEPCIONISTA o ESPECIALISTA (opcionalmente vinculado a un empleado con `empleadoId`). |
 | `GET` | `/api/servicios`, `/api/servicios/{id}` | Cualquier rol autenticado | Catálogo de terapias con duración, tiempo de limpieza y precio. |
 | `POST` `PUT` `DELETE` | `/api/servicios/**` | `ADMIN` | CRUD del catálogo (201 al crear, 204 al eliminar). |
+| `GET` | `/api/empleados/catalogo` | Cualquier rol autenticado | Terapeutas (id, nombre, especialidad) para armar una reserva, sin datos de contacto. |
 | `*` | `/api/clientes/**`, `/api/empleados/**`, `/api/salas/**`, `/api/pagos/**` | `ADMIN` | CRUD de administración; `GET /api/salas/disponibles` y `/api/empleados/disponibles` consideran duración + limpieza. |
-| `POST` | `/api/db/reservas` | `CLIENTE`, `RECEPCIONISTA`, `ADMIN` | Crea una reserva PENDIENTE; responde 409 si la sala o el especialista ya tienen una sesión que se cruza. |
+| `POST` | `/api/db/reservas` | `CLIENTE`, `RECEPCIONISTA`, `ADMIN` | Crea una reserva PENDIENTE (si no se indica `salaId`, asigna la primera cabina libre); responde 409 si la sala o el especialista ya tienen una sesión que se cruza. |
 | `GET` | `/api/db/reservas/mias` | `CLIENTE` | Historial del cliente autenticado. |
 | `GET` | `/api/db/reservas/agenda` | `ESPECIALISTA` | Agenda futura del especialista autenticado. |
 | `GET` | `/api/db/reservas/cliente/{id}` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Historial de un cliente. |
@@ -188,11 +194,18 @@ Códigos de error: `400` datos inválidos (con detalle por campo), `401` sin tok
 Ejecuta la suite de pruebas unitarias con simulación de capas de persistencia y servicios:
 ```bash
 cd backend
-./mvnw test
+mvn test
 ```
 - Pruebas de controladores REST con `MockMvc`.
 - Validaciones de negocio en `ReservaService` y `ClienteService`.
-- Pruebas de integración con perfiles de base de datos H2 en memoria.
+- Pruebas de integración con perfiles de base de datos H2 en memoria (JWT real, roles, conflictos de agenda, asignación de cabina y seed de datos demo).
+
+### Pruebas del Frontend
+```bash
+cd frontend
+npm test
+```
+Cubren `ApiService` (login, creación de reserva y error 409) y `BookingService` (respaldo local cuando el backend no responde).
 
 ### Compilación y Verificación de Presupuestos de Frontend
 Verifica que el bundle de producción no supere los presupuestos estrictos de rendimiento:
