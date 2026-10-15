@@ -71,7 +71,7 @@ RECOVR/
 - **Cancelación sin borrado:** cancelar una reserva (`PATCH /api/db/reservas/{id}/cancelar`) solo cambia su estado a `CANCELADA`; se conserva el historial y se libera el horario. Un servicio, especialista o cabina con reservas activas (o con historial) no se puede eliminar (400).
 - **Persistencia Dual (Producción & Testing):** Soporte nativo para MySQL 8 mediante Docker Compose y perfiles en memoria H2 para pruebas unitarias automatizadas.
 - **Documentación Viva OpenAPI 3 / Swagger UI:** Interfaz interactiva para pruebas directas de endpoints en `/swagger-ui/index.html`.
-- **Validaciones Rigurosas:** Validación declarativa con `spring-boot-starter-validation` (`@NotNull`, `@Size`, `@Pattern`, `@FutureOrPresent`) y manejador global de excepciones con respuestas estructuradas RFC 7807.
+- **Validaciones Rigurosas:** Validación declarativa con `spring-boot-starter-validation` (`@NotNull`, `@NotBlank`, `@Email`, `@Size`, `@Positive`, `@Max`; la fecha futura de la reserva se valida en `ReservaService`) y manejador global de excepciones con respuestas estructuradas RFC 7807.
 
 ---
 
