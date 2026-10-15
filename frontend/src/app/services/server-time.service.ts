@@ -21,7 +21,13 @@ export class ServerTimeService {
     return this.currentServerTime;
   }
 
+  /**
+   * Fecha y hora LOCAL en formato ISO sin zona (yyyy-MM-ddTHH:mm:ss.SSS). Antes devolvía UTC, y de noche en Lima
+   * el reloj del panel iba 5 horas adelantado y "hoy" caía en el día siguiente.
+   */
   getNowISOString(): string {
-    return this.currentServerTime.toISOString();
+    const d = this.currentServerTime;
+    const p = (n: number, l = 2) => String(n).padStart(l, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}.${p(d.getMilliseconds(), 3)}`;
   }
 }

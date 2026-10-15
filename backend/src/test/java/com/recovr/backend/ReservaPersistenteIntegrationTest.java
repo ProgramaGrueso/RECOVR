@@ -244,8 +244,12 @@ class ReservaPersistenteIntegrationTest {
 
         mockMvc.perform(auth(get("/api/db/reservas"), tokenRecepcion)).andExpect(status().isOk());
         mockMvc.perform(get("/api/db/reservas")).andExpect(status().isUnauthorized());
-        mockMvc.perform(auth(delete("/api/db/reservas/" + r.getId()), tokenRecepcion)).andExpect(status().isNoContent());
-        mockMvc.perform(auth(delete("/api/db/reservas/" + r.getId()), tokenRecepcion)).andExpect(status().isNotFound());
+        // Borrar es solo de ADMIN, y únicamente una reserva ya CANCELADA
+        mockMvc.perform(auth(delete("/api/db/reservas/" + r.getId()), tokenRecepcion)).andExpect(status().isForbidden());
+        mockMvc.perform(auth(delete("/api/db/reservas/" + r.getId()), tokenAdmin)).andExpect(status().isBadRequest());
+        mockMvc.perform(auth(patch("/api/db/reservas/" + r.getId() + "/cancelar"), tokenRecepcion)).andExpect(status().isOk());
+        mockMvc.perform(auth(delete("/api/db/reservas/" + r.getId()), tokenAdmin)).andExpect(status().isNoContent());
+        mockMvc.perform(auth(delete("/api/db/reservas/" + r.getId()), tokenAdmin)).andExpect(status().isNotFound());
     }
 
     @Test

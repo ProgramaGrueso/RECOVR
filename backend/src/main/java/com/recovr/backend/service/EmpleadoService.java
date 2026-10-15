@@ -28,6 +28,25 @@ public class EmpleadoService {
         return empleadoRepository.findAll();
     }
 
+    /** Terapeutas que reciben reservas (las dadas de baja no aparecen al reservar). */
+    public List<Empleado> listarActivos() {
+        return empleadoRepository.findAll().stream().filter(Empleado::isActivo).toList();
+    }
+
+    /**
+     * Baja lógica: la terapeuta conserva su historial pero deja de recibir reservas. No se puede dar de baja
+     * mientras tenga reservas activas (PENDIENTE o CONFIRMADA): primero se cancelan o se reasignan.
+     */
+    public Empleado cambiarActivo(Long id, boolean activo) {
+        Empleado empleado = buscarPorId(id);
+        if (!activo && reservaRepository.existsByEmpleadoIdAndEstadoIn(id, RESERVAS_ACTIVAS)) {
+            throw new IllegalStateException("No se puede dar de baja a " + empleado.getNombre()
+                    + ": tiene reservas activas (PENDIENTE o CONFIRMADA). Cancélalas o reasígnalas primero.");
+        }
+        empleado.setActivo(activo);
+        return empleadoRepository.save(empleado);
+    }
+
     public Empleado buscarPorId(Long id) {
         return empleadoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", id));
@@ -53,7 +72,7 @@ public class EmpleadoService {
             throw new IllegalStateException("No se puede eliminar al empleado: tiene reservas activas (PENDIENTE o CONFIRMADA)");
         }
         if (reservaRepository.existsByEmpleadoId(id)) {
-            throw new IllegalStateException("No se puede eliminar al empleado: tiene historial de reservas");
+            throw new IllegalStateException("No se puede eliminar al empleado: tiene historial de reservas. Dala de baja para que deje de recibir reservas conservando su historial.");
         }
         empleadoRepository.deleteById(id);
     }

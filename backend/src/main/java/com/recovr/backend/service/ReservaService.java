@@ -96,12 +96,20 @@ public class ReservaService {
     @Transactional
     public Reserva actualizar(Long id, ReservaRequest request) {
         Reserva reserva = buscarPorId(id);
+        if (!estaActiva(reserva)) {
+            throw new IllegalStateException("Una reserva " + reserva.getEstado()
+                    + " ya no se puede editar; cree una reserva nueva.");
+        }
         if (request.clienteId() != null) {
             reserva.setCliente(clienteRepository.findById(request.clienteId())
                     .orElseThrow(() -> new RecursoNoEncontradoException("Cliente", request.clienteId())));
         }
         asignarRelaciones(reserva, request);
         if (request.estado() != null) {
+            if (!ReglasReserva.transicionValida(reserva.getEstado(), request.estado())) {
+                throw new IllegalStateException("Transición de estado no permitida: "
+                        + reserva.getEstado() + " → " + request.estado());
+            }
             reserva.setEstado(request.estado());
         }
         if (estaActiva(reserva)) {
@@ -129,11 +137,58 @@ public class ReservaService {
         return reservaRepository.save(reserva);
     }
 
+    /** Solo se borran reservas CANCELADAS; las COMPLETADAS son historial contable y las activas se cancelan primero. */
+    @Transactional
     public void eliminar(Long id) {
-        if (!reservaRepository.existsById(id)) {
-            throw new RecursoNoEncontradoException("Reserva", id);
+        Reserva reserva = buscarPorId(id);
+        if (reserva.getEstado() != EstadoReserva.CANCELADA) {
+            throw new IllegalStateException("Solo se pueden eliminar reservas CANCELADAS (estado actual: "
+                    + reserva.getEstado() + "). Cancele la reserva primero; las completadas se conservan como historial.");
         }
-        reservaRepository.deleteById(id);
+        reservaRepository.delete(reserva);
+    }
+
+    public Reserva checkIn(Long id) {
+        return checkIn(id, LocalDateTime.now());
+    }
+
+    /**
+     * Registra la llegada del cliente. Requisitos: reserva CONFIRMADA (pagada), sin check-in previo y dentro de la
+     * ventana [inicio − {@value ReglasReserva#CHECKIN_ANTICIPADO_MIN} min, fin de la sesión).
+     */
+    @Transactional
+    public Reserva checkIn(Long id, LocalDateTime ahora) {
+        Reserva reserva = buscarPorId(id);
+        if (reserva.getEstado() != EstadoReserva.CONFIRMADA) {
+            throw new IllegalStateException("Solo una reserva CONFIRMADA (pagada) puede hacer check-in (estado actual: "
+                    + reserva.getEstado() + ")");
+        }
+        if (reserva.getCheckIn() != null) {
+            throw new IllegalStateException("La reserva ya tiene check-in registrado");
+        }
+        LocalDateTime desde = reserva.getFechaHora().minusMinutes(ReglasReserva.CHECKIN_ANTICIPADO_MIN);
+        if (ahora.isBefore(desde)) {
+            throw new IllegalStateException("Todavía es pronto: el check-in se habilita " + ReglasReserva.CHECKIN_ANTICIPADO_MIN
+                    + " minutos antes (desde las " + desde.toLocalTime().withSecond(0).withNano(0) + ")");
+        }
+        if (!ahora.isBefore(ReglasReserva.finSesion(reserva))) {
+            throw new IllegalStateException("La sesión ya terminó; no se puede registrar el check-in");
+        }
+        reserva.setCheckIn(ahora);
+        return reservaRepository.save(reserva);
+    }
+
+    /** Cierra la sesión manualmente (antes del cierre automático): exige check-in previo. */
+    @Transactional
+    public Reserva finalizar(Long id) {
+        Reserva reserva = buscarPorId(id);
+        if (reserva.getEstado() != EstadoReserva.CONFIRMADA || reserva.getCheckIn() == null) {
+            throw new IllegalStateException("Solo se puede finalizar una sesión CONFIRMADA con check-in (estado actual: "
+                    + ReglasReserva.estadoOperativo(reserva) + ")");
+        }
+        reserva.setEstado(EstadoReserva.COMPLETADA);
+        reserva.setObservacion("Finalizada manualmente por el personal.");
+        return reservaRepository.save(reserva);
     }
 
     public List<Reserva> buscarMisReservas(String correo) {
@@ -225,6 +280,9 @@ public class ReservaService {
     private void asignarRelaciones(Reserva reserva, ReservaRequest request) {
         reserva.setEmpleado(empleadoRepository.findById(request.empleadoId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", request.empleadoId())));
+        if (!reserva.getEmpleado().isActivo()) {
+            throw new IllegalArgumentException(reserva.getEmpleado().getNombre() + " está dada de baja y no recibe reservas");
+        }
         reserva.setServicio(servicioRepository.findById(request.servicioId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Servicio", request.servicioId())));
         reserva.setFechaHora(request.fechaHora());

@@ -46,7 +46,14 @@ public class EmpleadoController {
     @Operation(summary = "Catálogo de especialistas", description = "Lista id, nombre y especialidad para armar una reserva. Accesible para cualquier usuario autenticado.")
     @GetMapping("/catalogo")
     public List<EmpleadoCatalogoResponse> catalogo() {
-        return empleadoService.listarTodos().stream().map(EmpleadoCatalogoResponse::de).toList();
+        return empleadoService.listarActivos().stream().map(EmpleadoCatalogoResponse::de).toList();
+    }
+
+    @Operation(summary = "Dar de baja o reactivar a un especialista",
+            description = "Baja lógica: conserva el historial pero deja de recibir reservas. Falla si tiene reservas activas. Requiere rol ADMIN.")
+    @PatchMapping("/{id}/activo")
+    public EmpleadoResponse cambiarActivo(@PathVariable Long id, @RequestParam boolean valor) {
+        return EmpleadoResponse.de(empleadoService.cambiarActivo(id, valor));
     }
 
     @Operation(summary = "Obtener especialista por ID", description = "Obtiene los detalles del especialista según su ID. Requiere rol ADMIN.")

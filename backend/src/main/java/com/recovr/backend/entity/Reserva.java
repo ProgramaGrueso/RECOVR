@@ -44,6 +44,14 @@ public class Reserva {
     @Column(nullable = false)
     private EstadoReserva estado;
 
+    @Schema(description = "Momento en que el cliente llegó (check-in). Nulo si aún no llegó", example = "2026-10-15T10:02:00")
+    @Column(name = "check_in")
+    private LocalDateTime checkIn;
+
+    @Schema(description = "Motivo de un cambio automático o manual de estado (p. ej. expiración o no asistencia)")
+    @Column(length = 255)
+    private String observacion;
+
     @JsonIgnore
     @OneToOne(mappedBy = "reserva", cascade = CascadeType.ALL)
     private Pago pago;
@@ -70,6 +78,12 @@ public class Reserva {
 
     public EstadoReserva getEstado() { return estado; }
     public void setEstado(EstadoReserva estado) { this.estado = estado; }
+
+    public LocalDateTime getCheckIn() { return checkIn; }
+    public void setCheckIn(LocalDateTime checkIn) { this.checkIn = checkIn; }
+
+    public String getObservacion() { return observacion; }
+    public void setObservacion(String observacion) { this.observacion = observacion; }
 
     public Pago getPago() { return pago; }
     public void setPago(Pago pago) { this.pago = pago; }

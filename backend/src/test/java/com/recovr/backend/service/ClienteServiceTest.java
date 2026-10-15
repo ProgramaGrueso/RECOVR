@@ -25,6 +25,9 @@ public class ClienteServiceTest {
     @Mock
     private ClienteRepository clienteRepository;
 
+    @Mock
+    private com.recovr.backend.repository.ReservaRepository reservaRepository;
+
     @InjectMocks
     private ClienteService clienteService;
 

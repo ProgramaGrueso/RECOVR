@@ -16,7 +16,8 @@ public interface EmpleadoRepository extends JpaRepository<Empleado, Long> {
      */
     @Query("SELECT e FROM Empleado e WHERE NOT EXISTS (" +
            "SELECT r FROM Reserva r WHERE r.empleado = e AND " + ReservaRepository.ACTIVA +
-           " AND r.fechaHora < :fin AND " + ReservaRepository.FIN_BLOQUE + " > :inicio)")
+           " AND r.fechaHora < :fin AND " + ReservaRepository.FIN_BLOQUE + " > :inicio)"
+           + " AND (e.activo IS NULL OR e.activo = true)")
     List<Empleado> buscarDisponibles(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
     Optional<Empleado> findByUsuarioId(Long usuarioId);

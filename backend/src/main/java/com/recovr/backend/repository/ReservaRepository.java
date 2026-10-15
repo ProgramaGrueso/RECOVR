@@ -22,6 +22,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     String ACTIVA = "r.estado IN (com.recovr.backend.entity.EstadoReserva.PENDIENTE, "
             + "com.recovr.backend.entity.EstadoReserva.CONFIRMADA)";
 
+    boolean existsByClienteId(Long clienteId);
     boolean existsByServicioId(Long servicioId);
     boolean existsByEmpleadoId(Long empleadoId);
     boolean existsBySalaId(Long salaId);
@@ -56,4 +57,12 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     @Query("SELECT r FROM Reserva r WHERE r.empleado.id = :empleadoId AND r.fechaHora >= :desde "
             + "ORDER BY r.fechaHora ASC")
     List<Reserva> buscarAgendaEmpleado(@Param("empleadoId") Long empleadoId, @Param("desde") LocalDateTime desde);
+
+    /** Reservas activas (PENDIENTE o CONFIRMADA) cuyo inicio ya pasó: candidatas a expirar, completarse o marcarse como no asistidas. */
+    @Query("SELECT r FROM Reserva r WHERE " + ACTIVA + " AND r.fechaHora < :ahora")
+    List<Reserva> buscarActivasIniciadasAntesDe(@Param("ahora") LocalDateTime ahora);
+
+    /** Reservas cuyo inicio cae en [desde, hasta), en orden cronológico (base del estado en vivo y de los KPI). */
+    @Query("SELECT r FROM Reserva r WHERE r.fechaHora >= :desde AND r.fechaHora < :hasta ORDER BY r.fechaHora ASC")
+    List<Reserva> buscarEntre(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
 }

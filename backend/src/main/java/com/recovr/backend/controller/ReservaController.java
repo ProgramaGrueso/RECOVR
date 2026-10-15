@@ -117,7 +117,21 @@ public class ReservaController {
                 id, authentication.getName(), esGestionDeReservas(authentication)));
     }
 
-    @Operation(summary = "Eliminar reserva", description = "Elimina una reserva de la base de datos por su ID. Requiere rol ADMIN o RECEPCIONISTA.")
+    @Operation(summary = "Registrar check-in",
+            description = "Marca la llegada del cliente. La reserva debe estar CONFIRMADA y dentro de la ventana de check-in. ADMIN o RECEPCIONISTA.")
+    @PostMapping("/{id}/check-in")
+    public ReservaResponse checkIn(@Parameter(description = "ID de la reserva", example = "1") @PathVariable Long id) {
+        return ReservaResponse.de(reservaService.checkIn(id));
+    }
+
+    @Operation(summary = "Finalizar sesión",
+            description = "Pasa una sesión con check-in a COMPLETADA. ADMIN o RECEPCIONISTA. Si nadie la finaliza, el sistema la completa solo al terminar la sesión.")
+    @PostMapping("/{id}/finalizar")
+    public ReservaResponse finalizar(@Parameter(description = "ID de la reserva", example = "1") @PathVariable Long id) {
+        return ReservaResponse.de(reservaService.finalizar(id));
+    }
+
+    @Operation(summary = "Eliminar reserva", description = "Elimina una reserva CANCELADA de la base de datos. Las activas se cancelan primero y las completadas se conservan. Solo ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Reserva eliminada"),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),

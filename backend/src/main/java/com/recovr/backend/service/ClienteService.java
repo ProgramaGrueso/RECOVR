@@ -11,9 +11,11 @@ import java.util.List;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final com.recovr.backend.repository.ReservaRepository reservaRepository;
 
-    public ClienteService(ClienteRepository clienteRepository) {
+    public ClienteService(ClienteRepository clienteRepository, com.recovr.backend.repository.ReservaRepository reservaRepository) {
         this.clienteRepository = clienteRepository;
+        this.reservaRepository = reservaRepository;
     }
 
     public List<Cliente> listarTodos() {
@@ -40,6 +42,9 @@ public class ClienteService {
     public void eliminar(Long id) {
         if (!clienteRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Cliente", id);
+        }
+        if (reservaRepository.existsByClienteId(id)) {
+            throw new IllegalStateException("No se puede eliminar el cliente: tiene reservas registradas (historial)");
         }
         clienteRepository.deleteById(id);
     }

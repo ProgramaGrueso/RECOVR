@@ -4,23 +4,27 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService, AdminRole, AdminUser } from '../../services/auth.service';
 import {
-  BookingAdminItem,
-  BookingStatus,
   ClinicalRecord,
-  CashTransaction,
-  StaffMember,
-  CabinRoom,
   SystemAuditLog,
   BenefitItem,
   ClientBookingItem,
   PointTransaction
 } from '../../models/rbac.model';
 import { ServerTimeService } from '../../services/server-time.service';
+import { OpsResumenComponent } from './ops/ops-resumen.component';
+import { OpsAgendaComponent } from './ops/ops-agenda.component';
+import { OpsClientesComponent } from './ops/ops-clientes.component';
+import { OpsCajaComponent } from './ops/ops-caja.component';
+import { OpsPersonalComponent } from './ops/ops-personal.component';
+import { OpsCatalogoComponent } from './ops/ops-catalogo.component';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [
+    CommonModule, FormsModule, RouterLink,
+    OpsResumenComponent, OpsAgendaComponent, OpsClientesComponent, OpsCajaComponent, OpsPersonalComponent, OpsCatalogoComponent
+  ],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss']
 })
@@ -73,12 +77,12 @@ export class AdminComponent implements OnInit, OnDestroy {
   // -------------------------------------------------------------
   allNavItems = [
     { key: 'RESUMEN', icon: '◈', label: 'Resumen' },
-    { key: 'AGENDA', icon: '◷', label: 'Agenda & Salas' },
-    { key: 'PACIENTES', icon: '☗', label: 'Directorio Pacientes' },
+    { key: 'AGENDA', icon: '◷', label: 'Agenda' },
+    { key: 'PACIENTES', icon: '☗', label: 'Clientes' },
     { key: 'CLINICA', icon: '✚', label: 'Ficha Clínica' },
-    { key: 'CAJA', icon: '❖', label: 'Caja & POS' },
-    { key: 'PERSONAL', icon: '◌', label: 'Personal & Turnos' },
-    { key: 'CATALOGO', icon: '◇', label: 'Catálogo & Salas' },
+    { key: 'CAJA', icon: '❖', label: 'Caja' },
+    { key: 'PERSONAL', icon: '◌', label: 'Personal' },
+    { key: 'CATALOGO', icon: '◇', label: 'Catálogo y Cabinas' },
     { key: 'DEVOPS', icon: '⚙', label: 'DevOps & TI' },
     { key: 'MATRIZ_RBAC', icon: '⚑', label: 'Matriz de Roles' },
     { key: 'MI_CUENTA', icon: '◉', label: 'Mi Cuenta (Portal)' }
@@ -87,152 +91,6 @@ export class AdminComponent implements OnInit, OnDestroy {
   get allowedNavItems() {
     return this.allNavItems.filter(item => this.auth.canAccess(item.key, this.currentUser().role));
   }
-
-  get allRegisteredClients() {
-    return this.auth.getRegisteredClients();
-  }
-
-  editingClient: any = null;
-
-  editClient(clientId: string) {
-    const clients = this.auth.getRegisteredClients();
-    const client = clients.find(c => c.id === clientId);
-    if (!client) return;
-    
-    // Create a copy to edit without affecting the original until saved
-    this.editingClient = { ...client };
-  }
-
-  saveClientEdit() {
-    if (!this.editingClient) return;
-    
-    const confirmSave = confirm("¿Estás seguro de que deseas guardar los cambios de este perfil?");
-    if (!confirmSave) return;
-    
-    // Convert points to number if needed
-    this.editingClient.points = parseInt(this.editingClient.points, 10) || 0;
-    
-    this.auth.updateClient(this.editingClient);
-    
-    this.toastMessage = `Cliente ${this.editingClient.id} actualizado exitosamente.`;
-    this.editingClient = null; // Close modal
-    
-    setTimeout(() => this.toastMessage = null, 3000);
-  }
-
-  closeEditModal() {
-    this.editingClient = null;
-  }
-
-  deleteClient(clientId: string) {
-    if (confirm(`¿Confirmas que deseas eliminar permanentemente el cliente con ID ${clientId}?`)) {
-      this.auth.deleteClient(clientId);
-      this.toastMessage = `Cliente ${clientId} eliminado del sistema.`;
-      setTimeout(() => this.toastMessage = null, 3000);
-    }
-  }
-
-  // -------------------------------------------------------------
-  // DATOS OPERATIVOS: RESERVAS Y TURNOS
-  // -------------------------------------------------------------
-  selectedRoomFilter = 'TODAS';
-  bookings: BookingAdminItem[] = [
-    {
-      id: 'REC-908123',
-      client: 'Carlos Mendoza',
-      clientPhone: '+56 9 8765 4321',
-      service: 'Masaje Tántrico Sensitivo',
-      serviceCategory: 'MASAJE',
-      prof: 'Ely',
-      room: 'Cabina 01 (Néon Rose)',
-      date: '2026-08-21',
-      time: '16:00',
-      price: 200,
-      status: 'CONFIRMADA',
-      paymentStatus: 'PAGADO',
-      paymentMethod: 'STRIPE WEB',
-      notes: 'Llega 10 minutos antes para cambio de ropa.'
-    },
-    {
-      id: 'REC-871234',
-      client: 'Ignacio Silva',
-      clientPhone: '+56 9 9123 4567',
-      service: 'Masaje Nuru Body Slide',
-      serviceCategory: 'PODOLOGÍA',
-      prof: 'Miranda',
-      room: 'Cabina 03 (Dúo / 4 Manos)',
-      date: '2026-08-21',
-      time: '17:30',
-      price: 280,
-      status: 'EN ESPERA',
-      paymentStatus: 'PENDIENTE',
-      notes: 'Presenta molestia en talón izquierdo por trote.'
-    },
-    {
-      id: 'REC-761928',
-      client: 'Esteban Paz',
-      clientPhone: '+56 9 6543 2198',
-      service: 'Masaje Relajante & Descontracturante',
-      serviceCategory: 'MASAJE',
-      prof: 'Pamela',
-      room: 'Cabina 02 (Nuru Suite)',
-      date: '2026-08-22',
-      time: '09:00',
-      price: 180,
-      status: 'EN SESIÓN',
-      paymentStatus: 'PAGADO',
-      paymentMethod: 'POS TRANSBANK',
-      notes: 'Sesión enfocada en isquiotibiales y tren inferior.'
-    },
-    {
-      id: 'REC-654129',
-      client: 'Mariano Torres',
-      clientPhone: '+56 9 7890 1234',
-      service: 'Masaje a Cuatro Manos',
-      serviceCategory: 'PODOLOGÍA',
-      prof: 'Miranda',
-      room: 'Cabina 03 (Dúo / 4 Manos)',
-      date: '2026-08-22',
-      time: '10:30',
-      price: 380,
-      status: 'COMPLETADA',
-      paymentStatus: 'PAGADO',
-      paymentMethod: 'EFECTIVO'
-    },
-    {
-      id: 'REC-543210',
-      client: 'Felipe Araneda',
-      clientPhone: '+56 9 4321 0987',
-      service: 'RECOVR VIP Hidromasaje',
-      serviceCategory: 'RITUAL',
-      prof: 'Ely',
-      room: 'Cabina 01 (Néon Rose)',
-      date: '2026-08-22',
-      time: '12:00',
-      price: 450,
-      status: 'CONFIRMADA',
-      paymentStatus: 'PAGADO',
-      paymentMethod: 'STRIPE WEB',
-      notes: 'Pack 90 minutos con crioterapia localizada.'
-    }
-  ];
-
-  // Modal para nueva reserva manual (Walk-in / Recepción)
-  showManualBookingModal = false;
-  newBooking: Partial<BookingAdminItem> = {
-    client: '',
-    clientPhone: '+56 9 ',
-    service: 'Masaje Tántrico Sensitivo',
-    serviceCategory: 'MASAJE',
-    prof: 'Ely',
-    room: 'Cabina 01 (Néon Rose)',
-    date: '2026-08-22',
-    time: '14:00',
-    price: 200,
-    status: 'CONFIRMADA',
-    paymentStatus: 'PENDIENTE',
-    paymentMethod: 'POS TRANSBANK'
-  };
 
   // -------------------------------------------------------------
   // FICHAS CLÍNICAS (MÓDULO EXCLUSIVO PARA ESPECIALISTAS)
@@ -302,186 +160,6 @@ export class AdminComponent implements OnInit, OnDestroy {
     painScale: 5,
     recommendations: ''
   };
-
-  // -------------------------------------------------------------
-  // CAJA CHICA Y PUNTO DE VENTA (RECEPCIÓN & GERENCIA)
-  // -------------------------------------------------------------
-  cashRegisterInitial = 300;
-  cashTransactions: CashTransaction[] = [
-    {
-      id: 'TRX-101',
-      time: '09:45',
-      client: 'Esteban Paz',
-      service: 'Masaje Relajante 60m',
-      amount: 180,
-      method: 'POS TRANSBANK',
-      voucherCode: 'VOUCH-88129',
-      processedBy: 'Camila Morales'
-    },
-    {
-      id: 'TRX-102',
-      time: '11:15',
-      client: 'Mariano Torres',
-      service: 'Masaje a Cuatro Manos',
-      amount: 380,
-      method: 'EFECTIVO',
-      voucherCode: 'VOUCH-88130',
-      processedBy: 'Camila Morales'
-    },
-    {
-      id: 'TRX-103',
-      time: '13:30',
-      client: 'Rodrigo Vega',
-      service: 'Pack 4 Sesiones Tántrico',
-      amount: 720,
-      method: 'POS TRANSBANK',
-      voucherCode: 'VOUCH-88131',
-      processedBy: 'Camila Morales'
-    }
-  ];
-
-  newPayment = {
-    client: '',
-    service: 'Masaje Tántrico Sensitivo',
-    amount: 200,
-    method: 'POS TRANSBANK' as const
-  };
-
-  // -------------------------------------------------------------
-  // PERSONAL Y TURNOS (ADMINISTRADOR / GERENCIA)
-  // -------------------------------------------------------------
-  staffList: StaffMember[] = [
-    {
-      id: 'STF-01',
-      name: 'Ely',
-      role: 'ESPECIALISTA',
-      specialty: 'Masaje Tántrico Sensitivo',
-      email: 'ely@recovr.cl',
-      phone: '+56 9 7711 2233',
-      shift: 'Turno Tarde (14:00 - 21:00)',
-      commissionRate: 35,
-      monthlySessions: 46,
-      status: 'ACTIVO'
-    },
-    {
-      id: 'STF-02',
-      name: 'Miranda',
-      role: 'ESPECIALISTA',
-      specialty: 'Masaje Nuru Body Slide',
-      email: 'miranda@recovr.cl',
-      phone: '+56 9 6622 3344',
-      shift: 'Turno Mañana (09:00 - 15:00)',
-      commissionRate: 38,
-      monthlySessions: 39,
-      status: 'ACTIVO'
-    },
-    {
-      id: 'STF-03',
-      name: 'Pamela',
-      role: 'ESPECIALISTA',
-      specialty: 'Descontracturante y Cuatro Manos',
-      email: 'pamela@recovr.cl',
-      phone: '+56 9 5533 4455',
-      shift: 'Turno Completo (10:00 - 19:00)',
-      commissionRate: 32,
-      monthlySessions: 28,
-      status: 'ACTIVO'
-    },
-    {
-      id: 'STF-05',
-      name: 'Maria',
-      role: 'ESPECIALISTA',
-      specialty: 'Suite Presencial e Hidromasaje',
-      email: 'maria@recovr.cl',
-      phone: '+51 900 000 004',
-      shift: 'Turno Noche (16:00 - 23:00)',
-      commissionRate: 35,
-      monthlySessions: 31,
-      status: 'ACTIVO'
-    },
-    {
-      id: 'STF-04',
-      name: 'Camila Morales',
-      role: 'RECEPCIONISTA',
-      specialty: 'Front-Desk & Coordinación Operativa',
-      email: 'recepcion@recovr.cl',
-      phone: '+56 9 4455 6677',
-      shift: 'Rotativo (08:30 - 17:30)',
-      commissionRate: 5,
-      monthlySessions: 0,
-      status: 'ACTIVO'
-    }
-  ];
-
-  deleteStaff(staffId: string): void {
-    const role = this.currentUser().role;
-    if (role === 'SUPER ADMIN' || role === 'ADMINISTRADOR') {
-      if (confirm('¿Estás seguro/a que deseas dar de baja a este colaborador permanentemente?')) {
-        this.staffList = this.staffList.filter(s => s.id !== staffId);
-        this.showToast(`Colaborador dado de baja del sistema a las ${this.serverTime}.`);
-      }
-    } else {
-      this.showToast('Acceso denegado: No tienes permisos para eliminar personal.');
-    }
-  }
-
-  protocolStatuses: Record<string, boolean> = {
-    'Masaje Tántrico Sensitivo': true,
-    'Masaje Tántrico Completo': true,
-    'Masaje Nuru Body Slide': true,
-    'RECOVR VIP Hidromasaje': true
-  };
-
-  protocols = [
-    { name: 'Masaje Tántrico Sensitivo', price: 200, category: 'TÁNTRICO', duration: 60, desc: 'Toques lentos y continuos con aceites tibios neutros para relajación total.' },
-    { name: 'Masaje Tántrico Completo', price: 250, category: 'TÁNTRICO', duration: 75, desc: 'Sesión integral con piedras tibias de cuarzo, aceites aromáticos y música binaural.' },
-    { name: 'Masaje Nuru Body Slide', price: 280, category: 'NURU', duration: 75, desc: 'Masaje cuerpo a cuerpo sobre colchón impermeable con gel tibio hiperdeslizante.' },
-    { name: 'RECOVR VIP Hidromasaje', price: 450, category: 'VIP', duration: 90, desc: 'Masaje sensitivo, técnica cuerpo a cuerpo y tina privada con microburbujas.' }
-  ];
-
-  deleteProtocol(name: string): void {
-    const role = this.currentUser().role;
-    if (role === 'SUPER ADMIN' || role === 'ADMINISTRADOR') {
-      if (confirm(`¿Estás seguro/a que deseas eliminar el protocolo "${name}" del catálogo?`)) {
-        this.protocols = this.protocols.filter(p => p.name !== name);
-        delete this.protocolStatuses[name];
-        this.showToast(`Protocolo ${name} eliminado a las ${this.serverTime}.`);
-      }
-    } else {
-      this.showToast('Acceso denegado: No tienes permisos para eliminar protocolos.');
-    }
-  }
-
-  // -------------------------------------------------------------
-  // SALAS Y CABINAS SANCTUM
-  // -------------------------------------------------------------
-  cabins: CabinRoom[] = [
-    {
-      id: 'CAB-01',
-      name: 'Cabina 01 (Néon Rose)',
-      code: 'S-01',
-      type: 'Cabina de Descompresión & Masoterapia Avanzada',
-      equipment: ['Camilla hidráulica de alta resistencia', 'Manta térmica infrarroja', 'Equipo de percusión Theragun Pro'],
-      status: 'OCUPADA',
-      currentTherapist: 'Ely'
-    },
-    {
-      id: 'CAB-02',
-      name: 'Cabina 02 (Nuru Suite)',
-      code: 'S-02',
-      type: 'Cabina Sensorial de Recuperación Miofascial',
-      equipment: ['Camilla ergonómica acolchada', 'Difusor de aromaterapia de cedro', 'Sistema de sonido envolvente 432Hz'],
-      status: 'DISPONIBLE'
-    },
-    {
-      id: 'CAB-03',
-      name: 'Cabina 03 (Dúo / 4 Manos)',
-      code: 'POD-01',
-      type: 'Gabinete Clínico Especializado en Pie Masculino',
-      equipment: ['Sillón podológico eléctrico', 'Micromotor con aspiración integrada', 'Esterilizador autoclave clase B'],
-      status: 'EN SANITIZACIÓN'
-    }
-  ];
 
   // -------------------------------------------------------------
   // DEVOPS & INFRAESTRUCTURA (SUPER ADMIN)
@@ -758,170 +436,6 @@ export class AdminComponent implements OnInit, OnDestroy {
     }, 3800);
   }
 
-  saveStaffMember(staff: StaffMember): void {
-    this.showToast(`Cambios guardados para ${staff.name}: comisión ${staff.commissionRate}%`);
-  }
-
-  toggleStaffStatus(staff: StaffMember): void {
-    staff.status = staff.status === 'ACTIVO' ? 'EN PAUSA' : 'ACTIVO';
-    this.showToast(`${staff.name} quedó ${staff.status.toLowerCase()}.`);
-  }
-
-  toggleProtocol(name: string): void {
-    this.protocolStatuses[name] = !this.protocolStatuses[name];
-    this.showToast(`${name}: ${this.protocolStatuses[name] ? 'protocolo activado' : 'protocolo desactivado'}.`);
-  }
-
-  addProtocolDemo(): void {
-    this.showToast('Formulario de nuevo protocolo listo para conectar con el catálogo backend.');
-  }
-
-  // -------------------------------------------------------------
-  // OPERACIONES DE AGENDA Y RESERVAS
-  // -------------------------------------------------------------
-  get waitingClients(): BookingAdminItem[] {
-    return this.bookings.filter(b => b.status === 'EN ESPERA');
-  }
-
-  get activeSessions(): BookingAdminItem[] {
-    return this.bookings.filter(b => b.status === 'EN SESIÓN');
-  }
-
-  get staffStatuses() {
-    return this.staffList.filter(s => s.role === 'ESPECIALISTA').map(staff => {
-      const activeSession = this.activeSessions.find(b => b.prof === staff.name);
-      if (activeSession) {
-        const isEndingSoon = staff.name === 'Ely'; // Mock for demo
-        return {
-          ...staff,
-          availability: isEndingSoon ? 'PRÓXIMAMENTE LIBRE' : 'OCUPADO',
-          detail: isEndingSoon ? `Finalizando en ${activeSession.room}` : `En sesión (${activeSession.room})`
-        };
-      }
-
-      const waitingClient = this.waitingClients.find(b => b.prof === staff.name);
-      if (waitingClient) {
-        return {
-          ...staff,
-          availability: 'OCUPADO',
-          detail: `Por iniciar sesión`
-        };
-      }
-
-      return {
-        ...staff,
-        availability: 'LIBRE',
-        detail: `Disponible`
-      };
-    });
-  }
-
-  get filteredBookings(): BookingAdminItem[] {
-    const role = this.currentUser().role;
-    let list = this.bookings;
-
-    // Si es Especialista, solo ve sus turnos asignados
-    if (role === 'ESPECIALISTA') {
-      list = list.filter(b => b.prof === this.currentUser().name);
-    }
-
-    // Si es Cliente, solo ve sus citas
-    if (role === 'CLIENTE') {
-      list = list.filter(b => b.client.toLowerCase().includes('carlos mendoza'));
-    }
-
-    // Filtro por sala
-    if (this.selectedRoomFilter !== 'TODAS') {
-      list = list.filter(b => b.room.includes(this.selectedRoomFilter));
-    }
-
-    return list;
-  }
-
-  updateBookingStatus(booking: BookingAdminItem, newStatus: BookingStatus): void {
-    booking.status = newStatus;
-    this.showToast(`Reserva ${booking.id} (${booking.client}) actualizada a: ${newStatus}`);
-
-    // Registrar evento de auditoría
-    this.auditLogs.unshift({
-      id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
-      timestamp: this.serverTimeService.getNowISOString().replace('T', ' ').substring(0, 19),
-      actor: this.currentUser().name,
-      role: this.currentUser().role,
-      action: `Cambio de estado de reserva ${booking.id} a ${newStatus}`,
-      ip: '192.168.1.100',
-      severity: 'INFO'
-    });
-  }
-
-  deleteBooking(booking: BookingAdminItem): void {
-    const role = this.currentUser().role;
-    if (role === 'SUPER ADMIN' || role === 'ADMINISTRADOR') {
-      if (confirm('¿Confirma que desea borrar permanentemente esta reserva del sistema?')) {
-        this.bookings = this.bookings.filter(b => b.id !== booking.id);
-        this.showToast(`Reserva ${booking.id} eliminada permanentemente a las ${this.serverTime}.`);
-        this.auditLogs.unshift({
-          id: `LOG-${Math.floor(1000 + Math.random() * 9000)}`,
-          timestamp: this.serverTime,
-          actor: this.currentUser().name,
-          role: role,
-          action: `Eliminación permanente de reserva ${booking.id}`,
-          ip: '192.168.1.100',
-          severity: 'SECURITY'
-        });
-      }
-    } else if (role === 'CLIENTE') {
-      if (confirm('¿Estás seguro que deseas cancelar tu cita? Se aplicará la política de cancelación.')) {
-        booking.status = 'CANCELADA';
-        this.showToast(`Tu cita ${booking.id} ha sido anulada a las ${this.serverTime}.`);
-      }
-    } else {
-      this.showToast('Acceso denegado: No tienes permisos para borrar citas.');
-    }
-  }
-
-  saveManualBooking(): void {
-    if (!this.newBooking.client || !this.newBooking.service) {
-      this.showToast('Por favor completa el nombre del cliente y el servicio.');
-      return;
-    }
-
-    const created: BookingAdminItem = {
-      id: `REC-${Math.floor(100000 + Math.random() * 900000)}`,
-      client: this.newBooking.client || 'Cliente Walk-in',
-      clientPhone: this.newBooking.clientPhone || '+56 9 ',
-      service: this.newBooking.service || 'Masaje Tántrico Sensitivo',
-      serviceCategory: this.newBooking.serviceCategory || 'MASAJE',
-      prof: this.newBooking.prof || 'Ely',
-      room: this.newBooking.room || 'Cabina 01 (Néon Rose)',
-      date: this.newBooking.date || '2026-08-22',
-      time: this.newBooking.time || '15:00',
-      price: this.newBooking.price || 200,
-      status: 'CONFIRMADA',
-      paymentStatus: this.newBooking.paymentStatus || 'PAGADO',
-      paymentMethod: this.newBooking.paymentMethod || 'POS TRANSBANK',
-      notes: this.newBooking.notes || 'Agendada manualmente en Front-Desk.'
-    };
-
-    this.bookings.unshift(created);
-    this.showManualBookingModal = false;
-    this.showToast(`Nueva cita agendada con éxito: ${created.id} para ${created.client}`);
-
-    // Si ya pagó, registrar en la caja
-    if (created.paymentStatus === 'PAGADO') {
-      this.cashTransactions.unshift({
-        id: `TRX-${Math.floor(100 + Math.random() * 900)}`,
-        time: created.time,
-        client: created.client,
-        service: created.service,
-        amount: created.price,
-        method: created.paymentMethod || 'POS TRANSBANK',
-        voucherCode: `VOUCH-${Math.floor(10000 + Math.random() * 90000)}`,
-        processedBy: this.currentUser().name
-      });
-    }
-  }
-
   // -------------------------------------------------------------
   // OPERACIONES DE FICHA CLÍNICA
   // -------------------------------------------------------------
@@ -963,63 +477,6 @@ export class AdminComponent implements OnInit, OnDestroy {
     } else {
       this.showToast('Acceso denegado: Privacidad médica. No puedes alterar fichas.');
     }
-  }
-
-  // -------------------------------------------------------------
-  // OPERACIONES DE CAJA CHICA & POS
-  // -------------------------------------------------------------
-  get totalCollectedToday(): number {
-    return this.cashTransactions.reduce((acc, curr) => acc + curr.amount, 0);
-  }
-
-  get totalTransbank(): number {
-    return this.cashTransactions.filter(t => t.method === 'POS TRANSBANK').reduce((a, b) => a + b.amount, 0);
-  }
-
-  get totalCash(): number {
-    return this.cashTransactions.filter(t => t.method === 'EFECTIVO').reduce((a, b) => a + b.amount, 0);
-  }
-
-  get totalStripe(): number {
-    return this.cashTransactions.filter(t => t.method === 'STRIPE WEB').reduce((a, b) => a + b.amount, 0);
-  }
-
-  registerQuickPayment(): void {
-    if (!this.newPayment.client) {
-      this.showToast('Ingresa el nombre del cliente para registrar el cobro.');
-      return;
-    }
-
-    this.cashTransactions.unshift({
-      id: `TRX-${Math.floor(100 + Math.random() * 900)}`,
-      time: this.serverTimeService.getNowISOString().substring(11, 16),
-      client: this.newPayment.client,
-      service: this.newPayment.service,
-      amount: this.newPayment.amount,
-      method: this.newPayment.method,
-      voucherCode: `VOUCH-${Math.floor(10000 + Math.random() * 90000)}`,
-      processedBy: this.currentUser().name
-    });
-
-    this.newPayment.client = '';
-    this.showToast(`Cobro registrado en caja correctamente. Total actualizado.`);
-  }
-
-  deleteTransaction(trxId: string): void {
-    const role = this.currentUser().role;
-    if (role === 'SUPER ADMIN' || role === 'ADMINISTRADOR') {
-      if (confirm(`¿Está seguro de anular el pago ${trxId}? El dinero será extornado.`)) {
-        this.cashTransactions = this.cashTransactions.filter(t => t.id !== trxId);
-        this.showToast(`Comprobante ${trxId} anulado y extornado de la caja a las ${this.serverTime}.`);
-      }
-    } else {
-      this.showToast('Acceso denegado: Solo Gerencia o TI pueden anular pagos.');
-    }
-  }
-
-  closeDailyCashRegister(): void {
-    const total = this.totalCollectedToday;
-    this.showToast(`Cierre de caja completado. Total arqueado: S/ ${total.toLocaleString('es-PE')} PEN. Comprobante archivado.`);
   }
 
   // -------------------------------------------------------------

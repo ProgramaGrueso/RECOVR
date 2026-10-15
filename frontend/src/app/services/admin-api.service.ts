@@ -1,0 +1,92 @@
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, catchError, throwError } from 'rxjs';
+import { ApiService } from './api.service';
+import {
+  ClienteOps, EmpleadoEstado, EmpleadoOps, ReservaOps, ResumenOps, SalaEstado, SalaOps, ServicioOps
+} from '../models/ops.model';
+
+/** Error con un mensaje listo para mostrar al personal. */
+export class OpsError extends Error {
+  constructor(message: string, readonly status = 0) {
+    super(message);
+  }
+}
+
+/**
+ * Todas las operaciones de la zona administrativa contra la API real. Cada método devuelve un Observable y,
+ * si falla, un OpsError con el motivo en español (409 agenda ocupada, 400 regla de negocio, 403 sin permiso...).
+ */
+@Injectable({ providedIn: 'root' })
+export class AdminApiService {
+  private http = inject(HttpClient);
+  private api = inject(ApiService);
+
+  private req<T>(method: string, path: string, body?: unknown): Observable<T> {
+    return this.http.request<T>(method, `${this.api.baseUrl}${path}`, { body, headers: this.api.authHeaders() }).pipe(
+      catchError((err: unknown) => throwError(() => this.traducir(err)))
+    );
+  }
+
+  private traducir(err: unknown): OpsError {
+    if (!(err instanceof HttpErrorResponse)) {
+      return new OpsError('Ocurrió un error inesperado.');
+    }
+    if (err.status === 0) {
+      return new OpsError('No hay conexión con el servidor. Enciende el backend (puerto 8095).', 0);
+    }
+    if (err.status === 401) {
+      this.api.clearSession();
+      return new OpsError('Tu sesión del servidor expiró. Vuelve a conectarte.', 401);
+    }
+    if (err.status === 403) {
+      const rol = this.api.session()?.role || 'desconocido';
+      return new OpsError(`Tu cuenta del servidor (${rol}) no tiene permiso para esta acción.`, 403);
+    }
+    const campos = err.error?.campos ? Object.entries(err.error.campos).map(([k, v]) => `${k}: ${v}`).join(' · ') : '';
+    return new OpsError(campos || err.error?.message || `Error ${err.status} del servidor.`, err.status);
+  }
+
+  // ---- Reservas ----
+  reservas(): Observable<ReservaOps[]> { return this.req('GET', '/db/reservas'); }
+  miAgenda(): Observable<ReservaOps[]> { return this.req('GET', '/db/reservas/agenda'); }
+  crearReserva(body: { clienteId: number; empleadoId: number; servicioId: number; salaId: number | null; fechaHora: string }): Observable<ReservaOps> {
+    return this.req('POST', '/db/reservas', body);
+  }
+  editarReserva(id: number, body: { clienteId: number; empleadoId: number; servicioId: number; salaId: number | null; fechaHora: string }): Observable<ReservaOps> {
+    return this.req('PUT', `/db/reservas/${id}`, body);
+  }
+  cobrarYConfirmar(id: number, monto: number, metodoPago: string): Observable<ReservaOps> {
+    return this.req('POST', `/db/reservas/${id}/confirmar-y-pagar`, { monto, metodoPago });
+  }
+  checkIn(id: number): Observable<ReservaOps> { return this.req('POST', `/db/reservas/${id}/check-in`); }
+  finalizar(id: number): Observable<ReservaOps> { return this.req('POST', `/db/reservas/${id}/finalizar`); }
+  cancelar(id: number): Observable<ReservaOps> { return this.req('PATCH', `/db/reservas/${id}/cancelar`); }
+  eliminarReserva(id: number): Observable<void> { return this.req('DELETE', `/db/reservas/${id}`); }
+
+  // ---- Clientes ----
+  clientes(): Observable<ClienteOps[]> { return this.req('GET', '/clientes'); }
+  crearCliente(b: { nombre: string; correo: string; telefono: string }): Observable<ClienteOps> { return this.req('POST', '/clientes', b); }
+  editarCliente(id: number, b: { nombre: string; correo: string; telefono: string }): Observable<ClienteOps> { return this.req('PUT', `/clientes/${id}`, b); }
+  eliminarCliente(id: number): Observable<void> { return this.req('DELETE', `/clientes/${id}`); }
+
+  // ---- Personal (masajistas) ----
+  crearEmpleado(b: { nombre: string; especialidad: string; telefono: string }): Observable<EmpleadoOps> { return this.req('POST', '/empleados', b); }
+  editarEmpleado(id: number, b: { nombre: string; especialidad: string; telefono: string }): Observable<EmpleadoOps> { return this.req('PUT', `/empleados/${id}`, b); }
+  cambiarActivoEmpleado(id: number, valor: boolean): Observable<EmpleadoOps> { return this.req('PATCH', `/empleados/${id}/activo?valor=${valor}`); }
+  eliminarEmpleado(id: number): Observable<void> { return this.req('DELETE', `/empleados/${id}`); }
+
+  // ---- Servicios y cabinas ----
+  servicios(): Observable<ServicioOps[]> { return this.req('GET', '/servicios'); }
+  crearServicio(b: Omit<ServicioOps, 'id'>): Observable<ServicioOps> { return this.req('POST', '/servicios', b); }
+  editarServicio(id: number, b: Omit<ServicioOps, 'id'>): Observable<ServicioOps> { return this.req('PUT', `/servicios/${id}`, b); }
+  eliminarServicio(id: number): Observable<void> { return this.req('DELETE', `/servicios/${id}`); }
+  crearSala(b: { nombre: string; capacidad: number }): Observable<SalaOps> { return this.req('POST', '/salas', b); }
+  editarSala(id: number, b: { nombre: string; capacidad: number }): Observable<SalaOps> { return this.req('PUT', `/salas/${id}`, b); }
+  eliminarSala(id: number): Observable<void> { return this.req('DELETE', `/salas/${id}`); }
+
+  // ---- Estado en vivo e indicadores ----
+  estadoSalas(): Observable<SalaEstado[]> { return this.req('GET', '/operacion/salas'); }
+  estadoEmpleados(): Observable<EmpleadoEstado[]> { return this.req('GET', '/operacion/empleados'); }
+  resumen(): Observable<ResumenOps> { return this.req('GET', '/operacion/resumen'); }
+}

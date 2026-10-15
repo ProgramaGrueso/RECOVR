@@ -7,7 +7,15 @@
   --color-metal: #e8dae6;
   --color-bubble-cyan: #00f0ff;
   --color-bubble-lavender: #c98dff;
+  // Fondo oscuro sólido: el tema pastel del sitio dejaba el texto claro sobre rosa (ilegible)
+  --color-bg: #15101c;
+  --color-bg-alt: #1c1526;
+  --color-bg-card: #251c30;
+  --color-card-border: rgba(255, 255, 255, 0.14);
+  --color-accent-soft: #ff7eb8;
 }
+
+:host { display: block; background: #15101c; }
 
 // -------------------------------------------------------------
 // LAYOUT GENERAL DEL SHELL ADMINISTRATIVO

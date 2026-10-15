@@ -1,10 +1,12 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, map, of, switchMap, throwError } from 'rxjs';
 import { BookingRequest, BookingResponse } from '../models/booking.model';
 
 const TOKEN_KEY = 'recovr-api-token';
 const URL_KEY = 'recovr-api-url';
+const ROLE_KEY = 'recovr-api-role';
+const EMAIL_KEY = 'recovr-api-email';
 const DEFAULT_API_URL = 'http://localhost:8095/api';
 
 interface ServicioApi { id: number; nombre: string; precio: number; }
@@ -28,6 +30,27 @@ export class ApiBusinessError extends Error {}
 export class ApiService {
   private http = inject(HttpClient);
 
+  /** Sesión con el backend (rol y correo del token). Es una señal para que el panel reaccione al conectar/cerrar. */
+  private readonly sessionState = signal<{ role: string; correo: string } | null>(this.loadSession());
+  readonly session = this.sessionState.asReadonly();
+
+  private loadSession(): { role: string; correo: string } | null {
+    try {
+      const token = localStorage.getItem(TOKEN_KEY);
+      return token ? { role: localStorage.getItem(ROLE_KEY) ?? '', correo: localStorage.getItem(EMAIL_KEY) ?? '' } : null;
+    } catch {
+      return null;
+    }
+  }
+
+  get baseUrl(): string {
+    return this.base;
+  }
+
+  authHeaders(): HttpHeaders {
+    return this.headers();
+  }
+
   private get base(): string {
     try {
       return localStorage.getItem(URL_KEY) || DEFAULT_API_URL;
@@ -49,11 +72,21 @@ export class ApiService {
   }
 
   clearSession(): void {
-    try { localStorage.removeItem(TOKEN_KEY); } catch { /* sin almacenamiento */ }
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(ROLE_KEY);
+      localStorage.removeItem(EMAIL_KEY);
+    } catch { /* sin almacenamiento */ }
+    this.sessionState.set(null);
   }
 
-  private saveToken(token: string): void {
-    try { localStorage.setItem(TOKEN_KEY, token); } catch { /* sin almacenamiento */ }
+  private saveToken(token: string, role = '', correo = ''): void {
+    try {
+      localStorage.setItem(TOKEN_KEY, token);
+      localStorage.setItem(ROLE_KEY, role);
+      localStorage.setItem(EMAIL_KEY, correo);
+    } catch { /* sin almacenamiento */ }
+    this.sessionState.set({ role, correo });
   }
 
   private headers(): HttpHeaders {
@@ -62,16 +95,29 @@ export class ApiService {
 
   /** Inicia sesión en el backend; devuelve false si no hay conexión o las credenciales no existen. */
   login(correo: string, password: string): Observable<boolean> {
-    return this.http.post<{ token: string }>(`${this.base}/auth/login`, { correo, password }).pipe(
-      map(res => { this.saveToken(res.token); return true; }),
+    return this.http.post<{ token: string; rol?: string; correo?: string }>(`${this.base}/auth/login`, { correo, password }).pipe(
+      map(res => { this.saveToken(res.token, res.rol ?? '', res.correo ?? correo); return true; }),
       catchError(() => of(false))
+    );
+  }
+
+  /** Igual que login, pero explica el motivo del fallo (para la pantalla de conexión del panel). */
+  loginConMensaje(correo: string, password: string): Observable<{ ok: boolean; message?: string }> {
+    return this.http.post<{ token: string; rol?: string; correo?: string }>(`${this.base}/auth/login`, { correo, password }).pipe(
+      map(res => { this.saveToken(res.token, res.rol ?? '', res.correo ?? correo); return { ok: true }; }),
+      catchError((err: HttpErrorResponse) => of({
+        ok: false,
+        message: err.status === 0
+          ? 'No hay conexión con el servidor. Enciende el backend (puerto 8095) e inténtalo de nuevo.'
+          : 'Correo o contraseña incorrectos.'
+      }))
     );
   }
 
   /** Registra al cliente en el backend y deja la sesión iniciada (si ya existía, solo inicia sesión). */
   registrar(nombre: string, correo: string, password: string, telefono: string): Observable<boolean> {
-    return this.http.post<{ token: string }>(`${this.base}/auth/registro`, { nombre, correo, password, telefono }).pipe(
-      map(res => { this.saveToken(res.token); return true; }),
+    return this.http.post<{ token: string; rol?: string; correo?: string }>(`${this.base}/auth/registro`, { nombre, correo, password, telefono }).pipe(
+      map(res => { this.saveToken(res.token, res.rol ?? 'CLIENTE', res.correo ?? correo); return true; }),
       catchError(() => this.login(correo, password))
     );
   }

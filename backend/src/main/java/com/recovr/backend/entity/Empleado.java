@@ -30,6 +30,10 @@ public class Empleado {
     @Column(name = "usuario_id", unique = true)
     private Long usuarioId;
 
+    @Schema(description = "false = dada de baja: conserva su historial pero ya no recibe reservas", example = "true")
+    @Column(name = "activo")
+    private Boolean activo = Boolean.TRUE;
+
     @JsonIgnore
     @OneToMany(mappedBy = "empleado")
     private List<Reserva> reservas;
@@ -50,6 +54,10 @@ public class Empleado {
 
     public String getTelefono() { return telefono; }
     public void setTelefono(String telefono) { this.telefono = telefono; }
+
+    /** Las filas anteriores a esta columna tienen null y cuentan como activas. */
+    public boolean isActivo() { return activo == null || activo; }
+    public void setActivo(boolean activo) { this.activo = activo; }
 
     public List<Reserva> getReservas() { return reservas; }
     public void setReservas(List<Reserva> reservas) { this.reservas = reservas; }
