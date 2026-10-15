@@ -36,6 +36,9 @@
           <span>SALIR</span><span class="logout-arrow">↗</span>
         </button>
       </div>
+      <button type="button" class="logout-btn" style="width:100%; margin-bottom:0.5rem; justify-content:center" (click)="cambiandoClave = true">
+        <span>CAMBIAR CONTRASEÑA</span>
+      </button>
       <a routerLink="/" class="public-site-btn" title="Volver al sitio público">
         <span class="btn-arrow">←</span><span>VOLVER A LA WEB PÚBLICA</span>
       </a>
@@ -58,6 +61,10 @@
       </div>
     </header>
 
+    @if (claveObligatoria || cambiandoClave) {
+      <app-ops-cambiar-clave [forzado]="claveObligatoria" (cerrar)="cambiandoClave = false" (salir)="logout()" />
+    }
+
     @switch (activeView) {
       @case ('RESUMEN') { <div class="view-content animate-fade"><app-ops-resumen (irAgenda)="setView('AGENDA')" /></div> }
       @case ('AGENDA') { <div class="view-content animate-fade"><app-ops-agenda /></div> }
@@ -65,6 +72,8 @@
       @case ('CAJA') { <div class="view-content animate-fade"><app-ops-caja /></div> }
       @case ('PERSONAL') { <div class="view-content animate-fade"><app-ops-personal /></div> }
       @case ('CATALOGO') { <div class="view-content animate-fade"><app-ops-catalogo /></div> }
+      @case ('USUARIOS') { <div class="view-content animate-fade"><app-ops-usuarios /></div> }
+      @case ('MI_PERFIL') { <div class="view-content animate-fade"><app-ops-miperfil /></div> }
       @case ('FICHAS') { <div class="view-content animate-fade"><app-ops-fichas /></div> }
       @case ('SISTEMA') { <div class="view-content animate-fade"><app-ops-sistema /></div> }
       @case ('SEGURIDAD') { <div class="view-content animate-fade"><app-ops-seguridad /></div> }

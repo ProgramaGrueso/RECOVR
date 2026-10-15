@@ -36,7 +36,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String correo = jwtService.extraerCorreo(token);
             if (SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails user = userDetailsService.loadUserByUsername(correo);
+                if (!user.isEnabled()) {
+                    // Cuenta desactivada: el token deja de valer al instante
+                    filterChain.doFilter(request, response);
+                    return;
+                }
                 if (jwtService.esValido(token, user)) {
+                    String ruta = request.getRequestURI();
+                    if (!user.isCredentialsNonExpired() && !ruta.equals("/api/auth/me") && !ruta.equals("/api/auth/cambiar-clave")) {
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"status\":403,\"error\":\"Cambio de contraseña obligatorio\","
+                                + "\"message\":\"Debes cambiar tu contraseña temporal antes de continuar\"}");
+                        return;
+                    }
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

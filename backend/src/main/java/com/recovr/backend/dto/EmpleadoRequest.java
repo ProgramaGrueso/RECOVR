@@ -14,13 +14,15 @@ public record EmpleadoRequest(
         String especialidad,
 
         @Schema(description = "Teléfono de contacto", example = "911222333")
-        @Size(max = 20) String telefono
+        @Size(max = 20) String telefono,
+        @Size(max = 500) String bio
 ) {
     public Empleado aEntidad() {
         Empleado empleado = new Empleado();
         empleado.setNombre(nombre);
         empleado.setEspecialidad(especialidad);
         empleado.setTelefono(telefono);
+        empleado.setBio(bio);
         return empleado;
     }
 }

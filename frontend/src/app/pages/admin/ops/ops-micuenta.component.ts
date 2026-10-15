@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { AdminApiService } from '../../../services/admin-api.service';
-import { MiCuentaOps, ReservaOps } from '../../../models/ops.model';
+import { MiCuentaOps, PuntosOps, ReservaOps } from '../../../models/ops.model';
 import { ESTADO_TXT, codigoReserva, fechaHoraTxt, soles } from './ops.util';
 
 /**
@@ -22,11 +22,54 @@ import { ESTADO_TXT, codigoReserva, fechaHoraTxt, soles } from './ops.util';
       <div class="kpi-grid">
         <div class="kpi"><div class="k-label">Nivel</div><div class="k-value">{{ c.nivel }}</div>
           <div class="k-note">@if (c.siguienteNivel) { Te faltan {{ c.puntosParaSiguiente }} puntos para {{ c.siguienteNivel }} } @else { Nivel máximo alcanzado }</div></div>
-        <div class="kpi"><div class="k-label">Puntos</div><div class="k-value">{{ c.puntos }}</div><div class="k-note">1 punto por cada S/ 1 de sesiones completadas</div></div>
+        <div class="kpi"><div class="k-label">Saldo de puntos</div><div class="k-value">{{ c.puntos }}</div><div class="k-note">Ganados menos canjeados · detalle abajo</div></div>
         <div class="kpi"><div class="k-label">Sesiones completadas</div><div class="k-value">{{ c.sesionesCompletadas }}</div><div class="k-note">Historial real de tu cuenta</div></div>
         <div class="kpi"><div class="k-label">Cancelaciones del mes</div><div class="k-value">{{ c.cancelacionesMes }} / {{ c.limiteCancelacionesMes }}</div>
           <div class="k-note">Se cancela hasta {{ c.horasMinimasCancelacion }} h antes de la sesión</div></div>
       </div>
+
+      @if (puntos(); as p) {
+        <div class="ops-head"><h3 class="ops-title">Programa de puntos</h3><span class="muted">Ganados en total: {{ p.ganados }} · Canjeados: {{ p.canjeados }}</span></div>
+        <div class="state-grid">
+          <div class="ops-card"><h4 class="ops-title">Cómo funciona</h4>
+            <ul style="margin:0.5rem 0 0; padding-left:1.1rem; line-height:1.6">@for (r of p.reglas; track r) { <li>{{ r }}</li> }</ul></div>
+          <div class="ops-card"><h4 class="ops-title">Niveles</h4>
+            @for (n of p.niveles; track n.nombre) {
+              <div class="ops-row" style="justify-content:space-between; padding:0.3rem 0; border-bottom:1px solid var(--ops-line)">
+                <span [style.font-weight]="n.actual ? 800 : 400" [style.color]="n.actual ? 'var(--ops-pink)' : ''">{{ n.nombre }}@if (n.actual) { · tu nivel }</span><span class="muted">desde {{ n.desde }} pts</span></div>
+            }
+            @if (p.siguienteNivel) { <p class="ops-sub" style="margin-top:0.6rem">Te faltan {{ p.puntosParaSiguiente }} puntos ganados para {{ p.siguienteNivel }}.</p> }</div>
+        </div>
+
+        <div class="ops-head"><h3 class="ops-title">Canjear puntos</h3><span class="muted">Tienes {{ p.saldo }} puntos disponibles</span></div>
+        <div class="state-grid">
+          @for (b of p.beneficios; track b.id) {
+            <div class="ops-card">
+              <h4 style="margin:0">{{ b.titulo }}</h4><p class="ops-sub">{{ b.descripcion }}</p>
+              <div class="ops-row" style="justify-content:space-between; margin-top:0.6rem"><strong>{{ b.puntos }} pts</strong>
+                <button type="button" class="ops-btn sm primary" [disabled]="!b.alcanza" (click)="canjear(b.id, b.titulo, b.puntos)">{{ b.alcanza ? 'Canjear' : 'Te faltan ' + (b.puntos - p.saldo) }}</button></div>
+            </div>
+          }
+        </div>
+
+        @if (p.canjes.length) {
+          <div class="ops-head"><h3 class="ops-title">Mis códigos de canje</h3><span class="muted">Muéstralos en recepción al pagar tu sesión</span></div>
+          <div class="ops-table-wrap" style="margin-bottom:1.6rem"><table class="ops-table" style="min-width:560px">
+            <thead><tr><th>Código</th><th>Beneficio</th><th>Descuento</th><th>Estado</th></tr></thead>
+            <tbody>@for (k of p.canjes; track k.codigo) {
+              <tr><td class="mono" style="font-size:1rem; color:var(--ops-text)">{{ k.codigo }}</td><td>{{ k.titulo }}</td><td>{{ soles(k.descuento) }}</td>
+                <td><span [class]="k.estado === 'DISPONIBLE' ? 'badge CONFIRMADA' : 'badge COMPLETADA'">{{ k.estado === 'DISPONIBLE' ? 'Disponible' : 'Usado' }}</span></td></tr>
+            }</tbody></table></div>
+        }
+
+        <div class="ops-head"><h3 class="ops-title">Historial de puntos</h3></div>
+        <div class="ops-table-wrap" style="margin-bottom:1.6rem"><table class="ops-table" style="min-width:560px">
+          <thead><tr><th>Fecha</th><th>Detalle</th><th style="text-align:right">Puntos</th></tr></thead>
+          <tbody>@for (m of p.movimientos; track $index) {
+            <tr><td>{{ fechaHora(m.fecha) }}</td><td>{{ m.descripcion }}</td>
+              <td style="text-align:right; font-weight:800" [style.color]="m.puntos >= 0 ? 'var(--ops-ok)' : 'var(--ops-bad)'">{{ m.puntos > 0 ? '+' : '' }}{{ m.puntos }}</td></tr>
+          } @empty { <tr><td colspan="3" class="ops-empty">Aún no tienes movimientos: tus puntos llegan cuando completes una sesión.</td></tr> }</tbody></table></div>
+      }
 
       <div class="ops-head"><h3 class="ops-title">Próxima cita</h3>
         <button type="button" class="ops-btn primary" (click)="reservar()">+ Reservar nueva cita</button></div>
@@ -92,6 +135,7 @@ export class OpsMiCuentaComponent implements OnInit {
   private router = inject(Router);
 
   cuenta = signal<MiCuentaOps | null>(null);
+  puntos = signal<PuntosOps | null>(null);
   reservas = signal<ReservaOps[]>([]);
   filtro = signal<'PROXIMAS' | 'HISTORIAL'>('PROXIMAS');
   mensaje = signal<{ texto: string; error: boolean } | null>(null);
@@ -118,14 +162,23 @@ export class OpsMiCuentaComponent implements OnInit {
   }
 
   cargar(): void {
-    forkJoin({ cuenta: this.admin.miCuenta(), reservas: this.admin.misReservas() }).subscribe({
+    forkJoin({ cuenta: this.admin.miCuenta(), reservas: this.admin.misReservas(), puntos: this.admin.puntos() }).subscribe({
       next: d => {
-        this.cuenta.set(d.cuenta); this.reservas.set(d.reservas);
+        this.cuenta.set(d.cuenta); this.reservas.set(d.reservas); this.puntos.set(d.puntos);
         this.nombre = d.cuenta.nombre; this.telefono = d.cuenta.telefono ?? '';
         this.error.set('');
       },
       error: e => this.error.set(e.message)
     });
+  }
+
+  canjear(id: string, titulo: string, costo: number): void {
+    if (confirm(`¿Canjear ${costo} puntos por "${titulo}"? Recibirás un código de un solo uso para mostrar en recepción.`)) {
+      this.admin.canjear(id).subscribe({
+        next: c => { this.aviso(`Canje listo. Tu código es ${c.codigo}: muéstralo en recepción al pagar.`); this.cargar(); },
+        error: e => this.aviso(e.message, true)
+      });
+    }
   }
 
   reservar(): void {

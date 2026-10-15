@@ -201,10 +201,14 @@ public class DemoDataSeeder implements CommandLineRunner {
     }
 
     private Map<String, Empleado> terapeutas() {
-        asegurarEmpleado("Ely", "Masaje Tántrico Sensitivo", "900000001");
-        asegurarEmpleado("Miranda", "Masaje Nuru Body Slide", "900000002");
-        asegurarEmpleado("Pamela", "Descontracturante y Cuatro Manos", "900000003");
-        asegurarEmpleado("Maria", "Suite Presencial e Hidromasaje", "900000004");
+        asegurarEmpleado("Ely", "Masaje Tántrico Sensitivo", "900000001",
+                "Especialista en toques lentos, continuos y suaves por todo el cuerpo con aceites tibios neutros.");
+        asegurarEmpleado("Miranda", "Masaje Nuru Body Slide", "900000002",
+                "Especialista en técnicas cuerpo a cuerpo sobre camilla especial con gel nuru tibio hiperdeslizante.");
+        asegurarEmpleado("Pamela", "Descontracturante y Cuatro Manos", "900000003",
+                "Experta en presión media y profunda para liberar sobrecargas musculares y en maniobras sincronizadas a cuatro manos.");
+        asegurarEmpleado("Maria", "Suite Presencial e Hidromasaje", "900000004",
+                "Atención exclusiva en la sesión más completa: masaje tántrico, técnica Nuru cuerpo a cuerpo e hidromasaje.");
         Map<String, Empleado> porNombre = new HashMap<>();
         for (Empleado e : empleadoRepository.findAll()) {
             porNombre.put(e.getNombre(), e);
@@ -212,14 +216,20 @@ public class DemoDataSeeder implements CommandLineRunner {
         return porNombre;
     }
 
-    private void asegurarEmpleado(String nombre, String especialidad, String telefono) {
-        if (empleadoRepository.findAll().stream().anyMatch(e -> e.getNombre().equals(nombre))) {
+    private void asegurarEmpleado(String nombre, String especialidad, String telefono, String bio) {
+        Empleado existente = empleadoRepository.findAll().stream().filter(e -> e.getNombre().equals(nombre)).findFirst().orElse(null);
+        if (existente != null) {
+            if (existente.getBio() == null || existente.getBio().isBlank()) {
+                existente.setBio(bio);
+                empleadoRepository.save(existente);
+            }
             return;
         }
         Empleado e = new Empleado();
         e.setNombre(nombre);
         e.setEspecialidad(especialidad);
         e.setTelefono(telefono);
+        e.setBio(bio);
         empleadoRepository.save(e);
     }
 
@@ -267,6 +277,8 @@ public class DemoDataSeeder implements CommandLineRunner {
             u.setNombre(c.nombre());
             u.setRol(c.rol());
             u.setPassword(passwordEncoder.encode(c.password()));
+            u.setActivo(true);
+            u.setDebeCambiarClave(false);
             u = usuarioRepository.save(u);
             if (c.terapeuta() != null) {
                 final Long usuarioId = u.getId();

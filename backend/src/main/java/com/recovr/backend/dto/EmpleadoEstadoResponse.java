@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Schema(description = "Disponibilidad en vivo de una terapeuta, calculada a partir de las reservas")
 public record EmpleadoEstadoResponse(
-        Long id, String nombre, String especialidad, String telefono, boolean activo,
+        Long id, String nombre, String especialidad, String telefono, boolean activo, String bio, boolean tieneFoto,
         @Schema(description = "LIBRE, EN_SESION o POR_INICIAR") String estado,
         @Schema(description = "Cabina de la sesión en curso") String sala,
         @Schema(description = "Fin de la sesión en curso") LocalDateTime hasta,

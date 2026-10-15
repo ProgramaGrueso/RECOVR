@@ -2,10 +2,9 @@ package com.recovr.backend.controller;
 
 import com.recovr.backend.dto.AuthResponse;
 import com.recovr.backend.dto.PerfilResponse;
-import com.recovr.backend.dto.CrearUsuarioRequest;
+import com.recovr.backend.dto.UsuarioDtos.CambiarClaveRequest;
 import com.recovr.backend.dto.LoginRequest;
 import com.recovr.backend.dto.RegistroRequest;
-import com.recovr.backend.dto.UsuarioCreadoResponse;
 import com.recovr.backend.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -45,22 +44,6 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Registrar el primer administrador",
-            description = "Permite crear el usuario inicial con rol ADMIN si no existe ninguno previamente en el sistema."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Administrador registrado exitosamente y sesión iniciada",
-                    content = @Content(schema = @Schema(implementation = AuthResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Ya existe un usuario administrador registrado o datos inválidos", content = @Content)
-    })
-    @SecurityRequirements
-    @PostMapping("/registro-admin")
-    @ResponseStatus(HttpStatus.CREATED)
-    public AuthResponse registroPrimerAdmin(@Valid @RequestBody RegistroRequest request) {
-        return authService.registrarPrimerAdmin(request);
-    }
-
-    @Operation(
             summary = "Iniciar sesión",
             description = "Autentica credenciales de cualquier usuario (ADMIN, RECEPCIONISTA, ESPECIALISTA, CLIENTE) y retorna el Bearer Token JWT."
     )
@@ -82,20 +65,10 @@ public class AuthController {
         return authService.perfil(authentication.getName());
     }
 
-    @Operation(
-            summary = "Crear usuario de personal interno",
-            description = "Permite a un administrador registrar cuentas para personal operativo (RECEPCIONISTA o ESPECIALISTA). Requiere rol ADMIN."
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Usuario de personal creado satisfactoriamente",
-                    content = @Content(schema = @Schema(implementation = UsuarioCreadoResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos o correo ya en uso", content = @Content),
-            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
-            @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
-    })
-    @PostMapping("/usuarios")
-    @ResponseStatus(HttpStatus.CREATED)
-    public UsuarioCreadoResponse crearUsuarioPersonal(@Valid @RequestBody CrearUsuarioRequest request) {
-        return authService.crearUsuarioPersonal(request);
+    @Operation(summary = "Cambiar mi contraseña", description = "Exige la contraseña actual. Obligatorio en el primer ingreso con una clave temporal.")
+    @PostMapping("/cambiar-clave")
+    public void cambiarClave(@Valid @RequestBody CambiarClaveRequest request, org.springframework.security.core.Authentication authentication,
+                             jakarta.servlet.http.HttpServletRequest http) {
+        authService.cambiarClave(authentication.getName(), request, http.getRemoteAddr());
     }
 }

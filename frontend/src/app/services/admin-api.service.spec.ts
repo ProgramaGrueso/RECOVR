@@ -42,7 +42,7 @@ describe('AdminApiService', () => {
   function iniciar(rol: string, token: string): void {
     auth.login('u@u.com', 'x').subscribe();
     http.expectOne(`${API}/auth/login`).flush({ token, rol, correo: 'u@u.com' });
-    http.expectOne(`${API}/auth/me`).flush({ correo: 'u@u.com', rol, nombre: 'Usuaria', clienteId: null, empleadoId: null, telefono: null });
+    http.expectOne(`${API}/auth/me`).flush({ correo: 'u@u.com', rol, nombre: 'Usuaria', clienteId: null, empleadoId: null, telefono: null, debeCambiarClave: false });
   }
 
   function fallo(status: number, body: object | null = null): OpsError {

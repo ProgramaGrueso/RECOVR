@@ -6,7 +6,7 @@ import { ApiService, PerfilApi } from './api.service';
 /** Los cuatro roles reales del backend. No existen roles "locales": todo permiso lo decide el servidor. */
 export type Rol = 'ADMIN' | 'RECEPCIONISTA' | 'ESPECIALISTA' | 'CLIENTE';
 
-export type Vista = 'RESUMEN' | 'AGENDA' | 'CLIENTES' | 'CAJA' | 'PERSONAL' | 'CATALOGO' | 'FICHAS' | 'SISTEMA' | 'SEGURIDAD' | 'MI_CUENTA';
+export type Vista = 'RESUMEN' | 'AGENDA' | 'CLIENTES' | 'CAJA' | 'PERSONAL' | 'CATALOGO' | 'USUARIOS' | 'FICHAS' | 'MI_PERFIL' | 'SISTEMA' | 'SEGURIDAD' | 'MI_CUENTA';
 
 export interface SessionUser {
   correo: string;
@@ -15,13 +15,14 @@ export interface SessionUser {
   clienteId: number | null;
   empleadoId: number | null;
   telefono: string | null;
+  debeCambiarClave: boolean;
 }
 
 /** Qué vistas ve cada rol. Es solo comodidad de interfaz: el backend vuelve a validar cada petición. */
 export const VISTAS_POR_ROL: Record<Rol, Vista[]> = {
-  ADMIN: ['RESUMEN', 'AGENDA', 'CLIENTES', 'CAJA', 'PERSONAL', 'CATALOGO', 'SISTEMA', 'SEGURIDAD'],
+  ADMIN: ['RESUMEN', 'AGENDA', 'CLIENTES', 'CAJA', 'PERSONAL', 'USUARIOS', 'CATALOGO', 'SISTEMA', 'SEGURIDAD'],
   RECEPCIONISTA: ['RESUMEN', 'AGENDA', 'CLIENTES', 'CAJA'],
-  ESPECIALISTA: ['AGENDA', 'FICHAS'],
+  ESPECIALISTA: ['AGENDA', 'FICHAS', 'MI_PERFIL'],
   CLIENTE: ['MI_CUENTA']
 };
 
@@ -83,6 +84,11 @@ export class AuthService {
     return this.validacion;
   }
 
+  /** Tras cambiar la contraseña se vuelve a pedir el perfil para apagar el aviso de "clave temporal". */
+  refrescar(): Observable<boolean> {
+    return this.confirmar();
+  }
+
   logout(): void {
     this.cerrarLocal();
   }
@@ -116,7 +122,7 @@ export class AuthService {
 
   private aUsuario(p: PerfilApi): SessionUser {
     const rol = ROLES.includes(p.rol as Rol) ? (p.rol as Rol) : 'CLIENTE';
-    return { correo: p.correo, rol, nombre: p.nombre, clienteId: p.clienteId, empleadoId: p.empleadoId, telefono: p.telefono };
+    return { correo: p.correo, rol, nombre: p.nombre, clienteId: p.clienteId, empleadoId: p.empleadoId, telefono: p.telefono, debeCambiarClave: p.debeCambiarClave };
   }
 }
 

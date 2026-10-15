@@ -11,8 +11,6 @@ public final class MiCuentaDtos {
 
     public record ActualizarPerfilRequest(@NotBlank @Size(min = 3, max = 120) String nombre, @Size(max = 20) String telefono) {}
 
-    public record NivelInfo(String nivel, int desde) {}
-
     public record MiCuentaResponse(
             String nombre, String correo, String telefono,
             int puntos, String nivel, String siguienteNivel, int puntosParaSiguiente,

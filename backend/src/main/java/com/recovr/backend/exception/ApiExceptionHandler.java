@@ -62,6 +62,11 @@ public class ApiExceptionHandler {
         return respuesta(HttpStatus.BAD_REQUEST, "Solicitud Inválida", ex.getMessage());
     }
 
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, Object>> handleArchivoGrande(org.springframework.web.multipart.MaxUploadSizeExceededException ex) {
+        return respuesta(HttpStatus.PAYLOAD_TOO_LARGE, "Archivo demasiado grande", "La imagen supera los 3 MB permitidos");
+    }
+
     @ExceptionHandler(LoginBloqueadoException.class)
     public ResponseEntity<Map<String, Object>> handleLoginBloqueado(LoginBloqueadoException ex) {
         return respuesta(HttpStatus.TOO_MANY_REQUESTS, "Demasiados intentos", ex.getMessage());

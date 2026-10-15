@@ -26,9 +26,11 @@ import java.util.List;
 public class EmpleadoController {
 
     private final EmpleadoService empleadoService;
+    private final com.recovr.backend.service.FotoService fotoService;
 
-    public EmpleadoController(EmpleadoService empleadoService) {
+    public EmpleadoController(EmpleadoService empleadoService, com.recovr.backend.service.FotoService fotoService) {
         this.empleadoService = empleadoService;
+        this.fotoService = fotoService;
     }
 
     @Operation(summary = "Listar todos los especialistas", description = "Retorna el listado completo de terapeutas/empleados. Requiere rol ADMIN.")
@@ -47,6 +49,22 @@ public class EmpleadoController {
     @GetMapping("/catalogo")
     public List<EmpleadoCatalogoResponse> catalogo() {
         return empleadoService.listarActivos().stream().map(EmpleadoCatalogoResponse::de).toList();
+    }
+
+    @Operation(summary = "Subir la foto de una terapeuta", description = "JPG o PNG de hasta 3 MB. Solo ADMIN (la terapeuta puede subir la suya en /api/mi-perfil/foto).")
+    @PutMapping(path = "/{id}/foto", consumes = "multipart/form-data")
+    public EmpleadoResponse subirFoto(@PathVariable Long id, @RequestParam("archivo") org.springframework.web.multipart.MultipartFile archivo)
+            throws java.io.IOException {
+        fotoService.guardar(id, archivo.getBytes());
+        return EmpleadoResponse.de(empleadoService.buscarPorId(id));
+    }
+
+    @Operation(summary = "Quitar la foto de una terapeuta")
+    @DeleteMapping("/{id}/foto")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void quitarFoto(@PathVariable Long id) {
+        empleadoService.buscarPorId(id);
+        fotoService.eliminar(id);
     }
 
     @Operation(summary = "Dar de baja o reactivar a un especialista",

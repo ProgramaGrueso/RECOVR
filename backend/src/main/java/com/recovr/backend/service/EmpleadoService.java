@@ -61,6 +61,7 @@ public class EmpleadoService {
         empleado.setNombre(datos.getNombre());
         empleado.setEspecialidad(datos.getEspecialidad());
         empleado.setTelefono(datos.getTelefono());
+        empleado.setBio(datos.getBio());
         return empleadoRepository.save(empleado);
     }
 

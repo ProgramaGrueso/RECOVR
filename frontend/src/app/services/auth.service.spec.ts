@@ -30,7 +30,7 @@ describe('AuthService', () => {
   afterEach(() => http.verify());
 
   function perfil(rol: string, nombre = 'Ana'): object {
-    return { correo: 'a@a.com', rol, nombre, clienteId: null, empleadoId: null, telefono: null };
+    return { correo: 'a@a.com', rol, nombre, clienteId: null, empleadoId: null, telefono: null, debeCambiarClave: false };
   }
 
   it('credenciales incorrectas: no hay sesión y se explica el motivo', async () => {
@@ -67,7 +67,8 @@ describe('AuthService', () => {
     expect(auth.canAccess('PERSONAL')).toBe(false);
     expect(auth.canAccess('SISTEMA')).toBe(false);
     expect(auth.canAccess('FICHAS')).toBe(false);
-    expect(VISTAS_POR_ROL.ESPECIALISTA).toEqual(['AGENDA', 'FICHAS']);
+    expect(VISTAS_POR_ROL.ESPECIALISTA).toEqual(['AGENDA', 'FICHAS', 'MI_PERFIL']);
+    expect(VISTAS_POR_ROL.ADMIN).toContain('USUARIOS');
     expect(VISTAS_POR_ROL.CLIENTE).toEqual(['MI_CUENTA']);
     expect(VISTAS_POR_ROL.ADMIN).not.toContain('FICHAS');
   });

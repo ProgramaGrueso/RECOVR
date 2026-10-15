@@ -23,6 +23,14 @@ public class Usuario {
     @Column(length = 120)
     private String nombre;
 
+    /** false = cuenta desactivada: conserva su historial pero no puede iniciar sesión ni usar un token anterior. */
+    @Column(name = "activo")
+    private Boolean activo = Boolean.TRUE;
+
+    /** true = clave temporal: hasta cambiarla solo se permite /auth/me y /auth/cambiar-clave. */
+    @Column(name = "debe_cambiar_clave")
+    private Boolean debeCambiarClave = Boolean.FALSE;
+
     public Usuario() {}
 
     public Long getId() { return id; }
@@ -31,6 +39,12 @@ public class Usuario {
     public void setCorreo(String correo) { this.correo = correo; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+    public boolean isActivo() { return activo == null || activo; }
+    public void setActivo(boolean activo) { this.activo = activo; }
+
+    public boolean isDebeCambiarClave() { return debeCambiarClave != null && debeCambiarClave; }
+    public void setDebeCambiarClave(boolean debeCambiarClave) { this.debeCambiarClave = debeCambiarClave; }
+
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
 

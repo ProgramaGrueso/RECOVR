@@ -41,6 +41,9 @@ public class PagoService {
         if (pagoRepository.existsByReservaId(reserva.getId())) {
             throw new IllegalStateException("La reserva " + reserva.getId() + " ya tiene un pago registrado");
         }
+        if (request.monto().signum() <= 0) {
+            throw new IllegalArgumentException("El monto del pago debe ser mayor que cero");
+        }
         Pago pago = new Pago();
         pago.setReserva(reserva);
         pago.setMonto(request.monto());

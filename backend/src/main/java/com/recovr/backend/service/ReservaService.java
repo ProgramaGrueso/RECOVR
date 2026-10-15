@@ -3,6 +3,7 @@ package com.recovr.backend.service;
 import com.recovr.backend.dto.PagoRequest;
 import com.recovr.backend.dto.ReservaRequest;
 import com.recovr.backend.dto.ReservaResponse;
+import com.recovr.backend.entity.Canje;
 import com.recovr.backend.entity.Empleado;
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Pago;
@@ -10,6 +11,7 @@ import com.recovr.backend.entity.Reserva;
 import com.recovr.backend.entity.Sala;
 import com.recovr.backend.entity.Usuario;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
+import com.recovr.backend.repository.CanjeRepository;
 import com.recovr.backend.repository.ClienteRepository;
 import com.recovr.backend.repository.EmpleadoRepository;
 import com.recovr.backend.repository.PagoRepository;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -35,8 +38,10 @@ public class ReservaService {
     private final EmpleadoRepository empleadoRepository;
     private final ServicioRepository servicioRepository;
     private final SalaRepository salaRepository;
+    private final PuntosService puntosService;
+    private final CanjeRepository canjeRepository;
 
-    public ReservaService(ReservaRepository reservaRepository, PagoRepository pagoRepository, UsuarioRepository usuarioRepository, ClienteRepository clienteRepository, EmpleadoRepository empleadoRepository, ServicioRepository servicioRepository, SalaRepository salaRepository) {
+    public ReservaService(ReservaRepository reservaRepository, PagoRepository pagoRepository, UsuarioRepository usuarioRepository, ClienteRepository clienteRepository, EmpleadoRepository empleadoRepository, ServicioRepository servicioRepository, SalaRepository salaRepository, PuntosService puntosService, CanjeRepository canjeRepository) {
         this.reservaRepository = reservaRepository;
         this.pagoRepository = pagoRepository;
         this.usuarioRepository = usuarioRepository;
@@ -44,6 +49,8 @@ public class ReservaService {
         this.empleadoRepository = empleadoRepository;
         this.servicioRepository = servicioRepository;
         this.salaRepository = salaRepository;
+        this.puntosService = puntosService;
+        this.canjeRepository = canjeRepository;
     }
 
     public List<Reserva> listarTodos() {
@@ -269,10 +276,26 @@ public class ReservaService {
         if (!puedeGestionar && !reserva.getCliente().getId().equals(clienteIdDelUsuario(correo))) {
             throw new AccessDeniedException("Un cliente solo puede pagar sus propias reservas");
         }
+        BigDecimal monto = request.monto();
+        Canje canje = null;
+        if (request.codigoCanje() != null && !request.codigoCanje().isBlank()) {
+            // Con código de canje el servidor decide el monto: precio − descuento (nunca menos de 0)
+            canje = puntosService.canjeParaCobro(request.codigoCanje(), reserva.getCliente());
+            monto = reserva.getServicio().getPrecio().subtract(canje.getDescuento()).max(BigDecimal.ZERO);
+        } else if (monto == null || monto.signum() <= 0) {
+            throw new IllegalArgumentException("El monto debe ser mayor que cero");
+        }
         Pago pago = new Pago();
-        pago.setMonto(request.monto());
-        pago.setMetodoPago(request.metodoPago());
-        return confirmarYPagar(reservaId, pago);
+        pago.setMonto(monto);
+        pago.setMetodoPago(canje != null && monto.signum() == 0 ? "Canje de puntos" : request.metodoPago());
+        Reserva confirmada = confirmarYPagar(reservaId, pago);
+        if (canje != null) {
+            canje.setEstado(Canje.Estado.USADO);
+            canje.setUsadoEn(LocalDateTime.now());
+            canje.setReserva(confirmada);
+            canjeRepository.save(canje);
+        }
+        return confirmada;
     }
 
     /**

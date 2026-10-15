@@ -30,6 +30,10 @@ public class Empleado {
     @Column(name = "usuario_id", unique = true)
     private Long usuarioId;
 
+    @Schema(description = "Presentación pública de la terapeuta", example = "Especialista en toques lentos con aceites tibios")
+    @Column(length = 500)
+    private String bio;
+
     @Schema(description = "false = dada de baja: conserva su historial pero ya no recibe reservas", example = "true")
     @Column(name = "activo")
     private Boolean activo = Boolean.TRUE;
@@ -56,6 +60,9 @@ public class Empleado {
     public void setTelefono(String telefono) { this.telefono = telefono; }
 
     /** Las filas anteriores a esta columna tienen null y cuentan como activas. */
+    public String getBio() { return bio; }
+    public void setBio(String bio) { this.bio = bio; }
+
     public boolean isActivo() { return activo == null || activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
 

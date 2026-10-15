@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../../../services/admin-api.service';
-import { ReservaOps } from '../../../models/ops.model';
+import { CanjeValidoOps, ReservaOps } from '../../../models/ops.model';
 import { METODOS_PAGO, codigoReserva, soles } from './ops.util';
 
 /** Cobra una reserva en espera: registra el pago y la pasa a CONFIRMADA en una sola transacción del backend. */
@@ -17,9 +17,22 @@ import { METODOS_PAGO, codigoReserva, soles } from './ops.util';
         <p class="ops-sub" style="margin-bottom:1rem">{{ reserva.clienteNombre }} — {{ reserva.servicioNombre }} ({{ precioTxt }})</p>
         @if (error) { <div class="ops-banner err">{{ error }}</div> }
         <div class="form-grid">
+          <div class="field full">
+            <label for="cobro-canje">Código de canje de puntos (opcional)</label>
+            <div class="ops-row">
+              <input id="cobro-canje" class="ops-input" style="flex:1" name="canje" [(ngModel)]="codigoCanje" placeholder="CJ-XXXXXX" [disabled]="validado !== null && validado.valido">
+              <button type="button" class="ops-btn" (click)="validar()" [disabled]="!codigoCanje.trim() || validando">{{ validando ? 'Validando…' : 'Validar' }}</button>
+              @if (validado?.valido) { <button type="button" class="ops-btn sm" (click)="quitarCodigo()">Quitar</button> }
+            </div>
+            @if (validado; as v) {
+              <span [class]="v.valido ? 'badge COMPLETADA' : 'badge CANCELADA'" style="margin-top:0.4rem; align-self:flex-start">
+                {{ v.valido ? ('✓ ' + v.titulo + ' · ' + v.cliente + ': se cobrará ' + soles(v.montoACobrar)) : ('✗ ' + v.motivo) }}
+              </span>
+            }
+          </div>
           <div class="field">
             <label for="cobro-monto">Monto (S/)</label>
-            <input id="cobro-monto" class="ops-input" type="number" min="1" step="0.01" name="monto" [(ngModel)]="monto">
+            <input id="cobro-monto" class="ops-input" type="number" min="0" step="0.01" name="monto" [(ngModel)]="monto" [disabled]="validado?.valido === true">
           </div>
           <div class="field">
             <label for="cobro-metodo">Método de pago</label>
@@ -45,6 +58,10 @@ export class OpsCobroModalComponent {
   metodos = METODOS_PAGO;
   metodo = METODOS_PAGO[0];
   monto = 0;
+  codigoCanje = '';
+  validado: CanjeValidoOps | null = null;
+  validando = false;
+  soles = soles;
   error = '';
   enviando = false;
 
@@ -55,14 +72,30 @@ export class OpsCobroModalComponent {
     this.monto = this.reserva.precio;
   }
 
+  validar(): void {
+    this.error = '';
+    this.validando = true;
+    this.admin.validarCanje(this.codigoCanje, this.reserva.id).subscribe({
+      next: v => { this.validando = false; this.validado = v; if (v.valido) { this.monto = v.montoACobrar; } },
+      error: e => { this.validando = false; this.validado = null; this.error = e.message; }
+    });
+  }
+
+  quitarCodigo(): void {
+    this.validado = null;
+    this.codigoCanje = '';
+    this.monto = this.reserva.precio;
+  }
+
   cobrar(): void {
-    if (!(this.monto > 0)) {
+    const conCanje = this.validado?.valido === true;
+    if (!conCanje && !(this.monto > 0)) {
       this.error = 'El monto debe ser mayor que cero.';
       return;
     }
     this.enviando = true;
     this.error = '';
-    this.admin.cobrarYConfirmar(this.reserva.id, this.monto, this.metodo).subscribe({
+    this.admin.cobrarYConfirmar(this.reserva.id, this.monto, this.metodo, conCanje ? this.codigoCanje.trim() : undefined).subscribe({
       next: r => { this.enviando = false; this.cobrada.emit(r); },
       error: e => { this.enviando = false; this.error = e.message; }
     });

@@ -22,6 +22,7 @@ interface ReservaApi {
 export interface PerfilApi {
   correo: string; rol: string; nombre: string;
   clienteId: number | null; empleadoId: number | null; telefono: string | null;
+  debeCambiarClave: boolean;
 }
 
 /** Error de negocio devuelto por la API (409 agenda ocupada, 400 validación...). */

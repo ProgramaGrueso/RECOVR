@@ -4,6 +4,7 @@ import { AdminApiService } from '../../../services/admin-api.service';
 import { ApiService } from '../../../services/api.service';
 import { EmpleadoEstado } from '../../../models/ops.model';
 import { EMPLEADO_ESTADO_TXT, fechaHoraTxt, horaTxt } from './ops.util';
+import { prepararFoto } from './ops.imagen';
 
 /**
  * Personal (masajistas): CRUD sobre /api/empleados (solo ADMIN escribe). El estado (Libre / En sesión / Por iniciar)
@@ -24,11 +25,15 @@ import { EMPLEADO_ESTADO_TXT, fechaHoraTxt, horaTxt } from './ops.util';
       </div>
       <div class="ops-table-wrap">
         <table class="ops-table">
-          <thead><tr><th>ID</th><th>Terapeuta</th><th>Especialidad</th><th>Teléfono</th><th>Ahora</th><th>Próxima reserva</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>Foto</th><th>Terapeuta</th><th>Especialidad</th><th>Teléfono</th><th>Ahora</th><th>Próxima reserva</th><th>Acciones</th></tr></thead>
           <tbody>
             @for (e of empleados(); track e.id) {
               <tr>
-                <td class="mono">EMP-{{ e.id }}</td><td><strong>{{ e.nombre }}</strong></td><td>{{ e.especialidad || '—' }}</td><td>{{ e.telefono || '—' }}</td>
+                <td>
+                  @if (e.tieneFoto) { <img [src]="admin.urlFoto(e.id, versionTxt())" [alt]="'Foto de ' + e.nombre" style="width:46px; height:58px; object-fit:cover; border-radius:8px; display:block"> }
+                  @else { <div style="width:46px; height:58px; border-radius:8px; display:grid; place-items:center; background:#130e1a; color:var(--ops-muted); font-size:1.3rem">{{ e.nombre.charAt(0) }}</div> }
+                </td>
+                <td><strong>{{ e.nombre }}</strong><div class="muted mono">EMP-{{ e.id }}</div></td><td>{{ e.especialidad || '—' }}</td><td>{{ e.telefono || '—' }}</td>
                 <td>
                   @if (!e.activo) { <span class="badge CANCELADA">De baja</span> }
                   @else {
@@ -39,6 +44,9 @@ import { EMPLEADO_ESTADO_TXT, fechaHoraTxt, horaTxt } from './ops.util';
                 <td>{{ fechaHora(e.proximaReserva) }}</td>
                 <td><div class="ops-actions">
                   <button type="button" class="ops-btn sm" (click)="abrir(e)">Editar</button>
+                  <button type="button" class="ops-btn sm info" [disabled]="subiendoId() === e.id" (click)="selector.click()">{{ subiendoId() === e.id ? 'Subiendo…' : 'Foto' }}</button>
+                  <input #selector type="file" accept="image/*" hidden (change)="subirFoto(e, $event)">
+                  @if (e.tieneFoto) { <button type="button" class="ops-btn sm" (click)="quitarFoto(e)">Quitar foto</button> }
                   @if (e.activo) { <button type="button" class="ops-btn sm warn" (click)="cambiarActivo(e, false)">Dar de baja</button> }
                   @else { <button type="button" class="ops-btn sm ok" (click)="cambiarActivo(e, true)">Reactivar</button> }
                   <button type="button" class="ops-btn sm danger" (click)="eliminar(e)">Eliminar</button>
@@ -58,6 +66,8 @@ import { EMPLEADO_ESTADO_TXT, fechaHoraTxt, horaTxt } from './ops.util';
               <div class="field full"><label for="em-nombre">Nombre</label><input id="em-nombre" class="ops-input" name="nombre" [(ngModel)]="f.nombre" required></div>
               <div class="field full"><label for="em-esp">Especialidad</label><input id="em-esp" class="ops-input" name="especialidad" [(ngModel)]="f.especialidad"></div>
               <div class="field full"><label for="em-tel">Teléfono</label><input id="em-tel" class="ops-input" name="telefono" maxlength="20" [(ngModel)]="f.telefono"></div>
+              <div class="field full"><label for="em-bio">Presentación pública</label><textarea id="em-bio" class="ops-input" rows="3" name="bio" maxlength="500" [(ngModel)]="f.bio"></textarea>
+                <span class="muted">Es lo que lee el público en el sitio. La foto la sube la propia terapeuta (módulo Mi perfil) o la administración desde esta tabla, con su consentimiento.</span></div>
             </div>
             <div class="modal-foot">
               <button type="button" class="ops-btn" (click)="form.set(null)">Volver</button>
@@ -70,12 +80,15 @@ import { EMPLEADO_ESTADO_TXT, fechaHoraTxt, horaTxt } from './ops.util';
   `
 })
 export class OpsPersonalComponent implements OnInit {
-  private admin = inject(AdminApiService);
+  admin = inject(AdminApiService);
   api = inject(ApiService);
 
   empleados = signal<EmpleadoEstado[]>([]);
   mensaje = signal<{ texto: string; error: boolean } | null>(null);
-  form = signal<{ nombre: string; especialidad: string; telefono: string } | null>(null);
+  form = signal<{ nombre: string; especialidad: string; telefono: string; bio: string } | null>(null);
+  subiendoId = signal<number | null>(null);
+  version = signal(Date.now());
+  versionTxt = () => String(this.version());
   editandoId = signal<number | null>(null);
   errorForm = signal('');
 
@@ -97,7 +110,7 @@ export class OpsPersonalComponent implements OnInit {
   abrir(e: EmpleadoEstado | null): void {
     this.editandoId.set(e?.id ?? null);
     this.errorForm.set('');
-    this.form.set({ nombre: e?.nombre ?? '', especialidad: e?.especialidad ?? '', telefono: e?.telefono ?? '' });
+    this.form.set({ nombre: e?.nombre ?? '', especialidad: e?.especialidad ?? '', telefono: e?.telefono ?? '', bio: e?.bio ?? '' });
   }
 
   guardar(): void {
@@ -108,6 +121,33 @@ export class OpsPersonalComponent implements OnInit {
       next: () => { this.form.set(null); this.aviso(id ? 'Terapeuta actualizada.' : 'Terapeuta creada.'); this.cargar(); },
       error: e => this.errorForm.set(e.message)
     });
+  }
+
+  async subirFoto(e: EmpleadoEstado, evento: Event): Promise<void> {
+    const input = evento.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo) { return; }
+    this.subiendoId.set(e.id);
+    try {
+      const blob = await prepararFoto(archivo);
+      this.admin.subirFotoEmpleado(e.id, blob).subscribe({
+        next: () => { this.subiendoId.set(null); this.version.set(Date.now()); this.aviso(`Foto de ${e.nombre} actualizada.`); this.cargar(); },
+        error: err => { this.subiendoId.set(null); this.aviso(err.message, true); }
+      });
+    } catch (err) {
+      this.subiendoId.set(null);
+      this.aviso((err as Error).message, true);
+    }
+  }
+
+  quitarFoto(e: EmpleadoEstado): void {
+    if (confirm(`¿Quitar la foto de ${e.nombre} del sitio?`)) {
+      this.admin.quitarFotoEmpleado(e.id).subscribe({
+        next: () => { this.version.set(Date.now()); this.aviso('Foto eliminada.'); this.cargar(); },
+        error: err => this.aviso(err.message, true)
+      });
+    }
   }
 
   cambiarActivo(e: EmpleadoEstado, valor: boolean): void {

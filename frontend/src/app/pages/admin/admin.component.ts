@@ -12,6 +12,9 @@ import { OpsFichasComponent } from './ops/ops-fichas.component';
 import { OpsSistemaComponent } from './ops/ops-sistema.component';
 import { OpsSeguridadComponent } from './ops/ops-seguridad.component';
 import { OpsMiCuentaComponent } from './ops/ops-micuenta.component';
+import { OpsUsuariosComponent } from './ops/ops-usuarios.component';
+import { OpsMiPerfilComponent } from './ops/ops-miperfil.component';
+import { OpsCambiarClaveComponent } from './ops/ops-cambiar-clave.component';
 
 interface NavItem { key: Vista; icon: string; label: string; titulo: string; }
 
@@ -22,6 +25,8 @@ const NAV: NavItem[] = [
   { key: 'CAJA', icon: '❖', label: 'Caja', titulo: 'CAJA DEL DÍA' },
   { key: 'PERSONAL', icon: '◌', label: 'Personal', titulo: 'GESTIÓN DE PERSONAL (MASAJISTAS)' },
   { key: 'CATALOGO', icon: '◇', label: 'Catálogo y cabinas', titulo: 'CATÁLOGO DE SERVICIOS Y CABINAS' },
+  { key: 'USUARIOS', icon: '☰', label: 'Usuarios y accesos', titulo: 'USUARIOS Y ACCESOS DEL PERSONAL' },
+  { key: 'MI_PERFIL', icon: '☺', label: 'Mi perfil', titulo: 'MI PERFIL PÚBLICO' },
   { key: 'FICHAS', icon: '✚', label: 'Fichas de clientes', titulo: 'FICHAS CONFIDENCIALES DE MIS CLIENTES' },
   { key: 'SISTEMA', icon: '⚙', label: 'Sistema y auditoría', titulo: 'ESTADO DEL SISTEMA Y AUDITORÍA' },
   { key: 'SEGURIDAD', icon: '⚑', label: 'Permisos por rol', titulo: 'MATRIZ DE PERMISOS POR ROL' },
@@ -44,7 +49,8 @@ const ROL_TXT: Record<Rol, { titulo: string; alcance: string; tono: string }> = 
   standalone: true,
   imports: [
     RouterLink, OpsResumenComponent, OpsAgendaComponent, OpsClientesComponent, OpsCajaComponent, OpsPersonalComponent,
-    OpsCatalogoComponent, OpsFichasComponent, OpsSistemaComponent, OpsSeguridadComponent, OpsMiCuentaComponent
+    OpsCatalogoComponent, OpsFichasComponent, OpsSistemaComponent, OpsSeguridadComponent, OpsMiCuentaComponent, OpsUsuariosComponent,
+    OpsMiPerfilComponent, OpsCambiarClaveComponent
   ],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss']
@@ -55,6 +61,7 @@ export class AdminComponent implements OnInit, OnDestroy {
   auth = inject(AuthService);
 
   activeView: Vista = 'RESUMEN';
+  cambiandoClave = false;
   serverTime = '';
   private clockInterval: ReturnType<typeof setInterval> | undefined;
 
@@ -71,6 +78,11 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.clockInterval) { clearInterval(this.clockInterval); }
+  }
+
+  /** Con una clave temporal el cambio es obligatorio: el modal no se puede cerrar. */
+  get claveObligatoria(): boolean {
+    return this.user().debeCambiarClave;
   }
 
   get titulo(): string {

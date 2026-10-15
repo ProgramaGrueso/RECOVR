@@ -107,6 +107,10 @@ Todas las experiencias están configuradas con tarifas oficiales en moneda nacio
 - **Matriz de permisos verificada:** `GET /api/seguridad/matriz` lista qué rol puede cada acción y la prueba `SeguridadRolesTest` ejecuta cada fila con un token de cada rol.
 - **Contraseñas:** BCrypt, mínimo 8 caracteres con letras y números. **Bloqueo:** 5 intentos fallidos de un mismo correo e IP bloquean 5 minutos (HTTP 429). El mensaje de error no revela si el correo existe.
 - **Auditoría:** inicios de sesión, cambios de datos y accesos denegados quedan en la tabla `auditoria` (sin cuerpos ni contraseñas), visible para ADMIN en *Sistema y auditoría*.
+- **Quién crea a quién:** los clientes se registran solos; **recepción, administración y terapeutas los crea un ADMIN** en *Usuarios y accesos* (clave temporal que se muestra una sola vez y cambio de contraseña obligatorio al primer ingreso; se puede desactivar o restablecer cualquier acceso). El **primer ADMIN** nace por configuración (`ADMIN_EMAIL` y `ADMIN_PASSWORD`), no por un endpoint público.
+- **Puntos:** 1 punto por cada S/ 1 pagado en una sesión completada; saldo = ganados − canjeados; el nivel (Bronce, Plata, Oro, Diamante) depende de lo ganado. Se canjean por un código de un solo uso que recepción aplica al cobrar (el servidor recalcula el monto). Todo se calcula de reservas y canjes reales y se explica en *Mi cuenta*.
+- **Perfil público de las terapeutas:** el sitio lee de la base de datos (solo activas): nombre, especialidad, presentación y la **foto que sube la propia terapeuta** (o el administrador) con su consentimiento. Las fotos se validan por firma (JPG/PNG, máx. 3 MB) y se re-codifican, lo que elimina metadatos.
+- **Modo demo vs. modo real:** `./run-demo.sh` (`SEED_DEMO_DATA=true`) carga 11 cuentas y ~600 reservas de práctica; `./run-real.sh` arranca sin nada de eso (catálogo oficial + primer admin por configuración). `backend/bdd/limpiar-demo.sql` borra los datos de demostración de una base ya usada.
 - **Reservas:** ciclo de vida con expiración automática (ver `ReglasReserva`); el cliente cancela con 4 h de anticipación y máximo 2 veces al mes.
 
 ---
@@ -190,7 +194,7 @@ npm run dev
 
 | Método | Endpoint | Rol requerido | Descripción de la operación |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/registro`, `/api/auth/registro-admin`, `/api/auth/login` | *Público* | Registro de clientes, alta del primer ADMIN e inicio de sesión (emiten JWT). |
+| `POST` | `/api/auth/registro`, `/api/auth/login` | *Público* | Registro de clientes, alta del primer ADMIN e inicio de sesión (emiten JWT). |
 | `POST` | `/api/auth/usuarios` | `ADMIN` | Alta de RECEPCIONISTA o ESPECIALISTA (opcionalmente vinculado a un empleado con `empleadoId`). |
 | `GET` | `/api/servicios`, `/api/servicios/{id}` | Cualquier rol autenticado | Catálogo de terapias con duración, tiempo de limpieza y precio. |
 | `POST` `PUT` `DELETE` | `/api/servicios/**` | `ADMIN` | CRUD del catálogo (201 al crear, 204 al eliminar). |

@@ -28,9 +28,11 @@ export interface ReservaForm {
 }
 
 export interface ClienteOps { id: number; nombre: string; correo: string; telefono: string | null; usuarioId: number | null; }
-export interface EmpleadoOps { id: number; nombre: string; especialidad: string | null; telefono: string | null; }
+export interface EmpleadoOps { id: number; nombre: string; especialidad: string | null; telefono: string | null; bio?: string | null; }
 export interface EmpleadoEstado extends EmpleadoOps {
   activo: boolean;
+  bio: string | null;
+  tieneFoto: boolean;
   estado: 'LIBRE' | 'EN_SESION' | 'POR_INICIAR';
   sala: string | null; hasta: string | null; proximaReserva: string | null;
 }
@@ -86,3 +88,27 @@ export interface EstadoSistemaOps {
   cicloUltimaEjecucion: string | null; cicloUltimosCambios: number; cicloTotalCambios: number; intentosDenegados24h: number;
 }
 export interface PermisoOps { accion: string; metodo: string; ruta: string; roles: string[]; nota: string; }
+
+// ---- Accesos del personal (ADMIN) ----
+export interface UsuarioOps {
+  id: number; correo: string; nombre: string; rol: string; activo: boolean; debeCambiarClave: boolean;
+  vinculo: string; empleadoId: number | null;
+}
+export interface UsuarioNuevoOps { usuario: UsuarioOps; claveTemporal: string; }
+
+// ---- Perfil de la terapeuta ----
+export interface MiPerfilOps { id: number; nombre: string; especialidad: string | null; telefono: string | null; bio: string | null; tieneFoto: boolean; }
+
+// ---- Puntos y canjes ----
+export interface MovimientoPuntos { fecha: string; tipo: 'GANADO' | 'CANJE'; descripcion: string; puntos: number; }
+export interface BeneficioPuntos { id: string; titulo: string; descripcion: string; puntos: number; descuento: number; alcanza: boolean; }
+export interface NivelPuntos { nombre: string; desde: number; actual: boolean; }
+export interface CanjeOps { codigo: string; titulo: string; descuento: number; estado: 'DISPONIBLE' | 'USADO'; creadoEn: string; usadoEn: string | null; }
+export interface PuntosOps {
+  saldo: number; ganados: number; canjeados: number; nivel: string; siguienteNivel: string | null; puntosParaSiguiente: number;
+  reglas: string[]; niveles: NivelPuntos[]; beneficios: BeneficioPuntos[]; movimientos: MovimientoPuntos[]; canjes: CanjeOps[];
+}
+export interface CanjeValidoOps {
+  codigo: string; titulo: string; cliente: string; descuento: number; estado: string; valido: boolean; motivo: string | null;
+  precio: number; montoACobrar: number;
+}

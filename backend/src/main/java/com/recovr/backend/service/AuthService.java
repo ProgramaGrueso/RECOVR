@@ -1,10 +1,8 @@
 package com.recovr.backend.service;
 
 import com.recovr.backend.dto.AuthResponse;
-import com.recovr.backend.dto.CrearUsuarioRequest;
 import com.recovr.backend.dto.LoginRequest;
 import com.recovr.backend.dto.RegistroRequest;
-import com.recovr.backend.dto.UsuarioCreadoResponse;
 import com.recovr.backend.entity.Cliente;
 import com.recovr.backend.entity.Empleado;
 import com.recovr.backend.entity.Rol;
@@ -12,6 +10,7 @@ import com.recovr.backend.entity.Usuario;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
 import com.recovr.backend.exception.LoginBloqueadoException;
 import com.recovr.backend.dto.PerfilResponse;
+import com.recovr.backend.dto.UsuarioDtos.CambiarClaveRequest;
 import com.recovr.backend.security.LoginAttemptService;
 import java.time.Instant;
 import com.recovr.backend.repository.ClienteRepository;
@@ -62,13 +61,6 @@ public class AuthService {
         return respuesta(usuario);
     }
 
-    public AuthResponse registrarPrimerAdmin(RegistroRequest request) {
-        if (usuarioRepository.countByRol(Rol.ADMIN) > 0) {
-            return login(new LoginRequest(request.correo(), request.password()));
-        }
-        return respuesta(crearUsuario(request, Rol.ADMIN));
-    }
-
     public AuthResponse login(LoginRequest request) {
         return login(request, "interno");
     }
@@ -87,6 +79,12 @@ public class AuthService {
         if (usuario == null || !passwordEncoder.matches(request.password(), usuario.getPassword())) {
             loginAttemptService.registrarFallo(request.correo(), ip, ahora);
             auditoriaService.registrar(request.correo(), "-", "LOGIN_FALLIDO", "/api/auth/login", 401, ip, null);
+            throw new BadCredentialsException("Correo o contrasena incorrectos");
+        }
+        if (!usuario.isActivo()) {
+            // Mismo mensaje que una clave incorrecta: no se revela qué cuentas existen ni cuáles están desactivadas
+            loginAttemptService.registrarFallo(request.correo(), ip, ahora);
+            auditoriaService.registrar(usuario.getCorreo(), usuario.getRol().name(), "LOGIN_FALLIDO", "/api/auth/login", 401, ip, "Cuenta desactivada");
             throw new BadCredentialsException("Correo o contrasena incorrectos");
         }
         loginAttemptService.registrarExito(request.correo(), ip);
@@ -119,42 +117,34 @@ public class AuthService {
             }
         }
         return new PerfilResponse(usuario.getCorreo(), usuario.getRol().name(), nombre != null ? nombre : usuario.getCorreo(),
-                clienteId, empleadoId, telefono);
+                clienteId, empleadoId, telefono, usuario.isDebeCambiarClave());
     }
 
+    /**
+     * Cambia la contraseña del usuario autenticado. Exige la actual (un fallo cuenta para el bloqueo por intentos),
+     * una nueva distinta que cumpla la política, y apaga la marca de "clave temporal".
+     */
     @Transactional
-    public UsuarioCreadoResponse crearUsuarioPersonal(CrearUsuarioRequest request) {
-        if (request.rol() == Rol.CLIENTE) {
-            throw new IllegalArgumentException("Los clientes deben registrarse mediante /api/auth/registro");
+    public void cambiarClave(String correo, CambiarClaveRequest request, String ip) {
+        Usuario usuario = usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
+        Instant ahora = Instant.now();
+        if (loginAttemptService.estaBloqueado(correo, ip, ahora)) {
+            throw new LoginBloqueadoException("Demasiados intentos fallidos. Espera unos minutos antes de volver a intentar.");
         }
-        if (usuarioRepository.existsByCorreo(request.correo())) {
-            throw new IllegalArgumentException("Ya existe un usuario con ese correo");
+        if (!passwordEncoder.matches(request.claveActual(), usuario.getPassword())) {
+            loginAttemptService.registrarFallo(correo, ip, ahora);
+            auditoriaService.registrar(correo, usuario.getRol().name(), "CAMBIO_CLAVE_FALLIDO", "/api/auth/cambiar-clave", 400, ip, null);
+            throw new IllegalArgumentException("La contraseña actual no es correcta");
         }
-        Usuario usuario = new Usuario();
-        usuario.setCorreo(request.correo());
-        usuario.setPassword(passwordEncoder.encode(request.password()));
-        usuario.setRol(request.rol());
-        usuario.setNombre(request.nombre());
-        usuario = usuarioRepository.save(usuario);
-        vincularEspecialista(usuario, request);
-        return new UsuarioCreadoResponse(usuario.getId(), usuario.getCorreo(), usuario.getRol().name());
-    }
-
-    // Un ESPECIALISTA puede vincularse a su ficha de Empleado para consultar su agenda.
-    private void vincularEspecialista(Usuario usuario, CrearUsuarioRequest request) {
-        if (request.empleadoId() == null) {
-            return;
+        if (passwordEncoder.matches(request.claveNueva(), usuario.getPassword())) {
+            throw new IllegalArgumentException("La contraseña nueva debe ser distinta de la actual");
         }
-        if (request.rol() != Rol.ESPECIALISTA) {
-            throw new IllegalArgumentException("Solo un usuario ESPECIALISTA puede vincularse a un empleado");
-        }
-        Empleado empleado = empleadoRepository.findById(request.empleadoId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", request.empleadoId()));
-        if (empleado.getUsuarioId() != null) {
-            throw new IllegalStateException("El empleado " + empleado.getId() + " ya tiene un usuario vinculado");
-        }
-        empleado.setUsuarioId(usuario.getId());
-        empleadoRepository.save(empleado);
+        usuario.setPassword(passwordEncoder.encode(request.claveNueva()));
+        usuario.setDebeCambiarClave(false);
+        usuarioRepository.save(usuario);
+        loginAttemptService.registrarExito(correo, ip);
+        auditoriaService.registrar(correo, usuario.getRol().name(), "CAMBIO_CLAVE", "/api/auth/cambiar-clave", 200, ip, null);
     }
 
     private Usuario crearUsuario(RegistroRequest request, Rol rol) {

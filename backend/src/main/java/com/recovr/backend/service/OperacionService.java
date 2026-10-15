@@ -44,13 +44,16 @@ public class OperacionService {
     private final EmpleadoRepository empleadoRepository;
     private final ReservaRepository reservaRepository;
     private final PagoRepository pagoRepository;
+    private final com.recovr.backend.repository.FotoEmpleadoRepository fotoRepository;
 
     public OperacionService(SalaRepository salaRepository, EmpleadoRepository empleadoRepository,
-                            ReservaRepository reservaRepository, PagoRepository pagoRepository) {
+                            ReservaRepository reservaRepository, PagoRepository pagoRepository,
+                            com.recovr.backend.repository.FotoEmpleadoRepository fotoRepository) {
         this.salaRepository = salaRepository;
         this.empleadoRepository = empleadoRepository;
         this.reservaRepository = reservaRepository;
         this.pagoRepository = pagoRepository;
+        this.fotoRepository = fotoRepository;
     }
 
     @Transactional(readOnly = true)
@@ -135,15 +138,15 @@ public class OperacionService {
                 .map(Reserva::getFechaHora).findFirst().orElse(null);
         if (enSesion.isPresent()) {
             Reserva r = enSesion.get();
-            return new EmpleadoEstadoResponse(e.getId(), e.getNombre(), e.getEspecialidad(), e.getTelefono(), e.isActivo(),
+            return new EmpleadoEstadoResponse(e.getId(), e.getNombre(), e.getEspecialidad(), e.getTelefono(), e.isActivo(), e.getBio(), tieneFoto(e),
                     "EN_SESION", r.getSala().getNombre(), ReglasReserva.finSesion(r), proxima);
         }
         if (porIniciar.isPresent()) {
             Reserva r = porIniciar.get();
-            return new EmpleadoEstadoResponse(e.getId(), e.getNombre(), e.getEspecialidad(), e.getTelefono(), e.isActivo(),
+            return new EmpleadoEstadoResponse(e.getId(), e.getNombre(), e.getEspecialidad(), e.getTelefono(), e.isActivo(), e.getBio(), tieneFoto(e),
                     "POR_INICIAR", r.getSala().getNombre(), ReglasReserva.finSesion(r), proxima);
         }
-        return new EmpleadoEstadoResponse(e.getId(), e.getNombre(), e.getEspecialidad(), e.getTelefono(), e.isActivo(),
+        return new EmpleadoEstadoResponse(e.getId(), e.getNombre(), e.getEspecialidad(), e.getTelefono(), e.isActivo(), e.getBio(), tieneFoto(e),
                 "LIBRE", null, null, proxima);
     }
 
@@ -152,6 +155,10 @@ public class OperacionService {
         boolean atendida = r.getEstado() == EstadoReserva.COMPLETADA
                 || (r.getEstado() == EstadoReserva.CONFIRMADA && r.getCheckIn() != null && !ahora.isBefore(ReglasReserva.finSesion(r)));
         return atendida && !ahora.isBefore(r.getFechaHora()) && ahora.isBefore(ReglasReserva.finBloque(r));
+    }
+
+    private boolean tieneFoto(Empleado e) {
+        return fotoRepository.existsById(e.getId());
     }
 
     private static double redondear(double v) {

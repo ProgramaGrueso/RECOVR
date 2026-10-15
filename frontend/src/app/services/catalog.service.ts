@@ -1,5 +1,7 @@
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, catchError, map, of } from 'rxjs';
+import { ApiService } from './api.service';
 import { ServiceItem } from '../models/service.model';
 import { Professional } from '../models/professional.model';
 import { SpaceItem } from '../models/space.model';
@@ -23,10 +25,14 @@ export interface ReviewItem {
   masseuseName?: string;
 }
 
+interface TerapeutaPublica { id: number; nombre: string; especialidad: string | null; bio: string | null; fotoUrl: string | null; }
+
 @Injectable({
   providedIn: 'root'
 })
 export class CatalogService {
+  private http = inject(HttpClient);
+  private api = inject(ApiService);
 
   private services: ServiceItem[] = [
     {
@@ -311,8 +317,33 @@ export class CatalogService {
     return of(this.services.find(s => s.id.toLowerCase() === id.toLowerCase() || s.code.toLowerCase() === id.toLowerCase() || s.name.toLowerCase().includes(id.toLowerCase())));
   }
 
+  /**
+   * Las terapeutas del sitio salen de la base de datos (solo activas): nombre, especialidad, presentación y la foto que
+   * subieron ellas mismas o la administración. Los videos y textos de las cuatro fundadoras vienen del catálogo local.
+   * Si el servidor no responde se muestra el catálogo local para que el sitio público no quede vacío.
+   */
   getProfessionals(): Observable<Professional[]> {
-    return of(this.professionals);
+    return this.http.get<TerapeutaPublica[]>(`${this.api.baseUrl}/publico/terapeutas`).pipe(
+      map(lista => lista.map(t => this.aProfesional(t))),
+      catchError(() => of(this.professionals))
+    );
+  }
+
+  private aProfesional(t: TerapeutaPublica): Professional {
+    const local = this.professionals.find(p => p.name.toLowerCase() === t.nombre.toLowerCase());
+    const origen = new URL(this.api.baseUrl).origin;
+    return {
+      id: local?.id ?? `terapeuta-${t.id}`,
+      name: t.nombre,
+      title: local?.title ?? t.especialidad ?? 'Terapeuta RECOVR',
+      specialty: t.especialidad ?? local?.specialty ?? '',
+      photoUrl: t.fotoUrl ? origen + t.fotoUrl : (local?.photoUrl ?? 'assets/img/sin-foto.svg'),
+      videoUrl: local?.videoUrl,
+      bio: t.bio ?? local?.bio ?? '',
+      duties: local?.duties ?? '',
+      availability: local?.availability ?? 'Turnos por agenda',
+      category: 'MASAJE'
+    };
   }
 
   getSpaces(): Observable<SpaceItem[]> {

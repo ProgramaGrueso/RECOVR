@@ -303,12 +303,29 @@ class ReservaPersistenteIntegrationTest {
     @Test
     @DisplayName("Un ESPECIALISTA vinculado a su empleado consulta su agenda")
     void agendaDelEspecialista() throws Exception {
-        mockMvc.perform(auth(post("/api/auth/usuarios"), tokenAdmin).contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"correo\":\"esp@test.com\",\"password\":\"Especialista1\",\"rol\":\"ESPECIALISTA\",\"empleadoId\":"
+        String creado = mockMvc.perform(auth(post("/api/usuarios"), tokenAdmin).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Especialista Prueba\",\"correo\":\"esp@test.com\",\"rol\":\"ESPECIALISTA\",\"empleadoId\":"
                                 + empleado.getId() + "}"))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.usuario.debeCambiarClave").value(true))
+                .andReturn().getResponse().getContentAsString();
+        String temporal = creado.replaceAll(".*\"claveTemporal\":\"([^\"]+)\".*", "$1");
         guardarReserva(empleado, sala, manana10, EstadoReserva.CONFIRMADA);
         guardarReserva(empleado2, sala2, manana10, EstadoReserva.CONFIRMADA);
+
+        // Con la clave temporal todo queda bloqueado salvo /auth/me y /auth/cambiar-clave
+        String tokenTemporal = mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"correo\":\"esp@test.com\",\"password\":\"" + temporal + "\"}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()
+                .replaceAll(".*\"token\":\"([^\"]+)\".*", "$1");
+        mockMvc.perform(auth(get("/api/db/reservas/agenda"), tokenTemporal)).andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error").value("Cambio de contraseña obligatorio"));
+        mockMvc.perform(auth(get("/api/auth/me"), tokenTemporal)).andExpect(status().isOk()).andExpect(jsonPath("$.debeCambiarClave").value(true));
+        mockMvc.perform(auth(post("/api/auth/cambiar-clave"), tokenTemporal).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"claveActual\":\"incorrecta1\",\"claveNueva\":\"NuevaClave123\"}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(auth(post("/api/auth/cambiar-clave"), tokenTemporal).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"claveActual\":\"" + temporal + "\",\"claveNueva\":\"NuevaClave123\"}"))
+                .andExpect(status().isOk());
 
         String tokenEsp = jwtService.generarToken(userDetailsService.loadUserByUsername("esp@test.com"));
         mockMvc.perform(auth(get("/api/db/reservas/agenda"), tokenEsp))
