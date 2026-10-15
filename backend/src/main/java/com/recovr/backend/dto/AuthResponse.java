@@ -14,5 +14,7 @@ public record AuthResponse(
         String rol,
 
         @Schema(description = "Correo electrónico del usuario", example = "admin@recovr.com")
-        String correo
+        String correo,
+        @Schema(description = "Nombre para mostrar", example = "Ely")
+        String nombre
 ) {}

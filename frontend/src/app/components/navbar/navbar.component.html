@@ -20,7 +20,12 @@
     <a href="#masajes" class="btn-pill" data-cursor="TRATAMIENTOS">Tratamientos</a>
     <a href="#cabinas" class="btn-pill" data-cursor="CABINAS">Cabinas</a>
     <a href="#staff" class="btn-pill" data-cursor="MASAJISTAS">Masajistas</a>
-    <a routerLink="/admin/login" class="btn-pill" data-cursor="MI CUENTA">Mi Cuenta</a>
+    @if (currentUser(); as u) {
+      <a routerLink="/admin" class="btn-pill" data-cursor="MI ZONA">{{ u.rol === 'CLIENTE' ? 'Mi Cuenta' : 'Mi Panel' }}</a>
+      <button type="button" class="btn-pill" (click)="logout()" data-cursor="SALIR">Salir</button>
+    } @else {
+      <a routerLink="/admin/login" class="btn-pill" data-cursor="INGRESAR">Ingresar</a>
+    }
     <button class="btn-pill primary" (click)="onReserve()" data-cursor="RESERVAR">
       <span>Reservar Cita (S/)</span>
     </button>

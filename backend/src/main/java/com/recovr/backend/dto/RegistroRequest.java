@@ -3,6 +3,7 @@ package com.recovr.backend.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 @Schema(description = "Datos para el registro de un nuevo usuario")
@@ -14,7 +15,9 @@ public record RegistroRequest(
         @NotBlank @Email String correo,
 
         @Schema(description = "Contraseña segura (mínimo 6 caracteres)", example = "Cliente123", requiredMode = Schema.RequiredMode.REQUIRED)
-        @NotBlank @Size(min = 6) String password,
+        @NotBlank @Size(min = 8, max = 72, message = "La contraseña debe tener entre 8 y 72 caracteres")
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$", message = "La contraseña debe combinar letras y números")
+        String password,
 
         @Schema(description = "Número telefónico de contacto", example = "988888888")
         String telefono

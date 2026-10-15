@@ -3,10 +3,10 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { AdminApiService } from '../../../services/admin-api.service';
 import { ApiService } from '../../../services/api.service';
+import { AuthService } from '../../../services/auth.service';
 import {
   ClienteOps, EmpleadoEstado, ReservaForm, ReservaOps, SalaEstado, ServicioOps
 } from '../../../models/ops.model';
-import { OpsGateComponent } from './ops-gate.component';
 import { OpsCobroModalComponent } from './ops-cobro-modal.component';
 import { ESTADO_TXT, codigoReserva, fechaHoraTxt, fechaInput, horaTxt, soles } from './ops.util';
 
@@ -20,10 +20,9 @@ type Rango = 'HOY' | 'MANANA' | 'SEMANA' | 'PASADAS' | 'TODAS';
 @Component({
   selector: 'app-ops-agenda',
   standalone: true,
-  imports: [FormsModule, OpsGateComponent, OpsCobroModalComponent],
+  imports: [FormsModule, OpsCobroModalComponent],
   styleUrl: './ops.scss',
   template: `
-    <app-ops-gate (connected)="cargar()" />
     @if (api.session()) {
       @if (mensaje()) { <div class="ops-banner" [class.ok]="!mensaje()!.error" [class.err]="mensaje()!.error">{{ mensaje()!.texto }}</div> }
 
@@ -174,6 +173,7 @@ type Rango = 'HOY' | 'MANANA' | 'SEMANA' | 'PASADAS' | 'TODAS';
 export class OpsAgendaComponent implements OnInit, OnDestroy {
   admin = inject(AdminApiService);
   api = inject(ApiService);
+  private auth = inject(AuthService);
 
   reservas = signal<ReservaOps[]>([]);
   clientes = signal<ClienteOps[]>([]);
@@ -202,9 +202,9 @@ export class OpsAgendaComponent implements OnInit, OnDestroy {
   readonly hoy = fechaInput();
   codigo = codigoReserva; hora = horaTxt; fechaHora = fechaHoraTxt; soles = soles;
 
-  esAdmin = computed(() => this.api.session()?.role === 'ADMIN');
+  esAdmin = computed(() => this.auth.user()?.rol === 'ADMIN');
   /** Una cuenta ESPECIALISTA solo ve su propia agenda futura, sin acciones. */
-  soloLectura = computed(() => this.api.session()?.role === 'ESPECIALISTA');
+  soloLectura = computed(() => this.auth.user()?.rol === 'ESPECIALISTA');
 
   visibles = computed(() => {
     const ahora = new Date();

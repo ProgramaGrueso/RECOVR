@@ -1,15 +1,22 @@
 import { TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
 import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
+import { Component } from '@angular/core';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AdminApiService, OpsError } from './admin-api.service';
 import { ApiService } from './api.service';
+import { AuthService } from './auth.service';
+
+@Component({ selector: 'app-vacio', template: '' })
+class VacioComponent {}
 
 const API = 'http://localhost:8095/api';
 
 describe('AdminApiService', () => {
   let admin: AdminApiService;
   let api: ApiService;
+  let auth: AuthService;
   let http: HttpTestingController;
 
   beforeEach(() => {
@@ -20,13 +27,23 @@ describe('AdminApiService', () => {
       removeItem: (k: string) => void store.delete(k),
       clear: () => store.clear()
     });
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([{ path: 'admin/login', component: VacioComponent }])]
+    });
     admin = TestBed.inject(AdminApiService);
     api = TestBed.inject(ApiService);
+    auth = TestBed.inject(AuthService);
     http = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => http.verify());
+
+  /** Inicia sesión como lo hace la pantalla de acceso: /auth/login y luego /auth/me. */
+  function iniciar(rol: string, token: string): void {
+    auth.login('u@u.com', 'x').subscribe();
+    http.expectOne(`${API}/auth/login`).flush({ token, rol, correo: 'u@u.com' });
+    http.expectOne(`${API}/auth/me`).flush({ correo: 'u@u.com', rol, nombre: 'Usuaria', clienteId: null, empleadoId: null, telefono: null });
+  }
 
   function fallo(status: number, body: object | null = null): OpsError {
     let error!: OpsError;
@@ -36,9 +53,8 @@ describe('AdminApiService', () => {
   }
 
   it('envía el token en cada petición y usa PATCH para cancelar', () => {
-    api.loginConMensaje('a@a.com', 'x').subscribe();
-    http.expectOne(`${API}/auth/login`).flush({ token: 'T1', rol: 'ADMIN', correo: 'a@a.com' });
-    expect(api.session()).toEqual({ role: 'ADMIN', correo: 'a@a.com' });
+    iniciar('ADMIN', 'T1');
+    expect(auth.user()?.rol).toBe('ADMIN');
 
     admin.cancelar(7).subscribe();
     const req = http.expectOne(`${API}/db/reservas/7/cancelar`);
@@ -58,16 +74,15 @@ describe('AdminApiService', () => {
   });
 
   it('un 403 indica el rol real de la cuenta conectada', () => {
-    api.loginConMensaje('r@r.com', 'x').subscribe();
-    http.expectOne(`${API}/auth/login`).flush({ token: 'T2', rol: 'RECEPCIONISTA', correo: 'r@r.com' });
+    iniciar('RECEPCIONISTA', 'T2');
     expect(fallo(403).message).toContain('RECEPCIONISTA');
   });
 
   it('un 401 cierra la sesión para que el panel pida conectarse de nuevo', () => {
-    api.loginConMensaje('a@a.com', 'x').subscribe();
-    http.expectOne(`${API}/auth/login`).flush({ token: 'T3', rol: 'ADMIN', correo: 'a@a.com' });
+    iniciar('ADMIN', 'T3');
     fallo(401);
     expect(api.session()).toBeNull();
+    expect(auth.user()).toBeNull();
   });
 
   it('sin conexión (status 0) pide encender el backend', () => {

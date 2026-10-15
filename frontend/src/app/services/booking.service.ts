@@ -1,12 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, catchError, of, throwError } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { BookingRequest, BookingResponse } from '../models/booking.model';
 import { ServiceItem } from '../models/service.model';
 import { ApiService, ApiBusinessError } from './api.service';
 import { AuthService } from './auth.service';
-import { ServerTimeService } from './server-time.service';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +16,6 @@ export class BookingService {
   private router = inject(Router);
   private auth = inject(AuthService);
   private api = inject(ApiService);
-  private serverTimeService = inject(ServerTimeService);
 
   constructor() {}
 
@@ -28,8 +25,8 @@ export class BookingService {
 
   navigateToBooking(service?: ServiceItem): void {
     if (!this.auth.isClient()) {
-      alert('Debes crear una cuenta o iniciar sesión para poder reservar.');
-      this.router.navigate(['/admin/login']);
+      alert('Para reservar inicia sesión con tu cuenta de cliente (o crea una).');
+      void this.router.navigate(['/admin/login'], { queryParams: { returnUrl: '/reserva' } });
       return;
     }
 
@@ -49,29 +46,16 @@ export class BookingService {
   }
 
   /**
-   * Con sesión en el backend crea la reserva real (queda PENDIENTE hasta que se confirme y pague).
-   * Un conflicto de agenda se informa al usuario; si el backend no responde se usa la simulación local
-   * para que la demo publicada siga funcionando.
+   * Crea la reserva real en el backend (queda PENDIENTE hasta que recepción la cobre y confirme). Si no hay sesión
+   * o el servidor no responde se informa el error: nunca se simula una reserva que no existe en la base de datos.
    */
   submitBooking(request: BookingRequest, serviceCode?: string, professionalName?: string): Observable<BookingResponse> {
-    if (this.api.hasSession && serviceCode && professionalName) {
-      return this.api.reservar(request, serviceCode, professionalName).pipe(
-        catchError(err => err instanceof ApiBusinessError ? throwError(() => err) : this.simulatedBooking(request))
-      );
+    if (!this.api.hasSession) {
+      return throwError(() => new ApiBusinessError('Tu sesión expiró. Inicia sesión de nuevo para reservar.'));
     }
-    return this.simulatedBooking(request);
-  }
-
-  private simulatedBooking(request: BookingRequest): Observable<BookingResponse> {
-    const mockResponse: BookingResponse = {
-      id: 'REC-' + Math.floor(100000 + Math.random() * 900000),
-      status: 'CONFIRMADA',
-      createdAt: this.serverTimeService.getNowISOString(),
-      serviceName: 'Protocolo de Recuperación',
-      professionalName: 'Especialista RECOVR',
-      date: request.date,
-      timeSlot: request.timeSlot
-    };
-    return of(mockResponse).pipe(delay(800));
+    if (!serviceCode || !professionalName) {
+      return throwError(() => new ApiBusinessError('Elige un servicio y una terapeuta antes de confirmar.'));
+    }
+    return this.api.reservar(request, serviceCode, professionalName);
   }
 }

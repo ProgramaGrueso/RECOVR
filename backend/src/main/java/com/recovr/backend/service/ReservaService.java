@@ -110,6 +110,10 @@ public class ReservaService {
                 throw new IllegalStateException("Transición de estado no permitida: "
                         + reserva.getEstado() + " → " + request.estado());
             }
+            if (request.estado() == EstadoReserva.CANCELADA && reserva.getEstado() != EstadoReserva.CANCELADA) {
+                reserva.setCanceladaEn(LocalDateTime.now());
+                reserva.setObservacion(ReglasReserva.CANCELADA_POR_PERSONAL);
+            }
             reserva.setEstado(request.estado());
         }
         if (estaActiva(reserva)) {
@@ -133,7 +137,24 @@ public class ReservaService {
             throw new IllegalStateException("Solo se pueden cancelar reservas PENDIENTE o CONFIRMADA (estado actual: "
                     + reserva.getEstado() + ")");
         }
+        LocalDateTime ahora = LocalDateTime.now();
+        if (!puedeGestionar) {
+            // Política para el cliente: anticipación mínima y tope mensual de cancelaciones propias
+            if (ahora.isAfter(reserva.getFechaHora().minusHours(ReglasReserva.HORAS_MIN_CANCELACION_CLIENTE))) {
+                throw new IllegalStateException("Faltan menos de " + ReglasReserva.HORAS_MIN_CANCELACION_CLIENTE
+                        + " horas para tu sesión: ya no puedes cancelarla por tu cuenta. Comunícate con recepción.");
+            }
+            long delMes = reservaRepository.countByClienteIdAndObservacionAndCanceladaEnGreaterThanEqual(
+                    reserva.getCliente().getId(), ReglasReserva.CANCELADA_POR_CLIENTE,
+                    ahora.toLocalDate().withDayOfMonth(1).atStartOfDay());
+            if (delMes >= ReglasReserva.MAX_CANCELACIONES_CLIENTE_MES) {
+                throw new IllegalStateException("Alcanzaste el límite de " + ReglasReserva.MAX_CANCELACIONES_CLIENTE_MES
+                        + " cancelaciones por mes. Comunícate con recepción.");
+            }
+        }
         reserva.setEstado(EstadoReserva.CANCELADA);
+        reserva.setCanceladaEn(ahora);
+        reserva.setObservacion(puedeGestionar ? ReglasReserva.CANCELADA_POR_PERSONAL : ReglasReserva.CANCELADA_POR_CLIENTE);
         return reservaRepository.save(reserva);
     }
 

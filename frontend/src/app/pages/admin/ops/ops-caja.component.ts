@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../../../services/admin-api.service';
 import { ApiService } from '../../../services/api.service';
 import { ReservaOps } from '../../../models/ops.model';
-import { OpsGateComponent } from './ops-gate.component';
 import { OpsCobroModalComponent } from './ops-cobro-modal.component';
 import { METODOS_PAGO, codigoReserva, fechaInput, horaTxt, soles } from './ops.util';
 
@@ -11,10 +10,9 @@ import { METODOS_PAGO, codigoReserva, fechaInput, horaTxt, soles } from './ops.u
 @Component({
   selector: 'app-ops-caja',
   standalone: true,
-  imports: [FormsModule, OpsGateComponent, OpsCobroModalComponent],
+  imports: [FormsModule, OpsCobroModalComponent],
   styleUrl: './ops.scss',
   template: `
-    <app-ops-gate (connected)="cargar()" />
     @if (api.session()) {
       @if (mensaje()) { <div class="ops-banner" [class.ok]="!mensaje()!.error" [class.err]="mensaje()!.error">{{ mensaje()!.texto }}</div> }
       <div class="ops-head">

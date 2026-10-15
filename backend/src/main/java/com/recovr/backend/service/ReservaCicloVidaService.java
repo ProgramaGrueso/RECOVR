@@ -28,6 +28,9 @@ public class ReservaCicloVidaService {
     private static final Logger log = LoggerFactory.getLogger(ReservaCicloVidaService.class);
 
     private final ReservaRepository reservaRepository;
+    private volatile LocalDateTime ultimaEjecucion;
+    private volatile int ultimosCambios;
+    private final java.util.concurrent.atomic.AtomicLong totalCambios = new java.util.concurrent.atomic.AtomicLong();
 
     public ReservaCicloVidaService(ReservaRepository reservaRepository) {
         this.reservaRepository = reservaRepository;
@@ -41,6 +44,10 @@ public class ReservaCicloVidaService {
         }
     }
 
+    public LocalDateTime getUltimaEjecucion() { return ultimaEjecucion; }
+    public int getUltimosCambios() { return ultimosCambios; }
+    public long getTotalCambios() { return totalCambios.get(); }
+
     /** @return cuántas reservas cambiaron de estado. */
     @Transactional
     public int actualizarEstados(LocalDateTime ahora) {
@@ -50,6 +57,7 @@ public class ReservaCicloVidaService {
             if (r.getEstado() == EstadoReserva.PENDIENTE) {
                 if (!ahora.isBefore(r.getFechaHora().plusMinutes(ReglasReserva.TOLERANCIA_CONFIRMACION_MIN))) {
                     r.setEstado(EstadoReserva.CANCELADA);
+                    r.setCanceladaEn(ahora);
                     r.setObservacion("Expirada automáticamente: no se confirmó el pago antes del inicio de la sesión.");
                     cambios++;
                 }
@@ -61,6 +69,7 @@ public class ReservaCicloVidaService {
                 }
             } else if (!ahora.isBefore(r.getFechaHora().plusMinutes(ReglasReserva.TOLERANCIA_NO_SHOW_MIN))) {
                 r.setEstado(EstadoReserva.CANCELADA);
+                r.setCanceladaEn(ahora);
                 r.setObservacion("No asistió: no hubo check-in dentro de la tolerancia.");
                 cambios++;
             }
@@ -68,6 +77,9 @@ public class ReservaCicloVidaService {
         if (cambios > 0) {
             reservaRepository.saveAll(candidatas);
         }
+        ultimaEjecucion = ahora;
+        ultimosCambios = cambios;
+        totalCambios.addAndGet(cambios);
         return cambios;
     }
 }

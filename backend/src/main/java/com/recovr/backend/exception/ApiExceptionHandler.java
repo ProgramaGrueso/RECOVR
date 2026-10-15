@@ -62,6 +62,11 @@ public class ApiExceptionHandler {
         return respuesta(HttpStatus.BAD_REQUEST, "Solicitud Inválida", ex.getMessage());
     }
 
+    @ExceptionHandler(LoginBloqueadoException.class)
+    public ResponseEntity<Map<String, Object>> handleLoginBloqueado(LoginBloqueadoException ex) {
+        return respuesta(HttpStatus.TOO_MANY_REQUESTS, "Demasiados intentos", ex.getMessage());
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccesoDenegado(AccessDeniedException ex) {
         return respuesta(HttpStatus.FORBIDDEN, "Acceso denegado", ex.getMessage());

@@ -3,17 +3,15 @@ import { forkJoin } from 'rxjs';
 import { AdminApiService } from '../../../services/admin-api.service';
 import { ApiService } from '../../../services/api.service';
 import { EmpleadoEstado, ReservaOps, ResumenOps, SalaEstado } from '../../../models/ops.model';
-import { OpsGateComponent } from './ops-gate.component';
 import { EMPLEADO_ESTADO_TXT, ESTADO_TXT, SALA_ESTADO_TXT, codigoReserva, fechaHoraTxt, fechaInput, horaTxt, soles } from './ops.util';
 
 /** Panel de control: indicadores y estado en vivo, todo calculado por el backend desde las reservas. */
 @Component({
   selector: 'app-ops-resumen',
   standalone: true,
-  imports: [OpsGateComponent],
+  imports: [],
   styleUrl: './ops.scss',
   template: `
-    <app-ops-gate (connected)="cargar()" />
     @if (api.session()) {
       @if (error()) { <div class="ops-banner err">{{ error() }}</div> }
       @if (resumen(); as r) {

@@ -1,9 +1,12 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
+import { Router } from '@angular/router';
+import { AuthService } from './auth.service';
 import { ApiService } from './api.service';
 import {
-  ClienteOps, EmpleadoEstado, EmpleadoOps, ReservaOps, ResumenOps, SalaEstado, SalaOps, ServicioOps
+  AuditoriaOps, ClienteOps, EmpleadoEstado, EmpleadoOps, EstadoSistemaOps, FichaForm, FichaOps, MiClienteOps,
+  MiCuentaOps, PermisoOps, ReservaOps, ResumenOps, SalaEstado, SalaOps, ServicioOps
 } from '../models/ops.model';
 
 /** Error con un mensaje listo para mostrar al personal. */
@@ -21,6 +24,8 @@ export class OpsError extends Error {
 export class AdminApiService {
   private http = inject(HttpClient);
   private api = inject(ApiService);
+  private auth = inject(AuthService);
+  private router = inject(Router);
 
   private req<T>(method: string, path: string, body?: unknown): Observable<T> {
     return this.http.request<T>(method, `${this.api.baseUrl}${path}`, { body, headers: this.api.authHeaders() }).pipe(
@@ -36,12 +41,13 @@ export class AdminApiService {
       return new OpsError('No hay conexión con el servidor. Enciende el backend (puerto 8095).', 0);
     }
     if (err.status === 401) {
-      this.api.clearSession();
-      return new OpsError('Tu sesión del servidor expiró. Vuelve a conectarte.', 401);
+      this.auth.logout();
+      void this.router.navigate(['/admin/login']);
+      return new OpsError('Tu sesión expiró. Vuelve a iniciar sesión.', 401);
     }
     if (err.status === 403) {
-      const rol = this.api.session()?.role || 'desconocido';
-      return new OpsError(`Tu cuenta del servidor (${rol}) no tiene permiso para esta acción.`, 403);
+      const rol = this.auth.user()?.rol || 'desconocido';
+      return new OpsError(`Tu rol (${rol}) no tiene permiso para esta acción.`, 403);
     }
     const campos = err.error?.campos ? Object.entries(err.error.campos).map(([k, v]) => `${k}: ${v}`).join(' · ') : '';
     return new OpsError(campos || err.error?.message || `Error ${err.status} del servidor.`, err.status);
@@ -84,6 +90,25 @@ export class AdminApiService {
   crearSala(b: { nombre: string; capacidad: number }): Observable<SalaOps> { return this.req('POST', '/salas', b); }
   editarSala(id: number, b: { nombre: string; capacidad: number }): Observable<SalaOps> { return this.req('PUT', `/salas/${id}`, b); }
   eliminarSala(id: number): Observable<void> { return this.req('DELETE', `/salas/${id}`); }
+
+  // ---- Portal del cliente ----
+  miCuenta(): Observable<MiCuentaOps> { return this.req('GET', '/mi-cuenta/resumen'); }
+  actualizarMiCuenta(b: { nombre: string; telefono: string }): Observable<MiCuentaOps> { return this.req('PUT', '/mi-cuenta', b); }
+  misReservas(): Observable<ReservaOps[]> { return this.req('GET', '/db/reservas/mias'); }
+
+  // ---- Fichas de clientes (terapeutas) ----
+  misClientes(): Observable<MiClienteOps[]> { return this.req('GET', '/fichas/mis-clientes'); }
+  ficha(clienteId: number): Observable<FichaOps> { return this.req('GET', `/fichas/cliente/${clienteId}`); }
+  guardarFicha(clienteId: number, b: FichaForm): Observable<FichaOps> { return this.req('PUT', `/fichas/cliente/${clienteId}`, b); }
+  agregarNota(clienteId: number, b: { tratamiento: string; observaciones: string; recomendaciones: string }): Observable<FichaOps> {
+    return this.req('POST', `/fichas/cliente/${clienteId}/notas`, b);
+  }
+  eliminarNota(notaId: number): Observable<void> { return this.req('DELETE', `/fichas/notas/${notaId}`); }
+
+  // ---- Sistema y seguridad (ADMIN) ----
+  estadoSistema(): Observable<EstadoSistemaOps> { return this.req('GET', '/sistema/estado'); }
+  auditoria(limite = 100): Observable<AuditoriaOps[]> { return this.req('GET', `/sistema/auditoria?limite=${limite}`); }
+  matriz(): Observable<PermisoOps[]> { return this.req('GET', '/seguridad/matriz'); }
 
   // ---- Estado en vivo e indicadores ----
   estadoSalas(): Observable<SalaEstado[]> { return this.req('GET', '/operacion/salas'); }

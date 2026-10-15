@@ -46,3 +46,43 @@ export interface ResumenOps {
   ingresosMes: number; ocupacionHoyPct: number; sesionesCompletadasMes: number; agendadasHoy: number;
   pendientesPorConfirmar: number; canceladasMes: number; totalMes: number; tasaCancelacionPct: number;
 }
+
+// ---- Portal del cliente ----
+export interface MiCuentaOps {
+  nombre: string; correo: string; telefono: string | null;
+  puntos: number; nivel: string; siguienteNivel: string | null; puntosParaSiguiente: number;
+  sesionesCompletadas: number; proximaReserva: ReservaOps | null;
+  cancelacionesMes: number; limiteCancelacionesMes: number; horasMinimasCancelacion: number;
+}
+
+// ---- Fichas de clientes (terapeutas) ----
+export interface MiClienteOps {
+  clienteId: number; nombre: string; telefono: string | null; sesiones: number;
+  ultimaSesion: string | null; proximaSesion: string | null; tieneFicha: boolean;
+}
+export interface NotaSesionOps {
+  id: number; fecha: string; terapeuta: string; tratamiento: string;
+  observaciones: string | null; recomendaciones: string | null; reservaId: number | null; propia: boolean;
+}
+export interface FichaOps {
+  clienteId: number; clienteNombre: string; telefono: string | null;
+  alergias: string | null; condiciones: string | null; presionPreferida: string | null; aceites: string | null;
+  zonasRestringidas: string | null; notas: string | null; actualizadoPor: string | null; actualizadoEn: string | null;
+  notasSesion: NotaSesionOps[];
+}
+export interface FichaForm {
+  alergias: string; condiciones: string; presionPreferida: string; aceites: string; zonasRestringidas: string; notas: string;
+}
+
+// ---- Sistema y seguridad (ADMIN) ----
+export interface AuditoriaOps {
+  id: number; fecha: string; usuario: string | null; rol: string | null; accion: string;
+  recurso: string | null; estado: number | null; ip: string | null; detalle: string | null;
+}
+export interface EstadoSistemaOps {
+  version: string; java: string; springBoot: string; iniciadoEn: string; segundosActivo: number;
+  baseDatosActiva: boolean; baseDatos: string; memoriaUsadaMb: number; memoriaMaxMb: number;
+  registros: Record<string, number>; reservasPorEstado: Record<string, number>; usuariosPorRol: Record<string, number>;
+  cicloUltimaEjecucion: string | null; cicloUltimosCambios: number; cicloTotalCambios: number; intentosDenegados24h: number;
+}
+export interface PermisoOps { accion: string; metodo: string; ruta: string; roles: string[]; nota: string; }

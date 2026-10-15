@@ -10,267 +10,72 @@
 
     <h1 class="login-headline">ACCESO SANCTUM</h1>
 
-    <!-- SELECTOR DE MODO PRINCIPAL: CLIENTE VS STAFF -->
-    <div class="mode-tabs">
-      <button
-        type="button"
-        class="mode-tab-btn"
-        [class.active]="loginMode === 'CLIENT'"
-        (click)="setLoginMode('CLIENT')">
-        [ ACCESO CLIENTES / PACIENTES ]
-      </button>
-      <button
-        type="button"
-        class="mode-tab-btn"
-        [class.active]="loginMode === 'STAFF'"
-        (click)="setLoginMode('STAFF')">
-        [ ACCESO PERSONAL & STAFF ]
-      </button>
-    </div>
-
-    <!-- ========================================================= -->
-    <!-- MODO 1: PORTAL CLIENTE / PACIENTES                        -->
-    <!-- ========================================================= -->
-    @if (loginMode === 'CLIENT') {
-      <div class="client-auth-card animate-fade">
-        <!-- Sub-pestañas: Iniciar Sesión vs Registro -->
-        <div class="sub-tabs">
-          <button
-            type="button"
-            class="sub-tab-btn"
-            [class.active]="clientTab === 'LOGIN'"
-            (click)="setClientTab('LOGIN')">
-            Iniciar Sesión
-          </button>
-          <button
-            type="button"
-            class="sub-tab-btn"
-            [class.active]="clientTab === 'REGISTER'"
-            (click)="setClientTab('REGISTER')">
-            Crear Cuenta Nueva
-          </button>
-        </div>
-
-        <!-- FORMULARIO LOGIN CLIENTE -->
-        @if (clientTab === 'LOGIN') {
-          <form (ngSubmit)="submitClientLogin()" class="minimal-login-form">
-            <div class="input-group">
-              <span class="input-label-tag">[ CORREO O ID ]</span>
-              <input
-                type="text"
-                name="clientEmail"
-                [(ngModel)]="clientEmail"
-                placeholder="ej. carlos@gmail.com o cli-01"
-                required />
-            </div>
-
-            <div class="input-group">
-              <span class="input-label-tag">[ CONTRASEÑA ]</span>
-              <input
-                type="password"
-                name="clientPassword"
-                [(ngModel)]="clientPassword"
-                placeholder="••••••••"
-                required />
-            </div>
-
-            <div class="options-row">
-              <label class="remember">
-                <input type="checkbox" name="rememberMe" [(ngModel)]="rememberMe" />
-                <span>Recordarme</span>
-              </label>
-              <a class="forgot" (click)="forgotPassword()">¿Olvidaste tu contraseña?</a>
-            </div>
-
-            @if (error) {
-              <div class="error-msg">{{ error }}</div>
-            }
-            @if (infoMessage) {
-              <div class="info-msg">{{ infoMessage }}</div>
-            }
-            @if (successMessage) {
-              <div class="success-msg">{{ successMessage }}</div>
-            }
-
-            <button type="submit" class="btn-login">
-              [ INGRESAR A MI CUENTA ]
-            </button>
-
-            <!-- Acceso Rápido Demo Cliente -->
-            <div class="quick-demo-box">
-              <div class="divider-text"><span>O INGRESO DE PRUEBA</span></div>
-              <button type="button" class="btn-demo-quick" (click)="quickLoginClientDemo()">
-                <span>✦ Ingreso Directo Demo Cliente (Carlos Mendoza)</span>
-              </button>
-            </div>
-          </form>
-        }
-
-        <!-- FORMULARIO REGISTRO CLIENTE -->
-        @if (clientTab === 'REGISTER') {
-          <form (ngSubmit)="submitClientRegister()" class="minimal-login-form">
-            <div class="input-group">
-              <span class="input-label-tag">[ NOMBRE Y APELLIDO * ]</span>
-              <input
-                type="text"
-                name="regName"
-                [(ngModel)]="regName"
-                placeholder="Ej. Roberto Soto"
-                required />
-            </div>
-
-            <div class="input-group">
-              <span class="input-label-tag">[ CORREO ELECTRÓNICO * ]</span>
-              <input
-                type="email"
-                name="regEmail"
-                [(ngModel)]="regEmail"
-                placeholder="roberto@empresa.pe"
-                required />
-            </div>
-
-            <div class="input-group">
-              <span class="input-label-tag">[ TELÉFONO CELULAR * ]</span>
-              <input
-                type="tel"
-                name="regPhone"
-                [(ngModel)]="regPhone"
-                placeholder="+51 987 654 321"
-                required />
-            </div>
-
-            <div class="input-group">
-              <span class="input-label-tag">[ CONTRASEÑA * ]</span>
-              <input
-                type="password"
-                name="regPassword"
-                [(ngModel)]="regPassword"
-                placeholder="Mínimo 6 caracteres"
-                required />
-            </div>
-
-            <div class="input-group">
-              <span class="input-label-tag">[ CONFIRMAR CONTRASEÑA * ]</span>
-              <input
-                type="password"
-                name="regConfirmPassword"
-                [(ngModel)]="regConfirmPassword"
-                placeholder="Repite tu contraseña"
-                required />
-            </div>
-
-            @if (error) {
-              <div class="error-msg">{{ error }}</div>
-            }
-            @if (infoMessage) {
-              <div class="info-msg">{{ infoMessage }}</div>
-            }
-            @if (successMessage) {
-              <div class="success-msg">{{ successMessage }}</div>
-            }
-
-            <button type="submit" class="btn-login">
-              [ CREAR MI CUENTA NUEVA ]
-            </button>
-          </form>
-        }
+    <div class="client-auth-card animate-fade">
+      <div class="sub-tabs">
+        <button type="button" class="sub-tab-btn" [class.active]="tab === 'LOGIN'" (click)="setTab('LOGIN')">Iniciar Sesión</button>
+        <button type="button" class="sub-tab-btn" [class.active]="tab === 'REGISTER'" (click)="setTab('REGISTER')">Crear Cuenta de Cliente</button>
       </div>
-    }
 
-    <!-- ========================================================= -->
-    <!-- MODO 2: ACCESO PERSONAL & STAFF                           -->
-    <!-- ========================================================= -->
-    @if (loginMode === 'STAFF') {
-      <div class="staff-auth-card animate-fade">
-        <p class="staff-lead">
-          Acceso exclusivo para colaboradores del Sanctum (Masajistas, Front-Desk, Gerencia y DevOps).
-        </p>
-
-        <!-- Chips interactivos para prellenar roles demo -->
-        <div class="staff-role-chips">
-          <span class="chips-label">Atajos Demo por Rol:</span>
-          <div class="chips-row">
-            <button
-              type="button"
-              class="role-chip"
-              [class.selected]="selectedRole === 'SUPER ADMIN'"
-              (click)="prefillStaffCredentials('SUPER ADMIN')">
-              Super Admin
-            </button>
-            <button
-              type="button"
-              class="role-chip"
-              [class.selected]="selectedRole === 'ADMINISTRADOR'"
-              (click)="prefillStaffCredentials('ADMINISTRADOR')">
-              Gerencia
-            </button>
-            <button
-              type="button"
-              class="role-chip"
-              [class.selected]="selectedRole === 'RECEPCIONISTA'"
-              (click)="prefillStaffCredentials('RECEPCIONISTA')">
-              Recepción
-            </button>
-            <button
-              type="button"
-              class="role-chip"
-              [class.selected]="selectedRole === 'ESPECIALISTA'"
-              (click)="prefillStaffCredentials('ESPECIALISTA')">
-              Masajista
-            </button>
-          </div>
-        </div>
-
-        <form (ngSubmit)="submitStaffLogin()" class="minimal-login-form">
+      @if (tab === 'LOGIN') {
+        <form (ngSubmit)="submitLogin()" class="minimal-login-form" autocomplete="on">
+          <p class="staff-lead">Clientes, terapeutas, recepción y administración ingresan aquí. Cada cuenta ve solo su zona.</p>
           <div class="input-group">
-            <span class="input-label-tag">[ USUARIO O EMAIL CORPORATIVO ]</span>
-            <input
-              type="text"
-              name="staffUserId"
-              [(ngModel)]="staffUserId"
-              placeholder="staff@recovr.cl"
-              required />
+            <span class="input-label-tag">[ CORREO ]</span>
+            <input type="email" name="correo" [(ngModel)]="correo" autocomplete="username" required />
           </div>
 
           <div class="input-group">
-            <span class="input-label-tag">[ CONTRASEÑA AUTORIZADA ]</span>
-            <input
-              type="password"
-              name="staffPassword"
-              [(ngModel)]="staffPassword"
-              placeholder="••••••••"
-              required />
+            <span class="input-label-tag">[ CONTRASEÑA ]</span>
+            <input [type]="showPassword ? 'text' : 'password'" name="password" [(ngModel)]="password" autocomplete="current-password" required />
           </div>
 
           <div class="options-row">
             <label class="remember">
-              <input type="checkbox" name="rememberMe" [(ngModel)]="rememberMe" />
-              <span>Recordar sesión segura</span>
+              <input type="checkbox" name="showPassword" [(ngModel)]="showPassword" />
+              <span>Mostrar contraseña</span>
             </label>
-            <a class="forgot" (click)="forgotPassword()">Soporte TI</a>
+            <a class="forgot" (click)="forgotPassword()">¿Olvidaste tu contraseña?</a>
           </div>
 
-          @if (error) {
-            <div class="error-msg">{{ error }}</div>
-          }
-          @if (infoMessage) {
-            <div class="info-msg">{{ infoMessage }}</div>
-          }
+          @if (error) { <div class="error-msg" role="alert">{{ error }}</div> }
+          @if (infoMessage) { <div class="info-msg">{{ infoMessage }}</div> }
 
-          <button type="submit" class="btn-login">
-            [ INGRESAR AL CENTRO DE CONTROL ]
+          <button type="submit" class="btn-login" [disabled]="cargando">
+            {{ cargando ? '[ VALIDANDO… ]' : '[ INGRESAR ]' }}
           </button>
         </form>
-      </div>
-    }
+      }
 
-    <div class="login-footer-security">
-      <span>🔒 Sistema RBAC Sanctum v2.0 • Sesiones aisladas por rol y token de seguridad</span>
-      <br><br>
-      <a style="font-size: 0.75rem; color: #666; cursor: pointer; text-decoration: underline;" (click)="resetLocalData()">
-        (Limpiar datos de prueba y perfiles antiguos)
-      </a>
+      @if (tab === 'REGISTER') {
+        <form (ngSubmit)="submitRegister()" class="minimal-login-form" autocomplete="on">
+          <div class="input-group">
+            <span class="input-label-tag">[ NOMBRE Y APELLIDO * ]</span>
+            <input type="text" name="regName" [(ngModel)]="regName" autocomplete="name" required />
+          </div>
+          <div class="input-group">
+            <span class="input-label-tag">[ CORREO ELECTRÓNICO * ]</span>
+            <input type="email" name="regEmail" [(ngModel)]="regEmail" autocomplete="email" required />
+          </div>
+          <div class="input-group">
+            <span class="input-label-tag">[ TELÉFONO CELULAR * ]</span>
+            <input type="tel" name="regPhone" [(ngModel)]="regPhone" autocomplete="tel" required />
+          </div>
+          <div class="input-group">
+            <span class="input-label-tag">[ CONTRASEÑA * ]</span>
+            <input type="password" name="regPassword" [(ngModel)]="regPassword" placeholder="Mínimo 8 caracteres, con letras y números" autocomplete="new-password" required />
+          </div>
+          <div class="input-group">
+            <span class="input-label-tag">[ CONFIRMAR CONTRASEÑA * ]</span>
+            <input type="password" name="regConfirmPassword" [(ngModel)]="regConfirmPassword" autocomplete="new-password" required />
+          </div>
+
+          @if (error) { <div class="error-msg" role="alert">{{ error }}</div> }
+
+          <button type="submit" class="btn-login" [disabled]="cargando">
+            {{ cargando ? '[ CREANDO CUENTA… ]' : '[ CREAR MI CUENTA ]' }}
+          </button>
+        </form>
+      }
     </div>
   </div>
 </main>
-

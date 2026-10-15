@@ -23,6 +23,12 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             + "com.recovr.backend.entity.EstadoReserva.CONFIRMADA)";
 
     boolean existsByClienteId(Long clienteId);
+    boolean existsByEmpleadoIdAndClienteId(Long empleadoId, Long clienteId);
+    long countByEstado(EstadoReserva estado);
+    long countByClienteIdAndObservacionAndCanceladaEnGreaterThanEqual(Long clienteId, String observacion, LocalDateTime desde);
+
+    @Query("SELECT r FROM Reserva r WHERE r.empleado.id = :empleadoId ORDER BY r.fechaHora DESC")
+    List<Reserva> buscarPorEmpleado(@Param("empleadoId") Long empleadoId);
     boolean existsByServicioId(Long servicioId);
     boolean existsByEmpleadoId(Long empleadoId);
     boolean existsBySalaId(Long salaId);

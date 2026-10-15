@@ -43,8 +43,6 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
   errorMessage = '';
   bookingErrorTitle = 'SISTEMA TEMPORALMENTE NO DISPONIBLE';
   bookingSuccess: BookingResponse | null = null;
-  earnedPoints = 0;
-  totalClientPoints = 0;
 
   // Modal Gatekeeper de Autenticación Requerida
   showAuthGateModal = false;
@@ -194,18 +192,14 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
   }
 
   get isClientLoggedIn(): boolean {
-    return this.auth.isAuthenticated() && this.auth.currentUser()?.role === 'CLIENTE';
+    return this.auth.isClient();
   }
 
   private fillClientDataIfLoggedIn(): void {
     if (this.isClientLoggedIn) {
-      const u = this.auth.currentUser();
+      const u = this.auth.user();
       if (u) {
-        this.bookingForm.patchValue({
-          clientName: u.name,
-          clientEmail: u.email,
-          clientPhone: u.phone || '+51 987 654 321'
-        });
+        this.bookingForm.patchValue({ clientName: u.nombre, clientEmail: u.correo, clientPhone: u.telefono ?? '' });
       }
     }
   }
@@ -256,49 +250,41 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     this.authModalSuccess = '';
   }
 
-  quickLoginDemoClient(): void {
-    this.auth.loginAsRole('CLIENTE');
-    this.fillClientDataIfLoggedIn();
-    this.showAuthGateModal = false;
-    this.currentStep = 4;
-  }
-
   submitAuthModalLogin(): void {
     this.authModalError = '';
     if (!this.authModalEmail || !this.authModalPassword) {
-      this.authModalError = 'Ingresa tu correo/usuario y contraseña.';
+      this.authModalError = 'Ingresa tu correo y contraseña.';
       return;
     }
-    const success = this.auth.login(this.authModalEmail, this.authModalPassword);
-    if (success && this.auth.currentUser()?.role === 'CLIENTE') {
-      this.api.login(this.authModalEmail, this.authModalPassword).subscribe();
-      this.fillClientDataIfLoggedIn();
-      this.showAuthGateModal = false;
-      this.currentStep = 4;
-    } else if (success && this.auth.currentUser()?.role !== 'CLIENTE') {
-      this.authModalError = 'Esta sesión es del personal. Inicia sesión como cliente para agendar.';
-    } else {
-      this.authModalError = 'Credenciales inválidas. Verifica tu correo y contraseña.';
-    }
+    this.auth.login(this.authModalEmail.trim(), this.authModalPassword).subscribe(res => {
+      this.authModalPassword = '';
+      if (!res.ok) {
+        this.authModalError = res.message ?? 'No se pudo iniciar sesión.';
+      } else if (!this.auth.isClient()) {
+        this.auth.logout();
+        this.authModalError = 'Esta cuenta es del personal. Inicia sesión como cliente para agendar.';
+      } else {
+        this.fillClientDataIfLoggedIn();
+        this.showAuthGateModal = false;
+        this.currentStep = 4;
+      }
+      this.cdr.markForCheck();
+    });
   }
 
   submitAuthModalRegister(): void {
     this.authModalError = '';
-    const res = this.auth.registerClient({
-      name: this.authModalName,
-      email: this.authModalEmail,
-      phone: this.authModalPhone,
-      password: this.authModalPassword
+    this.auth.registrar(this.authModalName.trim(), this.authModalEmail.trim(), this.authModalPassword, this.authModalPhone.trim()).subscribe(res => {
+      this.authModalPassword = '';
+      if (res.ok) {
+        this.fillClientDataIfLoggedIn();
+        this.showAuthGateModal = false;
+        this.currentStep = 4;
+      } else {
+        this.authModalError = res.message ?? 'No se pudo crear la cuenta.';
+      }
+      this.cdr.markForCheck();
     });
-
-    if (res.success) {
-      this.api.registrar(this.authModalName, this.authModalEmail, this.authModalPassword, this.authModalPhone).subscribe();
-      this.fillClientDataIfLoggedIn();
-      this.showAuthGateModal = false;
-      this.currentStep = 4;
-    } else {
-      this.authModalError = res.message;
-    }
   }
 
   onSubmit(): void {
@@ -319,19 +305,6 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
         this.isSubmitting = false;
         this.bookingSuccess = response;
         this.cdr.markForCheck();
-        this.earnedPoints = 100;
-        this.totalClientPoints = this.auth.addClientPoints(100, `Reserva confirmada: ${this.selectedService?.name || 'Protocolo'}`);
-        this.auth.addClientBooking({
-          id: response.id,
-          service: this.selectedService?.name || 'Protocolo Sanctum',
-          prof: this.selectedProfessional?.name || 'Especialista RECOVR',
-          room: 'Cabina 01 (Néon Rose)',
-          date: response.date,
-          time: response.timeSlot,
-          price: this.selectedService?.price || 200,
-          status: response.status === 'PENDIENTE' ? 'EN ESPERA' : response.status,
-          notes: this.bookingForm.value.notes
-        });
       },
       error: (err) => {
         this.isSubmitting = false;

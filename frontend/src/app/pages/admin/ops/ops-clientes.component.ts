@@ -3,16 +3,14 @@ import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../../../services/admin-api.service';
 import { ApiService } from '../../../services/api.service';
 import { ClienteOps } from '../../../models/ops.model';
-import { OpsGateComponent } from './ops-gate.component';
 
 /** Directorio de clientes: CRUD sobre /api/clientes. Un cliente con reservas no se puede eliminar. */
 @Component({
   selector: 'app-ops-clientes',
   standalone: true,
-  imports: [FormsModule, OpsGateComponent],
+  imports: [FormsModule],
   styleUrl: './ops.scss',
   template: `
-    <app-ops-gate (connected)="cargar()" />
     @if (api.session()) {
       @if (mensaje()) { <div class="ops-banner" [class.ok]="!mensaje()!.error" [class.err]="mensaje()!.error">{{ mensaje()!.texto }}</div> }
       <div class="ops-head">

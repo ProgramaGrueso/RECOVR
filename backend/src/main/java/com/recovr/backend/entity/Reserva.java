@@ -48,6 +48,10 @@ public class Reserva {
     @Column(name = "check_in")
     private LocalDateTime checkIn;
 
+    @Schema(description = "Momento en que se canceló la reserva (nulo si no está cancelada)")
+    @Column(name = "cancelada_en")
+    private LocalDateTime canceladaEn;
+
     @Schema(description = "Motivo de un cambio automático o manual de estado (p. ej. expiración o no asistencia)")
     @Column(length = 255)
     private String observacion;
@@ -81,6 +85,9 @@ public class Reserva {
 
     public LocalDateTime getCheckIn() { return checkIn; }
     public void setCheckIn(LocalDateTime checkIn) { this.checkIn = checkIn; }
+
+    public LocalDateTime getCanceladaEn() { return canceladaEn; }
+    public void setCanceladaEn(LocalDateTime canceladaEn) { this.canceladaEn = canceladaEn; }
 
     public String getObservacion() { return observacion; }
     public void setObservacion(String observacion) { this.observacion = observacion; }

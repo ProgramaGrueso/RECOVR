@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 @Schema(description = "Datos para que un administrador cree un usuario de personal (RECEPCIONISTA o ESPECIALISTA)")
@@ -13,11 +14,14 @@ public record CrearUsuarioRequest(
         @NotBlank @Email String correo,
 
         @Schema(description = "Contraseña temporal o inicial (mínimo 6 caracteres)", example = "Recepcion123", requiredMode = Schema.RequiredMode.REQUIRED)
-        @NotBlank @Size(min = 6) String password,
+        @NotBlank @Size(min = 8, max = 72, message = "La contraseña debe tener entre 8 y 72 caracteres")
+        @Pattern(regexp = "^(?=.*[A-Za-z])(?=.*\\d).+$", message = "La contraseña debe combinar letras y números")
+        String password,
 
         @Schema(description = "Rol asignado dentro del sistema", example = "RECEPCIONISTA", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull Rol rol,
 
         @Schema(description = "Solo para ESPECIALISTA: ID del empleado que se vincula a este usuario", example = "1")
-        Long empleadoId
+        Long empleadoId,
+        @Size(max = 120) String nombre
 ) {}

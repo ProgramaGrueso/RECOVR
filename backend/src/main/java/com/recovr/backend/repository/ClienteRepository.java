@@ -9,4 +9,5 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     Optional<Cliente> findByUsuarioId(Long usuarioId);
 
     boolean existsByCorreoEndingWith(String sufijo);
+    Optional<Cliente> findByCorreo(String correo);
 }

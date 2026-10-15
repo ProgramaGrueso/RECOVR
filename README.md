@@ -100,6 +100,15 @@ Todas las experiencias están configuradas con tarifas oficiales en moneda nacio
 - **Cabina 03 (Dúo / 4 Manos):** Espacio amplio insonorizado para sesiones simultáneas en sincronía acústica.
 - **Cabina 04 (VIP Hidromasaje):** Suite privada con tina de hidromasaje con microburbujas oxigenadas.
 
+## 🔐 Seguridad y roles
+
+- **Un solo acceso para todos los roles** (`/admin/login`): el navegador no guarda usuarios ni claves, solo el token JWT. La identidad y el rol se confirman con `GET /api/auth/me` y cada petición vuelve a validar el rol en el servidor.
+- **Cada rol ve solo su zona:** CLIENTE → *Mi cuenta*; ESPECIALISTA → *Mi agenda* y *Fichas de clientes* (solo de clientes que atiende); RECEPCIONISTA → resumen, agenda, clientes y caja; ADMIN → todo lo operativo, personal, catálogo, sistema y auditoría. Las fichas confidenciales no las ve ni ADMIN ni RECEPCIONISTA.
+- **Matriz de permisos verificada:** `GET /api/seguridad/matriz` lista qué rol puede cada acción y la prueba `SeguridadRolesTest` ejecuta cada fila con un token de cada rol.
+- **Contraseñas:** BCrypt, mínimo 8 caracteres con letras y números. **Bloqueo:** 5 intentos fallidos de un mismo correo e IP bloquean 5 minutos (HTTP 429). El mensaje de error no revela si el correo existe.
+- **Auditoría:** inicios de sesión, cambios de datos y accesos denegados quedan en la tabla `auditoria` (sin cuerpos ni contraseñas), visible para ADMIN en *Sistema y auditoría*.
+- **Reservas:** ciclo de vida con expiración automática (ver `ReglasReserva`); el cliente cancela con 4 h de anticipación y máximo 2 veces al mes.
+
 ---
 
 ## 🚀 Requisitos Previos
@@ -133,15 +142,15 @@ cd ..
 Requiere Java 21 y Maven 3.9+ (el repositorio no incluye el wrapper `mvnw`). Con la base de datos ya levantada:
 ```bash
 cd backend
-SEED_DEMO_DATA=true DEMO_PASSWORD='Demo12345!' mvn spring-boot:run
+SEED_DEMO_DATA=true mvn spring-boot:run
 ```
-*(En Windows PowerShell: `$env:SEED_DEMO_DATA="true"; $env:DEMO_PASSWORD="Demo12345!"; mvn spring-boot:run`)*
+*(En Windows PowerShell: `$env:SEED_DEMO_DATA="true"; mvn spring-boot:run`)*
 
 - La API inicia en: `http://localhost:8095` (se cambia con la variable `SERVER_PORT`).
 - Documentación Swagger UI interactiva: [http://localhost:8095/swagger-ui/index.html](http://localhost:8095/swagger-ui/index.html)
 - Especificación OpenAPI en formato JSON: `http://localhost:8095/v3/api-docs`
 - Variables opcionales: `JWT_SECRET` (clave Base64 de 32 bytes o más; si falta se genera una temporal al arrancar), `DB_USERNAME`, `DB_PASSWORD` y `SHOW_SQL=true`.
-- CORS está abierto a propósito para la exposición: el frontend puede consumir la API desde cualquier origen.
+- CORS solo acepta orígenes conocidos: `localhost` / `127.0.0.1` (cualquier puerto) y dominios `https://*.vercel.app`. Un origen cualquiera no recibe la cabecera `Access-Control-Allow-Origin`.
 
 **Datos de demostración (`SEED_DEMO_DATA=true`):** al arrancar por primera vez carga el catálogo oficial (RC-01 a RC-06), las 4 cabinas, las 4 terapeutas, 45 clientes y unas 600 reservas entre el 1 de octubre y el 31 de diciembre de 2026 (rango configurable con `recovr.seed.inicio` y `recovr.seed.fin`). Respeta la regla de negocio: ninguna cabina ni terapeuta tiene dos reservas activas que se crucen (duración + tiempo de limpieza). Las sesiones pasadas quedan COMPLETADAS o CANCELADAS y las futuras CONFIRMADAS (con pago) o PENDIENTES. Es idempotente: si ya hay datos demo, no vuelve a cargarlos. Con `DEMO_PASSWORD` crea además las cuentas `admin.demo@recovr.test`, `recepcion.demo@recovr.test`, `ely.demo@recovr.test` (ESPECIALISTA) y `cliente.demo@recovr.test`.
 
@@ -151,7 +160,7 @@ Con Docker, Java 21 y Maven instalados, en la carpeta `backend`:
 ./run-demo.sh          # Linux / macOS
 .\run-demo.ps1         # Windows PowerShell
 ```
-El script levanta MySQL (`docker compose up -d`), espera a que esté sano y arranca el backend con `SEED_DEMO_DATA=true`. Cuentas demo (contraseña `Demo12345!`): `admin.demo@recovr.test`, `recepcion.demo@recovr.test`, `ely.demo@recovr.test` (ESPECIALISTA) y `cliente.demo@recovr.test`. Para empezar de cero: `docker compose down -v` y volver a ejecutar el script.
+El script levanta MySQL (`docker compose up -d`), espera a que esté sano y arranca el backend con `SEED_DEMO_DATA=true`. Con `SEED_DEMO_DATA=true` se crean 11 cuentas de demostración (administración, recepción, las 4 terapeutas y 5 clientes), cada una con su propia contraseña: están listadas en `backend/CREDENCIALES_DEMO.md` (archivo local, no se sube a git). Solo para desarrollo.
 > Si Docker responde que el nombre `recovr-mysql` ya está en uso, es un contenedor de una ejecución anterior: `docker start recovr-mysql` (o `docker rm recovr-mysql` y repetir).
 
 ### 4. Iniciar el Frontend (Angular Standalone)

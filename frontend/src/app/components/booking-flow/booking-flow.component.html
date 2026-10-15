@@ -29,7 +29,7 @@
           class="gate-tab-btn"
           [class.active]="authModalTab === 'REGISTER'"
           (click)="authModalTab = 'REGISTER'; authModalError = ''">
-          CREAR CUENTA NUEVA (+50 PTS)
+          CREAR CUENTA NUEVA
         </button>
       </div>
 
@@ -44,11 +44,11 @@
       <!-- Pestaña 1: Iniciar Sesión -->
       <div class="gate-form-panel" *ngIf="authModalTab === 'LOGIN'">
         <div class="form-group">
-          <label class="form-label">CORREO ELECTRÓNICO O USUARIO</label>
+          <label class="form-label">CORREO ELECTRÓNICO</label>
           <input
-            type="text"
+            type="email"
             class="form-input"
-            placeholder="carlos.mendoza@gmail.com"
+            autocomplete="username"
             [(ngModel)]="authModalEmail"
             name="gateEmail" />
         </div>
@@ -57,7 +57,7 @@
           <input
             type="password"
             class="form-input"
-            placeholder="••••••••"
+            autocomplete="current-password"
             [(ngModel)]="authModalPassword"
             name="gatePassword" />
         </div>
@@ -66,17 +66,11 @@
           <button type="button" class="btn-primary" (click)="submitAuthModalLogin()">
             <span>Ingresar y Continuar Reserva</span>
           </button>
-          <button type="button" class="btn-secondary btn-demo-quick" (click)="quickLoginDemoClient()">
-            ⚡ Acceso 1-Clic como Carlos Mendoza (Demo)
-          </button>
         </div>
       </div>
 
       <!-- Pestaña 2: Crear Cuenta Nueva -->
       <div class="gate-form-panel" *ngIf="authModalTab === 'REGISTER'">
-        <div class="bonus-notice">
-          <span>🎁 <strong>Bono de Bienvenida:</strong> Recibe +50 Puntos RECOVR inmediatamente al registrarte.</span>
-        </div>
         <div class="form-group">
           <label class="form-label">NOMBRE Y APELLIDO COMPLETO *</label>
           <input
@@ -105,7 +99,7 @@
             name="regPhone" />
         </div>
         <div class="form-group">
-          <label class="form-label">CONTRASEÑA (MÍNIMO 6 CARACTERES) *</label>
+          <label class="form-label">CONTRASEÑA (MÍN. 8, CON LETRAS Y NÚMEROS) *</label>
           <input
             type="password"
             class="form-input"
@@ -191,15 +185,6 @@
 
     <h3 class="success-title">{{ bookingSuccess.status === 'PENDIENTE' ? 'CITA REGISTRADA CON ÉXITO' : 'CITA CONFIRMADA CON ÉXITO' }}</h3>
     <p class="success-code">CÓDIGO DE SEGUIMIENTO: <strong>{{ bookingSuccess.id }}</strong></p>
-
-    <!-- Tarjeta de Puntos Ganados -->
-    <div class="points-reward-box" *ngIf="earnedPoints > 0">
-      <div class="reward-star">✨</div>
-      <div class="reward-text">
-        <h4>¡HAS ACUMULADO +{{ earnedPoints }} PUNTOS RECOVR!</h4>
-        <p>Tu saldo actualizado es de <strong>{{ totalClientPoints }} Puntos</strong>. Acércate a los 500 puntos para canjear tu próxima sesión gratuita.</p>
-      </div>
-    </div>
 
     <div class="summary-box">
       <div class="summary-row">
@@ -353,9 +338,8 @@
         <div class="client-active-badge" *ngIf="isClientLoggedIn">
           <div class="client-badge-info">
             <span class="badge-dot"></span>
-            <span>SESIÓN AUTENTICADA: <strong>{{ auth.currentUser()?.name }}</strong> ({{ auth.currentUser()?.email }})</span>
+            <span>SESIÓN AUTENTICADA: <strong>{{ auth.user()?.nombre }}</strong> ({{ auth.user()?.correo }})</span>
           </div>
-          <span class="badge-points-reward">+100 PUNTOS RECOVR POR ESTA SESIÓN</span>
         </div>
 
         <!-- Resumen de reserva -->

@@ -17,9 +17,11 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 @EnableWebSecurity
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuditoriaFilter auditoriaFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, AuditoriaFilter auditoriaFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.auditoriaFilter = auditoriaFilter;
     }
 
     @Bean
@@ -60,6 +62,9 @@ public class SecurityConfig {
                             .hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
                         .requestMatchers(HttpMethod.PATCH, "/api/db/reservas/*/cancelar")
                             .hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
+                        .requestMatchers("/api/fichas/**").hasRole("ESPECIALISTA")
+                        .requestMatchers("/api/mi-cuenta/**").hasRole("CLIENTE")
+                        .requestMatchers("/api/sistema/**", "/api/seguridad/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/operacion/**").hasAnyRole("ADMIN", "RECEPCIONISTA")
                         .requestMatchers(HttpMethod.DELETE, "/api/db/reservas/*").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/clientes").hasAnyRole("ADMIN", "RECEPCIONISTA")
@@ -74,6 +79,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/servicios/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(auditoriaFilter, JwtAuthenticationFilter.class)
                 .build();
     }
 

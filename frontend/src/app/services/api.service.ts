@@ -19,6 +19,11 @@ interface ReservaApi {
   estado: BookingResponse['status'];
 }
 
+export interface PerfilApi {
+  correo: string; rol: string; nombre: string;
+  clienteId: number | null; empleadoId: number | null; telefono: string | null;
+}
+
 /** Error de negocio devuelto por la API (409 agenda ocupada, 400 validación...). */
 export class ApiBusinessError extends Error {}
 
@@ -101,25 +106,39 @@ export class ApiService {
     );
   }
 
-  /** Igual que login, pero explica el motivo del fallo (para la pantalla de conexión del panel). */
+  /** Igual que login, pero explica el motivo del fallo (pantalla de acceso). */
   loginConMensaje(correo: string, password: string): Observable<{ ok: boolean; message?: string }> {
     return this.http.post<{ token: string; rol?: string; correo?: string }>(`${this.base}/auth/login`, { correo, password }).pipe(
       map(res => { this.saveToken(res.token, res.rol ?? '', res.correo ?? correo); return { ok: true }; }),
-      catchError((err: HttpErrorResponse) => of({
-        ok: false,
-        message: err.status === 0
-          ? 'No hay conexión con el servidor. Enciende el backend (puerto 8095) e inténtalo de nuevo.'
-          : 'Correo o contraseña incorrectos.'
-      }))
+      catchError((err: HttpErrorResponse) => of({ ok: false, message: this.mensajeDeAcceso(err) }))
     );
   }
 
-  /** Registra al cliente en el backend y deja la sesión iniciada (si ya existía, solo inicia sesión). */
-  registrar(nombre: string, correo: string, password: string, telefono: string): Observable<boolean> {
+  /** Crea la cuenta de cliente y deja la sesión iniciada. Devuelve el motivo si el servidor la rechaza. */
+  registrarConMensaje(nombre: string, correo: string, password: string, telefono: string): Observable<{ ok: boolean; message?: string }> {
     return this.http.post<{ token: string; rol?: string; correo?: string }>(`${this.base}/auth/registro`, { nombre, correo, password, telefono }).pipe(
-      map(res => { this.saveToken(res.token, res.rol ?? 'CLIENTE', res.correo ?? correo); return true; }),
-      catchError(() => this.login(correo, password))
+      map(res => { this.saveToken(res.token, res.rol ?? 'CLIENTE', res.correo ?? correo); return { ok: true }; }),
+      catchError((err: HttpErrorResponse) => of({ ok: false, message: this.mensajeDeAcceso(err) }))
     );
+  }
+
+  /** Perfil del token guardado: confirma con el servidor quién es y qué rol tiene (no se confía en lo guardado en el navegador). */
+  perfil(): Observable<PerfilApi> {
+    return this.http.get<PerfilApi>(`${this.base}/auth/me`, { headers: this.headers() });
+  }
+
+  private mensajeDeAcceso(err: HttpErrorResponse): string {
+    if (err.status === 0) {
+      return 'No hay conexión con el servidor. Enciende el backend (puerto 8095) e inténtalo de nuevo.';
+    }
+    if (err.status === 429) {
+      return err.error?.message ?? 'Demasiados intentos fallidos. Espera unos minutos.';
+    }
+    if (err.status === 401) {
+      return 'Correo o contraseña incorrectos.';
+    }
+    const campos = err.error?.campos ? Object.values(err.error.campos).join(' · ') : '';
+    return campos || err.error?.message || 'No se pudo completar la operación.';
   }
 
   /**

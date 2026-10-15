@@ -4,7 +4,6 @@ import { forkJoin } from 'rxjs';
 import { AdminApiService } from '../../../services/admin-api.service';
 import { ApiService } from '../../../services/api.service';
 import { SalaEstado, ServicioOps } from '../../../models/ops.model';
-import { OpsGateComponent } from './ops-gate.component';
 import { SALA_ESTADO_TXT, fechaHoraTxt, horaTxt, soles } from './ops.util';
 
 /**
@@ -14,10 +13,9 @@ import { SALA_ESTADO_TXT, fechaHoraTxt, horaTxt, soles } from './ops.util';
 @Component({
   selector: 'app-ops-catalogo',
   standalone: true,
-  imports: [FormsModule, OpsGateComponent],
+  imports: [FormsModule],
   styleUrl: './ops.scss',
   template: `
-    <app-ops-gate (connected)="cargar()" />
     @if (api.session()) {
       @if (mensaje()) { <div class="ops-banner" [class.ok]="!mensaje()!.error" [class.err]="mensaje()!.error">{{ mensaje()!.texto }}</div> }
 

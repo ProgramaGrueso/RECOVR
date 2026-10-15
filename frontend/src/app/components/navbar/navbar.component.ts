@@ -33,8 +33,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   auth = inject(AuthService);
 
-  currentUser = computed(() => this.auth.currentUser());
-  clientPoints = computed(() => this.auth.getClientPoints());
+  currentUser = computed(() => this.auth.user());
 
   limaTimeStr = computed(() => {
     const date = this.serverTimeService.serverTimeSignal();

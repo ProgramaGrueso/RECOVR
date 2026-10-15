@@ -1,6 +1,7 @@
 package com.recovr.backend.controller;
 
 import com.recovr.backend.dto.AuthResponse;
+import com.recovr.backend.dto.PerfilResponse;
 import com.recovr.backend.dto.CrearUsuarioRequest;
 import com.recovr.backend.dto.LoginRequest;
 import com.recovr.backend.dto.RegistroRequest;
@@ -71,8 +72,14 @@ public class AuthController {
     })
     @SecurityRequirements
     @PostMapping("/login")
-    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
-        return authService.login(request);
+    public AuthResponse login(@Valid @RequestBody LoginRequest request, jakarta.servlet.http.HttpServletRequest http) {
+        return authService.login(request, http.getRemoteAddr());
+    }
+
+    @Operation(summary = "Perfil de la sesión actual", description = "Devuelve correo, rol, nombre y vínculos (cliente o terapeuta) del token enviado. Sirve para validar la sesión.")
+    @GetMapping("/me")
+    public PerfilResponse me(org.springframework.security.core.Authentication authentication) {
+        return authService.perfil(authentication.getName());
     }
 
     @Operation(

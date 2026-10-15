@@ -17,6 +17,9 @@ import java.io.IOException;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class WebCorsFilter implements Filter {
 
+    private static final java.util.regex.Pattern ORIGEN_PERMITIDO = java.util.regex.Pattern.compile(
+            "^https?://(localhost|127\\.0\\.0\\.1)(:\\d+)?$|^https://[a-z0-9-]+(\\.[a-z0-9-]+)*\\.vercel\\.app$");
+
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
             throws IOException, ServletException {
@@ -24,11 +27,14 @@ public class WebCorsFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) req;
 
         String origin = request.getHeader("Origin");
-        response.setHeader("Access-Control-Allow-Origin", origin != null ? origin : "*");
+        // Solo orígenes conocidos (la app en desarrollo y los despliegues de Vercel); nunca se refleja un origen cualquiera.
+        if (origin != null && ORIGEN_PERMITIDO.matcher(origin).matches()) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+            response.setHeader("Vary", "Origin");
+        }
         response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-        response.setHeader("Access-Control-Allow-Headers", "*");
+        response.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Accept");
         response.setHeader("Access-Control-Expose-Headers", "Authorization, Content-Type");
-        response.setHeader("Access-Control-Allow-Credentials", "true");
         response.setHeader("Access-Control-Max-Age", "3600");
 
         // Soporte para Chrome Private Network Access (permite que páginas https externas llamen a localhost)

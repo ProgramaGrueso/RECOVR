@@ -2,6 +2,8 @@ package com.recovr.backend.config;
 
 import com.recovr.backend.entity.Cliente;
 import com.recovr.backend.entity.Empleado;
+import com.recovr.backend.entity.FichaCliente;
+import com.recovr.backend.entity.NotaSesion;
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Pago;
 import com.recovr.backend.entity.Reserva;
@@ -11,11 +13,14 @@ import com.recovr.backend.entity.Servicio;
 import com.recovr.backend.entity.Usuario;
 import com.recovr.backend.repository.ClienteRepository;
 import com.recovr.backend.repository.EmpleadoRepository;
+import com.recovr.backend.repository.FichaClienteRepository;
+import com.recovr.backend.repository.NotaSesionRepository;
 import com.recovr.backend.repository.PagoRepository;
 import com.recovr.backend.repository.ReservaRepository;
 import com.recovr.backend.repository.SalaRepository;
 import com.recovr.backend.repository.ServicioRepository;
 import com.recovr.backend.repository.UsuarioRepository;
+import com.recovr.backend.service.ReglasReserva;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,8 +49,8 @@ import java.util.Random;
  *
  * Solo corre con recovr.seed.demo-data=true (variable SEED_DEMO_DATA). Todo lo que crea queda marcado con
  * el dominio {@value #DOMINIO} en el correo, y si ya existe un cliente demo se omite (es idempotente).
- * Las cuentas de acceso usan la contraseña recovr.seed.demo-password (DEMO_PASSWORD); si está vacía solo se
- * crean las fichas, sin usuarios.
+ * Además crea las cuentas de acceso de demostración (administración, recepción, las 4 terapeutas y 5 clientes),
+ * cada una con su propia contraseña, documentadas en backend/CREDENCIALES_DEMO.md. SOLO para desarrollo local.
  *
  * Respeta la regla de negocio del motor de reservas: ni una cabina ni un terapeuta tienen dos reservas
  * activas cuyos bloques [inicio, inicio + duración + limpieza) se crucen. Las sesiones pasadas quedan
@@ -64,7 +69,6 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     private final boolean catalogoInicial;
     private final boolean activo;
-    private final String passwordDemo;
     private final LocalDate inicio;
     private final LocalDate fin;
 
@@ -77,20 +81,21 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final PagoRepository pagoRepository;
     private final PasswordEncoder passwordEncoder;
     private final TransactionTemplate transaccion;
+    private final FichaClienteRepository fichaRepository;
+    private final NotaSesionRepository notaRepository;
 
     public DemoDataSeeder(@Value("${recovr.seed.catalogo:true}") boolean catalogoInicial,
                           @Value("${recovr.seed.demo-data:false}") boolean activo,
-                          @Value("${recovr.seed.demo-password:}") String passwordDemo,
                           @Value("${recovr.seed.inicio:2026-10-01}") LocalDate inicio,
                           @Value("${recovr.seed.fin:2026-12-31}") LocalDate fin,
                           ServicioRepository servicioRepository, SalaRepository salaRepository,
                           EmpleadoRepository empleadoRepository, ClienteRepository clienteRepository,
                           UsuarioRepository usuarioRepository, ReservaRepository reservaRepository,
                           PagoRepository pagoRepository, PasswordEncoder passwordEncoder,
-                          TransactionTemplate transaccion) {
+                          TransactionTemplate transaccion, FichaClienteRepository fichaRepository,
+                          NotaSesionRepository notaRepository) {
         this.catalogoInicial = catalogoInicial;
         this.activo = activo;
-        this.passwordDemo = passwordDemo;
         this.inicio = inicio;
         this.fin = fin;
         this.servicioRepository = servicioRepository;
@@ -102,6 +107,8 @@ public class DemoDataSeeder implements CommandLineRunner {
         this.pagoRepository = pagoRepository;
         this.passwordEncoder = passwordEncoder;
         this.transaccion = transaccion;
+        this.fichaRepository = fichaRepository;
+        this.notaRepository = notaRepository;
     }
 
     @Override
@@ -118,10 +125,15 @@ public class DemoDataSeeder implements CommandLineRunner {
         }
         if (clienteRepository.existsByCorreoEndingWith(DOMINIO)) {
             log.info("DemoDataSeeder — ya hay datos demo, se omite.");
-            return;
+        } else {
+            int total = transaccion.execute(status -> sembrar());
+            log.info("DemoDataSeeder — {} reservas demo creadas ({} → {}).", total, inicio, fin);
         }
-        int total = transaccion.execute(status -> sembrar());
-        log.info("DemoDataSeeder — {} reservas demo creadas ({} → {}).", total, inicio, fin);
+        // Las cuentas de acceso se aseguran siempre (idempotente): así quedan con las contraseñas documentadas.
+        transaccion.executeWithoutResult(status -> {
+            asegurarCuentasDemo();
+            asegurarHistorialDeClientesDemo();
+        });
     }
 
     private int sembrar() {
@@ -129,7 +141,6 @@ public class DemoDataSeeder implements CommandLineRunner {
         Map<String, Sala> salas = cabinas();
         Map<String, Empleado> terapeutas = terapeutas();
         List<Cliente> clientes = clientes();
-        sembrarCuentasDeStaff(terapeutas);
         return sembrarReservas(servicios, salas, terapeutas, clientes);
     }
 
@@ -220,37 +231,176 @@ public class DemoDataSeeder implements CommandLineRunner {
             c.setNombre(NOMBRES[rnd.nextInt(NOMBRES.length)] + " " + APELLIDOS[rnd.nextInt(APELLIDOS.length)]);
             c.setCorreo("cliente" + i + DOMINIO);
             c.setTelefono("9" + (10000000 + rnd.nextInt(89999999)));
-            if (i == 0 && !passwordDemo.isBlank()) {
-                c.setUsuarioId(cuenta("cliente.demo" + DOMINIO, Rol.CLIENTE).getId());
-                c.setCorreo("cliente.demo" + DOMINIO);
+            if (i == 0) {
+                c.setCorreo("cliente.demo" + DOMINIO); // su cuenta de acceso se crea en asegurarCuentasDemo()
             }
             clientes.add(clienteRepository.save(c));
         }
         return clientes;
     }
 
-    private void sembrarCuentasDeStaff(Map<String, Empleado> terapeutas) {
-        if (passwordDemo.isBlank()) {
-            log.warn("DemoDataSeeder — DEMO_PASSWORD vacía: no se crean cuentas de acceso demo.");
-            return;
-        }
-        cuenta("admin.demo" + DOMINIO, Rol.ADMIN);
-        cuenta("recepcion.demo" + DOMINIO, Rol.RECEPCIONISTA);
-        Empleado ely = terapeutas.get("Ely");
-        if (ely != null && ely.getUsuarioId() == null) {
-            ely.setUsuarioId(cuenta("ely.demo" + DOMINIO, Rol.ESPECIALISTA).getId());
-            empleadoRepository.save(ely);
+    /** Cuenta de acceso de demostración. La contraseña es propia de cada cuenta (ver CREDENCIALES_DEMO.md). */
+    record CuentaDemo(String usuario, String nombre, Rol rol, String password, String terapeuta, String telefono) {
+        String correo() {
+            return usuario + DOMINIO;
         }
     }
 
-    private Usuario cuenta(String correo, Rol rol) {
-        return usuarioRepository.findByCorreo(correo).orElseGet(() -> {
-            Usuario u = new Usuario();
-            u.setCorreo(correo);
-            u.setPassword(passwordEncoder.encode(passwordDemo));
-            u.setRol(rol);
-            return usuarioRepository.save(u);
-        });
+    static final List<CuentaDemo> CUENTAS = List.of(
+            new CuentaDemo("admin.demo", "Mateo Salazar", Rol.ADMIN, "Admin#Recovr2026", null, null),
+            new CuentaDemo("recepcion.demo", "Camila Morales", Rol.RECEPCIONISTA, "Recep#Recovr2026", null, null),
+            new CuentaDemo("ely.demo", "Ely", Rol.ESPECIALISTA, "Ely#Recovr2026", "Ely", null),
+            new CuentaDemo("miranda.demo", "Miranda", Rol.ESPECIALISTA, "Miranda#Recovr2026", "Miranda", null),
+            new CuentaDemo("pamela.demo", "Pamela", Rol.ESPECIALISTA, "Pamela#Recovr2026", "Pamela", null),
+            new CuentaDemo("maria.demo", "Maria", Rol.ESPECIALISTA, "Maria#Recovr2026", "Maria", null),
+            new CuentaDemo("cliente.demo", "Carlos Mendoza", Rol.CLIENTE, "Carlos#Recovr2026", null, "987654321"),
+            new CuentaDemo("lucia.demo", "Lucía Paredes", Rol.CLIENTE, "Lucia#Recovr2026", null, "987000002"),
+            new CuentaDemo("andrea.demo", "Andrea Vargas", Rol.CLIENTE, "Andrea#Recovr2026", null, "987000003"),
+            new CuentaDemo("diego.demo", "Diego Rojas", Rol.CLIENTE, "Diego#Recovr2026", null, "987000004"),
+            new CuentaDemo("sofia.demo", "Sofía Medina", Rol.CLIENTE, "Sofia#Recovr2026", null, "987000005"));
+
+    /** Crea o actualiza las cuentas de demostración y las vincula a su terapeuta o ficha de cliente. */
+    private void asegurarCuentasDemo() {
+        for (CuentaDemo c : CUENTAS) {
+            Usuario u = usuarioRepository.findByCorreo(c.correo()).orElseGet(Usuario::new);
+            u.setCorreo(c.correo());
+            u.setNombre(c.nombre());
+            u.setRol(c.rol());
+            u.setPassword(passwordEncoder.encode(c.password()));
+            u = usuarioRepository.save(u);
+            if (c.terapeuta() != null) {
+                final Long usuarioId = u.getId();
+                empleadoRepository.findAll().stream().filter(e -> e.getNombre().equals(c.terapeuta())).findFirst().ifPresent(e -> {
+                    if (!usuarioId.equals(e.getUsuarioId())) {
+                        e.setUsuarioId(usuarioId);
+                        empleadoRepository.save(e);
+                    }
+                });
+            }
+            if (c.rol() == Rol.CLIENTE) {
+                Cliente cliente = clienteRepository.findByCorreo(c.correo()).orElseGet(Cliente::new);
+                cliente.setNombre(c.nombre());
+                cliente.setCorreo(c.correo());
+                cliente.setTelefono(c.telefono());
+                cliente.setUsuarioId(u.getId());
+                clienteRepository.save(cliente);
+            }
+        }
+        log.info("DemoDataSeeder — {} cuentas de acceso de demostración listas (ver backend/CREDENCIALES_DEMO.md).", CUENTAS.size());
+    }
+
+    /**
+     * Los clientes demo con cuenta traen historial propio para que "Mi cuenta" y las fichas de las terapeutas no salgan
+     * vacías: tres sesiones completadas, una confirmada próxima y una pendiente, más una ficha y una nota de ejemplo.
+     * Solo se crea si el cliente aún no tiene reservas, y cada reserva busca un horario libre (sin cruces).
+     */
+    private void asegurarHistorialDeClientesDemo() {
+        String[] codigos = {"RC-01", "RC-03", "RC-02", "RC-04", "RC-05"};
+        Map<String, Servicio> servicios = catalogo();
+        Map<String, Sala> salas = cabinas();
+        Map<String, Empleado> terapeutas = terapeutas();
+        int n = 0;
+        for (CuentaDemo c : CUENTAS) {
+            if (c.rol() != Rol.CLIENTE) {
+                continue;
+            }
+            Cliente cliente = clienteRepository.findByCorreo(c.correo()).orElse(null);
+            if (cliente == null || reservaRepository.existsByClienteId(cliente.getId())) {
+                continue;
+            }
+            LocalDate hoy = LocalDate.now();
+            int[] dias = {-35, -21, -9, 3, 6};
+            EstadoReserva[] estados = {EstadoReserva.COMPLETADA, EstadoReserva.COMPLETADA, EstadoReserva.COMPLETADA,
+                    EstadoReserva.CONFIRMADA, EstadoReserva.PENDIENTE};
+            for (int i = 0; i < dias.length; i++) {
+                String codigo = codigos[(n + i) % codigos.length];
+                crearReservaSinCruces(cliente, servicios.get(codigo), salas.get(cabinaDe(codigo)),
+                        terapeutas.get(terapeutaDe(codigo)), dentroDelRango(hoy.plusDays(dias[i]), i).atTime(15 + (n % 4), 0), estados[i]);
+            }
+            n++;
+        }
+        sembrarFichaDeEjemplo(terapeutas);
+    }
+
+    /** Mantiene las fechas de demostración dentro de la ventana sembrada (inicio..fin). */
+    private LocalDate dentroDelRango(LocalDate fecha, int posicion) {
+        if (fecha.isBefore(inicio)) {
+            return inicio.plusDays(posicion + 1L);
+        }
+        return fecha.isAfter(fin) ? fin.minusDays(posicion) : fecha;
+    }
+
+    private boolean hayCruce(Sala sala, Empleado terapeuta, LocalDateTime desde, LocalDateTime hasta) {
+        return reservaRepository.buscarEntre(desde.toLocalDate().minusDays(1).atStartOfDay(), desde.toLocalDate().plusDays(2).atStartOfDay())
+                .stream().filter(r -> r.getEstado() != EstadoReserva.CANCELADA)
+                .filter(r -> r.getSala().getId().equals(sala.getId()) || r.getEmpleado().getId().equals(terapeuta.getId()))
+                .anyMatch(r -> desde.isBefore(ReglasReserva.finBloque(r)) && r.getFechaHora().isBefore(hasta));
+    }
+
+    private void crearReservaSinCruces(Cliente cliente, Servicio servicio, Sala sala, Empleado terapeuta,
+                                       LocalDateTime deseada, EstadoReserva estado) {
+        if (servicio == null || sala == null || terapeuta == null) {
+            return;
+        }
+        LocalDateTime inicio = deseada;
+        for (int intento = 0; intento < 40; intento++) {
+            LocalDateTime fin = inicio.plusMinutes(servicio.getDuracionMinutos() + servicio.getTiempoLimpiezaMinutos());
+            if (!hayCruce(sala, terapeuta, inicio, fin)) {
+                Reserva r = new Reserva();
+                r.setCliente(cliente);
+                r.setEmpleado(terapeuta);
+                r.setServicio(servicio);
+                r.setSala(sala);
+                r.setFechaHora(inicio);
+                r.setEstado(estado);
+                reservaRepository.save(r);
+                if (estado == EstadoReserva.CONFIRMADA || estado == EstadoReserva.COMPLETADA) {
+                    Pago p = new Pago();
+                    p.setReserva(r);
+                    p.setMonto(servicio.getPrecio());
+                    p.setMetodoPago(METODOS_PAGO[(int) (r.getId() % METODOS_PAGO.length)]);
+                    p.setFechaPago(inicio.isBefore(LocalDateTime.now()) ? inicio.minusHours(1) : LocalDateTime.now().minusHours(2));
+                    pagoRepository.save(p);
+                }
+                return;
+            }
+            inicio = inicio.plusMinutes(30);
+            if (inicio.getHour() >= 21) { // fuera del horario de atención: pasa al día siguiente
+                inicio = inicio.toLocalDate().plusDays(1).atTime(12, 0);
+            }
+        }
+    }
+
+    private void sembrarFichaDeEjemplo(Map<String, Empleado> terapeutas) {
+        Cliente carlos = clienteRepository.findByCorreo("cliente.demo" + DOMINIO).orElse(null);
+        if (carlos == null || fichaRepository.findByClienteId(carlos.getId()).isPresent()) {
+            return;
+        }
+        Empleado atendiente = reservaRepository.buscarPorCliente(carlos.getId()).stream()
+                .filter(r -> r.getEstado() == EstadoReserva.COMPLETADA).map(Reserva::getEmpleado).findFirst()
+                .orElse(terapeutas.get("Ely"));
+        if (atendiente == null) {
+            return;
+        }
+        FichaCliente ficha = new FichaCliente();
+        ficha.setCliente(carlos);
+        ficha.setAlergias("Esencias de lavanda concentradas");
+        ficha.setCondiciones("Sobrecarga lumbar por entrenamiento; sin otras condiciones.");
+        ficha.setPresionPreferida("MEDIA");
+        ficha.setAceites("Aceite de almendras neutro");
+        ficha.setZonasRestringidas("Cervical alta");
+        ficha.setNotas("Prefiere música suave y temperatura templada.");
+        ficha.setActualizadoPor(atendiente.getNombre());
+        ficha.setActualizadoEn(LocalDateTime.now().minusDays(9));
+        fichaRepository.save(ficha);
+        NotaSesion nota = new NotaSesion();
+        nota.setCliente(carlos);
+        nota.setEmpleado(atendiente);
+        nota.setFecha(LocalDateTime.now().minusDays(9));
+        nota.setTratamiento("Masaje relajante con foco lumbar");
+        nota.setObservaciones("Buena tolerancia a presión media. Contractura leve en el cuadrado lumbar derecho.");
+        nota.setRecomendaciones("Estiramientos suaves en casa y agendar mantención en 10 días.");
+        notaRepository.save(nota);
     }
 
     /** Qué terapeuta y qué cabina atienden cada servicio (según la carta oficial de RECOVR). */

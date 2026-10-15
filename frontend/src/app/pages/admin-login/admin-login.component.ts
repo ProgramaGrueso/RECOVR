@@ -1,11 +1,14 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
-import { AuthService, AdminRole } from '../../services/auth.service';
-import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { BrandMarkComponent } from '../../components/brand-mark/brand-mark.component';
 
+/**
+ * Acceso único para todos los roles. Se valida contra el backend; no hay usuarios, claves ni atajos de demostración
+ * en el navegador. Según el rol que devuelva el servidor, el usuario cae en su propia zona.
+ */
 @Component({
   selector: 'app-admin-login',
   standalone: true,
@@ -14,190 +17,96 @@ import { BrandMarkComponent } from '../../components/brand-mark/brand-mark.compo
   styleUrls: ['./admin-login.component.scss']
 })
 export class AdminLoginComponent implements OnInit {
-  loginMode: 'CLIENT' | 'STAFF' = 'CLIENT';
-  clientTab: 'LOGIN' | 'REGISTER' = 'LOGIN';
+  tab: 'LOGIN' | 'REGISTER' = 'LOGIN';
 
-  // Campos Login Cliente
-  clientEmail = '';
-  clientPassword = '';
+  correo = '';
+  password = '';
 
-  // Campos Registro Cliente
   regName = '';
   regEmail = '';
   regPhone = '';
   regPassword = '';
   regConfirmPassword = '';
 
-  // Campos Login Staff
-  selectedRole: AdminRole = 'SUPER ADMIN';
-  staffUserId = '';
-  staffPassword = '';
-
-  rememberMe = true;
   showPassword = false;
   error = '';
   infoMessage = '';
-  successMessage = '';
+  cargando = false;
 
-  auth = inject(AuthService);
-  private api = inject(ApiService);
+  private auth = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
-    const modeParam = this.route.snapshot.queryParams['mode'];
-    const roleParam = this.route.snapshot.queryParams['role'] as AdminRole | undefined;
-
-    if (modeParam === 'staff') {
-      this.loginMode = 'STAFF';
-    } else if (modeParam === 'register') {
-      this.loginMode = 'CLIENT';
-      this.clientTab = 'REGISTER';
-    } else if (roleParam && roleParam !== 'CLIENTE') {
-      this.loginMode = 'STAFF';
-      this.selectedRole = roleParam;
-      this.staffUserId = this.selectedStaffUser.id;
-      this.staffPassword = this.selectedStaffUser.password;
-    } else {
-      this.loginMode = 'CLIENT';
-      this.clientTab = 'LOGIN';
+    if (this.route.snapshot.queryParams['mode'] === 'register') {
+      this.tab = 'REGISTER';
     }
+    // Si ya hay una sesión válida, no se pide iniciar de nuevo
+    this.auth.asegurarSesion().subscribe(ok => { if (ok) { this.entrar(); } });
   }
 
-  setLoginMode(mode: 'CLIENT' | 'STAFF'): void {
-    this.loginMode = mode;
-    this.error = '';
-    this.infoMessage = '';
-    this.successMessage = '';
-  }
-
-  setClientTab(tab: 'LOGIN' | 'REGISTER'): void {
-    this.clientTab = tab;
-    this.error = '';
-    this.infoMessage = '';
-    this.successMessage = '';
-  }
-
-  get staffDemoUsers() {
-    return this.auth.demoUsersList.filter(u => u.role !== 'CLIENTE');
-  }
-
-  get selectedStaffUser() {
-    return this.staffDemoUsers.find(user => user.role === this.selectedRole) ?? this.staffDemoUsers[0];
-  }
-
-  onStaffRoleChange(): void {
-    this.staffUserId = this.selectedStaffUser.id;
-    this.staffPassword = this.selectedStaffUser.password;
+  setTab(tab: 'LOGIN' | 'REGISTER'): void {
+    this.tab = tab;
     this.error = '';
     this.infoMessage = '';
   }
 
-  prefillStaffCredentials(role: AdminRole): void {
-    this.selectedRole = role;
-    this.staffUserId = this.selectedStaffUser.id;
-    this.staffPassword = this.selectedStaffUser.password;
+  submitLogin(): void {
     this.error = '';
     this.infoMessage = '';
-  }
-
-  submitClientLogin(): void {
-    this.error = '';
-    this.infoMessage = '';
-    this.successMessage = '';
-
-    if (!this.clientEmail || !this.clientPassword) {
-      this.error = 'Por favor ingresa tu correo o ID y contraseña.';
+    if (!this.correo.trim() || !this.password) {
+      this.error = 'Ingresa tu correo y contraseña.';
       return;
     }
-
-    const success = this.auth.login(this.clientEmail, this.clientPassword);
-    const currentUser = this.auth.currentUser();
-    if (success && currentUser?.role === 'CLIENTE') {
-      const returnUrl = this.route.snapshot.queryParams['returnUrl'];
-      this.router.navigate([returnUrl || '/admin']);
-    } else if (success && currentUser?.role !== 'CLIENTE') {
-      this.error = 'Esta cuenta pertenece al personal del spa. Usa la pestaña "Acceso Personal & Staff".';
-    } else {
-      this.error = 'Correo/ID o contraseña incorrectos. Si no tienes cuenta, regístrate en "Crear Cuenta".';
-    }
+    this.cargando = true;
+    this.auth.login(this.correo.trim(), this.password).subscribe(res => {
+      this.cargando = false;
+      this.password = '';
+      if (res.ok) {
+        this.entrar();
+      } else {
+        this.error = res.message ?? 'No se pudo iniciar sesión.';
+      }
+      this.cdr.detectChanges();
+    });
   }
 
-  quickLoginClientDemo(): void {
-    this.auth.loginAsRole('CLIENTE');
-    const returnUrl = this.route.snapshot.queryParams['returnUrl'];
-    this.router.navigate([returnUrl || '/admin']);
-  }
-
-  submitClientRegister(): void {
+  submitRegister(): void {
     this.error = '';
     this.infoMessage = '';
-    this.successMessage = '';
-
-    if (!this.regName || this.regName.trim().length < 3) {
-      this.error = 'Ingresa tu nombre y apellido completo (mínimo 3 caracteres).';
+    if (this.regName.trim().length < 3) {
+      this.error = 'Ingresa tu nombre y apellido completos.';
       return;
     }
-    if (!this.regEmail || !this.regEmail.includes('@')) {
+    if (!this.regEmail.includes('@')) {
       this.error = 'Ingresa un correo electrónico válido.';
       return;
     }
-    if (!this.regPhone || this.regPhone.trim().length < 8) {
-      this.error = 'Ingresa un número telefónico de contacto válido.';
+    if (this.regPhone.trim().length < 8) {
+      this.error = 'Ingresa un teléfono de contacto válido.';
       return;
     }
-    if (!this.regPassword || this.regPassword.length < 6) {
-      this.error = 'La contraseña debe tener al menos 6 caracteres.';
+    if (this.regPassword.length < 8 || !/[A-Za-z]/.test(this.regPassword) || !/\d/.test(this.regPassword)) {
+      this.error = 'La contraseña debe tener al menos 8 caracteres, con letras y números.';
       return;
     }
     if (this.regPassword !== this.regConfirmPassword) {
-      this.error = 'Las contraseñas no coinciden. Verifica e intenta nuevamente.';
+      this.error = 'Las contraseñas no coinciden.';
       return;
     }
-
-    const res = this.auth.registerClient({
-      name: this.regName,
-      email: this.regEmail,
-      phone: this.regPhone,
-      password: this.regPassword
+    this.cargando = true;
+    this.auth.registrar(this.regName.trim(), this.regEmail.trim(), this.regPassword, this.regPhone.trim()).subscribe(res => {
+      this.cargando = false;
+      this.regPassword = '';
+      this.regConfirmPassword = '';
+      if (res.ok) {
+        this.entrar();
+      } else {
+        this.error = res.message ?? 'No se pudo crear la cuenta.';
+      }
+      this.cdr.detectChanges();
     });
-
-    if (res.success) {
-      // También se guarda en la base de datos (si el backend no está encendido, la cuenta local sigue funcionando).
-      this.api.registrar(this.regName, this.regEmail, this.regPassword, this.regPhone).subscribe();
-      this.successMessage = res.message;
-      setTimeout(() => {
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'];
-        this.router.navigate([returnUrl || '/admin']);
-      }, 700);
-    } else {
-      this.error = res.message;
-    }
-  }
-
-  submitStaffLogin(): void {
-    this.error = '';
-    this.infoMessage = '';
-    this.successMessage = '';
-
-    if (!this.staffUserId || !this.staffPassword) {
-      this.error = 'Ingresa tus credenciales de empleado del spa.';
-      return;
-    }
-
-    // Auto-detección por si escribe correo o id directo
-    const matched = this.staffDemoUsers.find(
-      u => u.id === this.staffUserId || u.email.toLowerCase() === this.staffUserId.toLowerCase()
-    );
-    if (matched) {
-      this.selectedRole = matched.role;
-    }
-
-    if (this.auth.loginWithRole(this.selectedRole, this.staffUserId, this.staffPassword, this.rememberMe)) {
-      this.router.navigate(['/admin']);
-    } else {
-      this.error = 'Credenciales de personal no autorizadas o incorrectas.';
-    }
   }
 
   forgotPassword(): void {
@@ -205,11 +114,10 @@ export class AdminLoginComponent implements OnInit {
     this.infoMessage = 'Para restablecer tu clave, acércate a recepción o contacta al administrador.';
   }
 
-  resetLocalData(): void {
-    if (confirm('¿Estás seguro de que deseas borrar todos los clientes registrados y sesiones locales de prueba? Esta acción no se puede deshacer.')) {
-      localStorage.clear();
-      sessionStorage.clear();
-      window.location.reload();
-    }
+  /** Lleva a cada rol a su zona; un cliente que venía a reservar continúa con su reserva. */
+  private entrar(): void {
+    const destino = this.route.snapshot.queryParams['returnUrl'];
+    const esCliente = this.auth.isClient();
+    void this.router.navigateByUrl(esCliente && typeof destino === 'string' && destino.startsWith('/') ? destino : '/admin');
   }
 }

@@ -29,6 +29,13 @@ public final class ReglasReserva {
     public static final LocalTime APERTURA = LocalTime.of(12, 0);
     public static final LocalTime CIERRE = LocalTime.of(23, 0);
 
+    /** Un cliente solo puede cancelar por su cuenta con al menos estas horas de anticipación. */
+    public static final int HORAS_MIN_CANCELACION_CLIENTE = 4;
+    /** Máximo de cancelaciones hechas por el propio cliente en el mes calendario. */
+    public static final int MAX_CANCELACIONES_CLIENTE_MES = 2;
+    public static final String CANCELADA_POR_CLIENTE = "Cancelada por el cliente.";
+    public static final String CANCELADA_POR_PERSONAL = "Cancelada por el personal.";
+
     public static final String EN_ESPERA = "EN_ESPERA";
     public static final String CONFIRMADA = "CONFIRMADA";
     public static final String EN_SESION = "EN_SESION";

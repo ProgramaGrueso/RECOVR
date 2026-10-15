@@ -1,9 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
-import { ApiBusinessError, ApiService } from './api.service';
+import { Router } from '@angular/router';
+import { of, throwError, firstValueFrom } from 'rxjs';
 import { BookingService } from './booking.service';
+import { ApiBusinessError, ApiService } from './api.service';
+import { AuthService } from './auth.service';
 import { BookingRequest } from '../models/booking.model';
 
 const REQUEST: BookingRequest = {
@@ -12,49 +13,44 @@ const REQUEST: BookingRequest = {
 };
 
 describe('BookingService', () => {
-  let api: { hasSession: boolean; reservar: ReturnType<typeof vi.fn> };
   let service: BookingService;
+  let api: { hasSession: boolean; reservar: ReturnType<typeof vi.fn> };
 
-  function crear(hasSession: boolean) {
-    const store = new Map<string, string>();
-    vi.stubGlobal('localStorage', {
-      getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v),
-      removeItem: (k: string) => void store.delete(k), clear: () => store.clear()
-    });
-    vi.stubGlobal('sessionStorage', localStorage);
+  function crear(hasSession: boolean, esCliente = true): void {
     api = { hasSession, reservar: vi.fn() };
-    TestBed.configureTestingModule({ providers: [provideRouter([]), { provide: ApiService, useValue: api }] });
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: ApiService, useValue: api },
+        { provide: AuthService, useValue: { isClient: () => esCliente } },
+        { provide: Router, useValue: { navigate: vi.fn().mockResolvedValue(true) } }
+      ]
+    });
     service = TestBed.inject(BookingService);
   }
 
-  afterEach(() => vi.unstubAllGlobals());
-
-  it('sin sesión del backend usa la simulación local', async () => {
+  it('sin sesión NO simula la reserva: informa que hay que iniciar sesión', async () => {
     crear(false);
-    const res = await new Promise<{ status: string }>(r => service.submitBooking(REQUEST, 'RC-01', 'Ely').subscribe(r));
+    await expect(firstValueFrom(service.submitBooking(REQUEST, 'RC-01', 'Ely'))).rejects.toBeInstanceOf(ApiBusinessError);
     expect(api.reservar).not.toHaveBeenCalled();
-    expect(res.status).toBe('CONFIRMADA');
   });
 
   it('con sesión crea la reserva real y queda PENDIENTE', async () => {
     crear(true);
     api.reservar.mockReturnValue(of({ id: 'REC-000001', status: 'PENDIENTE', createdAt: '', serviceName: 'RC-01', professionalName: 'Ely', date: '2026-11-18', timeSlot: '17:30' }));
-    const res = await new Promise<{ id: string; status: string }>(r => service.submitBooking(REQUEST, 'RC-01', 'Ely').subscribe(r));
+    const r = await firstValueFrom(service.submitBooking(REQUEST, 'RC-01', 'Ely'));
     expect(api.reservar).toHaveBeenCalledWith(REQUEST, 'RC-01', 'Ely');
-    expect(res).toMatchObject({ id: 'REC-000001', status: 'PENDIENTE' });
+    expect(r.status).toBe('PENDIENTE');
   });
 
-  it('un conflicto de agenda se propaga y no se simula', async () => {
+  it('un conflicto de agenda se propaga tal cual', async () => {
     crear(true);
     api.reservar.mockReturnValue(throwError(() => new ApiBusinessError('Turno ocupado')));
-    const error = await new Promise<unknown>(r => service.submitBooking(REQUEST, 'RC-01', 'Ely').subscribe({ error: r }));
-    expect(error).toBeInstanceOf(ApiBusinessError);
+    await expect(firstValueFrom(service.submitBooking(REQUEST, 'RC-01', 'Ely'))).rejects.toThrow('Turno ocupado');
   });
 
-  it('si el backend cae (error de red) vuelve a la simulación local', async () => {
+  it('si el backend cae, el error llega a la pantalla y no se inventa una reserva', async () => {
     crear(true);
     api.reservar.mockReturnValue(throwError(() => new Error('network')));
-    const res = await new Promise<{ status: string }>(r => service.submitBooking(REQUEST, 'RC-01', 'Ely').subscribe(r));
-    expect(res.status).toBe('CONFIRMADA');
+    await expect(firstValueFrom(service.submitBooking(REQUEST, 'RC-01', 'Ely'))).rejects.toThrow('network');
   });
 });

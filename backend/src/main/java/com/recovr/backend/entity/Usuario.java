@@ -20,6 +20,9 @@ public class Usuario {
     @Column(nullable = false)
     private Rol rol;
 
+    @Column(length = 120)
+    private String nombre;
+
     public Usuario() {}
 
     public Long getId() { return id; }
@@ -28,6 +31,9 @@ public class Usuario {
     public void setCorreo(String correo) { this.correo = correo; }
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+    public String getNombre() { return nombre; }
+    public void setNombre(String nombre) { this.nombre = nombre; }
+
     public Rol getRol() { return rol; }
     public void setRol(Rol rol) { this.rol = rol; }
 }
