@@ -110,6 +110,25 @@ public class ReservaService {
         return reservaRepository.save(reserva);
     }
 
+    /**
+     * Cancela una reserva cambiando su estado (no borra la fila: se conserva el historial).
+     * Un CLIENTE solo cancela las suyas; ADMIN y RECEPCIONISTA cancelan cualquiera.
+     * Solo se pueden cancelar reservas PENDIENTE o CONFIRMADA.
+     */
+    @Transactional
+    public Reserva cancelar(Long id, String correo, boolean puedeGestionar) {
+        Reserva reserva = buscarPorId(id);
+        if (!puedeGestionar && !reserva.getCliente().getId().equals(clienteIdDelUsuario(correo))) {
+            throw new AccessDeniedException("Un cliente solo puede cancelar sus propias reservas");
+        }
+        if (!estaActiva(reserva)) {
+            throw new IllegalStateException("Solo se pueden cancelar reservas PENDIENTE o CONFIRMADA (estado actual: "
+                    + reserva.getEstado() + ")");
+        }
+        reserva.setEstado(EstadoReserva.CANCELADA);
+        return reservaRepository.save(reserva);
+    }
+
     public void eliminar(Long id) {
         if (!reservaRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Reserva", id);

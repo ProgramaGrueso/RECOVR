@@ -317,6 +317,70 @@ class ReservaPersistenteIntegrationTest {
 
     // ---------- utilidades ----------
 
+    // ---------- Cancelar sin borrar + borrado protegido ----------
+
+    @Test
+    @DisplayName("Cancelar cambia el estado a CANCELADA, conserva la fila y libera el horario")
+    void cancelarConservaLaFila() throws Exception {
+        Reserva r = guardarReserva(empleado, sala, manana10, EstadoReserva.PENDIENTE);
+        mockMvc.perform(auth(patch("/api/db/reservas/" + r.getId() + "/cancelar"), tokenCliente))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estado").value("CANCELADA"));
+        assertThat(reservaRepository.findById(r.getId())).isPresent();
+        crearReserva(tokenCliente, empleado, sala, manana10).andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("Una reserva ya cancelada no se puede cancelar de nuevo (400)")
+    void cancelarDosVeces() throws Exception {
+        Reserva r = guardarReserva(empleado, sala, manana10, EstadoReserva.CANCELADA);
+        mockMvc.perform(auth(patch("/api/db/reservas/" + r.getId() + "/cancelar"), tokenRecepcion))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Un cliente no puede cancelar la reserva de otro cliente (403)")
+    void cancelarAjena() throws Exception {
+        Cliente otro = new Cliente();
+        otro.setNombre("Otro");
+        otro.setCorreo("otro@test.com");
+        otro.setUsuarioId(usuarioRepository.findByCorreo("recepcion@test.com").orElseThrow().getId());
+        otro = clienteRepository.save(otro);
+        Reserva r = guardarReserva(empleado, sala, manana10, EstadoReserva.PENDIENTE);
+        r.setCliente(otro);
+        reservaRepository.save(r);
+        mockMvc.perform(auth(patch("/api/db/reservas/" + r.getId() + "/cancelar"), tokenCliente))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("No se elimina un servicio con reservas activas (400); sin reservas sí (204)")
+    void eliminarServicioConReservas() throws Exception {
+        guardarReserva(empleado, sala, manana10, EstadoReserva.CONFIRMADA);
+        mockMvc.perform(auth(delete("/api/servicios/" + servicio.getId()), tokenAdmin))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("reservas activas")));
+
+        Servicio libre = new Servicio();
+        libre.setNombre("Sin reservas");
+        libre.setDuracionMinutos(30);
+        libre.setTiempoLimpiezaMinutos(0);
+        libre.setPrecio(new BigDecimal("50.00"));
+        libre = servicioRepository.save(libre);
+        mockMvc.perform(auth(delete("/api/servicios/" + libre.getId()), tokenAdmin))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @DisplayName("No se elimina un especialista ni una sala con historial de reservas (400)")
+    void eliminarEmpleadoYSalaConHistorial() throws Exception {
+        guardarReserva(empleado, sala, manana10, EstadoReserva.COMPLETADA);
+        mockMvc.perform(auth(delete("/api/empleados/" + empleado.getId()), tokenAdmin))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(auth(delete("/api/salas/" + sala.getId()), tokenAdmin))
+                .andExpect(status().isBadRequest());
+    }
+
     private String token(String correo, Rol rol) {
         Usuario u = new Usuario();
         u.setCorreo(correo);

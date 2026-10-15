@@ -2,6 +2,8 @@ package com.recovr.backend.service;
 
 import com.recovr.backend.entity.Empleado;
 import com.recovr.backend.repository.EmpleadoRepository;
+import com.recovr.backend.repository.ReservaRepository;
+import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
 import org.springframework.stereotype.Service;
 
@@ -11,10 +13,15 @@ import java.util.List;
 @Service
 public class EmpleadoService {
 
-    private final EmpleadoRepository empleadoRepository;
+    private static final java.util.List<EstadoReserva> RESERVAS_ACTIVAS =
+            java.util.List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA);
 
-    public EmpleadoService(EmpleadoRepository empleadoRepository) {
+    private final EmpleadoRepository empleadoRepository;
+    private final ReservaRepository reservaRepository;
+
+    public EmpleadoService(EmpleadoRepository empleadoRepository, ReservaRepository reservaRepository) {
         this.empleadoRepository = empleadoRepository;
+        this.reservaRepository = reservaRepository;
     }
 
     public List<Empleado> listarTodos() {
@@ -41,6 +48,12 @@ public class EmpleadoService {
     public void eliminar(Long id) {
         if (!empleadoRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Empleado", id);
+        }
+        if (reservaRepository.existsByEmpleadoIdAndEstadoIn(id, RESERVAS_ACTIVAS)) {
+            throw new IllegalStateException("No se puede eliminar al empleado: tiene reservas activas (PENDIENTE o CONFIRMADA)");
+        }
+        if (reservaRepository.existsByEmpleadoId(id)) {
+            throw new IllegalStateException("No se puede eliminar al empleado: tiene historial de reservas");
         }
         empleadoRepository.deleteById(id);
     }

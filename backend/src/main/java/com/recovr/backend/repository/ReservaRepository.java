@@ -22,6 +22,14 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     String ACTIVA = "r.estado IN (com.recovr.backend.entity.EstadoReserva.PENDIENTE, "
             + "com.recovr.backend.entity.EstadoReserva.CONFIRMADA)";
 
+    boolean existsByServicioId(Long servicioId);
+    boolean existsByEmpleadoId(Long empleadoId);
+    boolean existsBySalaId(Long salaId);
+
+    boolean existsByServicioIdAndEstadoIn(Long servicioId, java.util.Collection<EstadoReserva> estados);
+    boolean existsByEmpleadoIdAndEstadoIn(Long empleadoId, java.util.Collection<EstadoReserva> estados);
+    boolean existsBySalaIdAndEstadoIn(Long salaId, java.util.Collection<EstadoReserva> estados);
+
     @Query("SELECT r FROM Reserva r WHERE r.cliente.id = :clienteId ORDER BY r.fechaHora DESC")
     List<Reserva> buscarPorCliente(@Param("clienteId") Long clienteId);
 

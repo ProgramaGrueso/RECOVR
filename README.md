@@ -64,10 +64,11 @@ RECOVR/
 - **Java 21 LTS + Spring Boot 3.3.5:** Arquitectura limpia con separación estricta en capas (Controllers, Services, Repositories, Entities, DTOs y Mappers).
 - **Seguridad Sin Estado con JWT (Spring Security 6):** Filtro de interceptación de cabeceras `Authorization: Bearer <token>`, encriptación BCrypt para credenciales y tokens firmados con JJWT 0.12.6.
 - **Control de Acceso Basado en Roles (RBAC):**
-  - `ROLE_ADMIN`: Control absoluto de métricas, configuración de servicios, tarifas y asignación de personal.
-  - `ROLE_RECEPCION`: Registro de citas presenciales, confirmación de pagos y control de agenda.
-  - `ROLE_STAFF`: Acceso a turnos, historial de sesiones y estado de cabinas asignadas.
-  - `ROLE_CLIENTE`: Consulta de catálogo, historial de reservas y puntos de fidelidad.
+  - `ROLE_ADMIN`: Control total: catálogo de servicios, tarifas, cabinas, personal y clientes.
+  - `ROLE_RECEPCIONISTA`: Gestión de reservas (crear, buscar, actualizar, cancelar) y confirmación de pagos.
+  - `ROLE_ESPECIALISTA`: Consulta de su propia agenda futura (vinculado a su ficha de empleado).
+  - `ROLE_CLIENTE`: Consulta de catálogo, reserva a su nombre, pago y cancelación de sus propias reservas.
+- **Cancelación sin borrado:** cancelar una reserva (`PATCH /api/db/reservas/{id}/cancelar`) solo cambia su estado a `CANCELADA`; se conserva el historial y se libera el horario. Un servicio, especialista o cabina con reservas activas (o con historial) no se puede eliminar (400).
 - **Persistencia Dual (Producción & Testing):** Soporte nativo para MySQL 8 mediante Docker Compose y perfiles en memoria H2 para pruebas unitarias automatizadas.
 - **Documentación Viva OpenAPI 3 / Swagger UI:** Interfaz interactiva para pruebas directas de endpoints en `/swagger-ui/index.html`.
 - **Validaciones Rigurosas:** Validación declarativa con `spring-boot-starter-validation` (`@NotNull`, `@Size`, `@Pattern`, `@FutureOrPresent`) y manejador global de excepciones con respuestas estructuradas RFC 7807.
@@ -144,6 +145,15 @@ SEED_DEMO_DATA=true DEMO_PASSWORD='Demo12345!' mvn spring-boot:run
 
 **Datos de demostración (`SEED_DEMO_DATA=true`):** al arrancar por primera vez carga el catálogo oficial (RC-01 a RC-06), las 4 cabinas, las 4 terapeutas, 45 clientes y unas 600 reservas entre el 1 de octubre y el 31 de diciembre de 2026 (rango configurable con `recovr.seed.inicio` y `recovr.seed.fin`). Respeta la regla de negocio: ninguna cabina ni terapeuta tiene dos reservas activas que se crucen (duración + tiempo de limpieza). Las sesiones pasadas quedan COMPLETADAS o CANCELADAS y las futuras CONFIRMADAS (con pago) o PENDIENTES. Es idempotente: si ya hay datos demo, no vuelve a cargarlos. Con `DEMO_PASSWORD` crea además las cuentas `admin.demo@recovr.test`, `recepcion.demo@recovr.test`, `ely.demo@recovr.test` (ESPECIALISTA) y `cliente.demo@recovr.test`.
 
+#### Atajo para el equipo: base de datos + backend con datos de 3 meses (oct–dic)
+Con Docker, Java 21 y Maven instalados, en la carpeta `backend`:
+```bash
+./run-demo.sh          # Linux / macOS
+.\run-demo.ps1         # Windows PowerShell
+```
+El script levanta MySQL (`docker compose up -d`), espera a que esté sano y arranca el backend con `SEED_DEMO_DATA=true`. Cuentas demo (contraseña `Demo12345!`): `admin.demo@recovr.test`, `recepcion.demo@recovr.test`, `ely.demo@recovr.test` (ESPECIALISTA) y `cliente.demo@recovr.test`. Para empezar de cero: `docker compose down -v` y volver a ejecutar el script.
+> Si Docker responde que el nombre `recovr-mysql` ya está en uso, es un contenedor de una ejecución anterior: `docker start recovr-mysql` (o `docker rm recovr-mysql` y repetir).
+
 ### 4. Iniciar el Frontend (Angular Standalone)
 En una nueva terminal, instala las dependencias y corre el servidor de desarrollo:
 ```bash
@@ -182,9 +192,10 @@ npm run dev
 | `GET` | `/api/db/reservas/agenda` | `ESPECIALISTA` | Agenda futura del especialista autenticado. |
 | `GET` | `/api/db/reservas/cliente/{id}` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Historial de un cliente. |
 | `POST` | `/api/db/reservas/{id}/confirmar-y-pagar` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Confirma la reserva y registra el pago en una transacción. |
+| `PATCH` | `/api/db/reservas/{id}/cancelar` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Cancela una reserva PENDIENTE o CONFIRMADA cambiando su estado a CANCELADA (no borra la fila). |
 | `GET` `PUT` `DELETE` | `/api/db/reservas`, `/api/db/reservas/{id}`, `/api/db/reservas/buscar` | `RECEPCIONISTA`, `ADMIN` | Gestión completa y búsqueda JPQL por rango de fechas y estado. |
 
-Códigos de error: `400` datos inválidos (con detalle por campo), `401` sin token o token inválido, `403` rol sin permiso, `404` recurso inexistente, `409` cruce de horario o registro duplicado.
+Códigos de error: `400` datos inválidos (con detalle por campo), `401` sin token o token inválido, `403` rol sin permiso, `404` recurso inexistente (o intento de eliminar un servicio, especialista o cabina con reservas: `400`), `409` cruce de horario o registro duplicado.
 
 ---
 
@@ -198,7 +209,7 @@ mvn test
 ```
 - Pruebas de controladores REST con `MockMvc`.
 - Validaciones de negocio en `ReservaService` y `ClienteService`.
-- Pruebas de integración con perfiles de base de datos H2 en memoria (JWT real, roles, conflictos de agenda, asignación de cabina y seed de datos demo).
+- Pruebas de integración con perfiles de base de datos H2 en memoria (JWT real, roles, conflictos de agenda, asignación de cabina, cancelación sin borrado, borrado protegido y seed de datos demo).
 
 ### Pruebas del Frontend
 ```bash

@@ -58,6 +58,8 @@ public class SecurityConfig {
                             .hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
                         .requestMatchers(HttpMethod.POST, "/api/db/reservas/*/confirmar-y-pagar")
                             .hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
+                        .requestMatchers(HttpMethod.PATCH, "/api/db/reservas/*/cancelar")
+                            .hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
                         .requestMatchers(HttpMethod.POST, "/api/db/reservas")
                             .hasAnyRole("ADMIN", "RECEPCIONISTA", "CLIENTE")
                         .requestMatchers("/api/db/reservas", "/api/db/reservas/**")

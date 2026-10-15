@@ -96,6 +96,27 @@ public class ReservaController {
         return ReservaResponse.de(reservaService.actualizar(id, request));
     }
 
+    @Operation(
+            summary = "Cancelar reserva",
+            description = "Cambia el estado a CANCELADA sin borrar la fila (se conserva el historial y se libera el horario). "
+                    + "Un CLIENTE solo cancela las suyas; ADMIN y RECEPCIONISTA cualquiera. Solo PENDIENTE o CONFIRMADA."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Reserva cancelada",
+                    content = @Content(schema = @Schema(implementation = ReservaResponse.class))),
+            @ApiResponse(responseCode = "400", description = "La reserva ya no está activa", content = @Content),
+            @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Reserva de otro cliente", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Reserva no encontrada", content = @Content)
+    })
+    @PatchMapping("/{id}/cancelar")
+    public ReservaResponse cancelar(
+            @Parameter(description = "ID de la reserva a cancelar", example = "1") @PathVariable Long id,
+            Authentication authentication) {
+        return ReservaResponse.de(reservaService.cancelar(
+                id, authentication.getName(), esGestionDeReservas(authentication)));
+    }
+
     @Operation(summary = "Eliminar reserva", description = "Elimina una reserva de la base de datos por su ID. Requiere rol ADMIN o RECEPCIONISTA.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Reserva eliminada"),

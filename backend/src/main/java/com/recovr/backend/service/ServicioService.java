@@ -2,6 +2,8 @@ package com.recovr.backend.service;
 
 import com.recovr.backend.entity.Servicio;
 import com.recovr.backend.repository.ServicioRepository;
+import com.recovr.backend.repository.ReservaRepository;
+import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
 import org.springframework.stereotype.Service;
 
@@ -10,10 +12,15 @@ import java.util.List;
 @Service
 public class ServicioService {
 
-    private final ServicioRepository servicioRepository;
+    private static final java.util.List<EstadoReserva> RESERVAS_ACTIVAS =
+            java.util.List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA);
 
-    public ServicioService(ServicioRepository servicioRepository) {
+    private final ServicioRepository servicioRepository;
+    private final ReservaRepository reservaRepository;
+
+    public ServicioService(ServicioRepository servicioRepository, ReservaRepository reservaRepository) {
         this.servicioRepository = servicioRepository;
+        this.reservaRepository = reservaRepository;
     }
 
     public List<Servicio> listarTodos() {
@@ -41,6 +48,12 @@ public class ServicioService {
     public void eliminar(Long id) {
         if (!servicioRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Servicio", id);
+        }
+        if (reservaRepository.existsByServicioIdAndEstadoIn(id, RESERVAS_ACTIVAS)) {
+            throw new IllegalStateException("No se puede eliminar el servicio: tiene reservas activas (PENDIENTE o CONFIRMADA)");
+        }
+        if (reservaRepository.existsByServicioId(id)) {
+            throw new IllegalStateException("No se puede eliminar el servicio: tiene historial de reservas");
         }
         servicioRepository.deleteById(id);
     }
