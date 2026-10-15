@@ -388,6 +388,18 @@ export class AdminComponent implements OnInit, OnDestroy {
       status: 'ACTIVO'
     },
     {
+      id: 'STF-05',
+      name: 'Maria',
+      role: 'ESPECIALISTA',
+      specialty: 'Suite Presencial e Hidromasaje',
+      email: 'maria@recovr.cl',
+      phone: '+51 900 000 004',
+      shift: 'Turno Noche (16:00 - 23:00)',
+      commissionRate: 35,
+      monthlySessions: 31,
+      status: 'ACTIVO'
+    },
+    {
       id: 'STF-04',
       name: 'Camila Morales',
       role: 'RECEPCIONISTA',
