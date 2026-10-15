@@ -35,7 +35,11 @@ import java.util.Map;
 import java.util.Random;
 
 /**
- * Datos de demostración: catálogo de servicios, cabinas, terapeutas, clientes y reservas
+ * Datos iniciales. SIEMPRE (con o sin demo) y de forma idempotente crea el catálogo oficial: los 6 servicios RC-xx,
+ * las 4 cabinas y las 4 terapeutas (Ely, Miranda, Pamela y Maria), para que la base nunca arranque sin personal
+ * (se apaga con recovr.seed.catalogo=false, p. ej. en las pruebas que necesitan una base vacía).
+ *
+ * Datos de demostración (solo con recovr.seed.demo-data=true): clientes y reservas
  * repartidas entre {@code recovr.seed.inicio} y {@code recovr.seed.fin} (por defecto octubre a diciembre).
  *
  * Solo corre con recovr.seed.demo-data=true (variable SEED_DEMO_DATA). Todo lo que crea queda marcado con
@@ -58,6 +62,7 @@ public class DemoDataSeeder implements CommandLineRunner {
     private static final String[] APELLIDOS = {"Quispe", "Mendoza", "Flores", "Rojas", "Torres", "Huamán", "Castillo",
             "Vargas", "Chávez", "Ramírez", "Salazar", "Paredes", "Cárdenas", "Medina", "Gutiérrez", "Rivera"};
 
+    private final boolean catalogoInicial;
     private final boolean activo;
     private final String passwordDemo;
     private final LocalDate inicio;
@@ -73,7 +78,8 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final TransactionTemplate transaccion;
 
-    public DemoDataSeeder(@Value("${recovr.seed.demo-data:false}") boolean activo,
+    public DemoDataSeeder(@Value("${recovr.seed.catalogo:true}") boolean catalogoInicial,
+                          @Value("${recovr.seed.demo-data:false}") boolean activo,
                           @Value("${recovr.seed.demo-password:}") String passwordDemo,
                           @Value("${recovr.seed.inicio:2026-10-01}") LocalDate inicio,
                           @Value("${recovr.seed.fin:2026-12-31}") LocalDate fin,
@@ -82,6 +88,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                           UsuarioRepository usuarioRepository, ReservaRepository reservaRepository,
                           PagoRepository pagoRepository, PasswordEncoder passwordEncoder,
                           TransactionTemplate transaccion) {
+        this.catalogoInicial = catalogoInicial;
         this.activo = activo;
         this.passwordDemo = passwordDemo;
         this.inicio = inicio;
@@ -99,6 +106,13 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        if (catalogoInicial) {
+            transaccion.executeWithoutResult(status -> {
+                catalogo();
+                cabinas();
+                terapeutas();
+            });
+        }
         if (!activo) {
             return;
         }

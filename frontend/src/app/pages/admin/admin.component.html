@@ -240,7 +240,7 @@
             <div class="stat-card highlight">
               <span class="stat-label">PRÓXIMO PACIENTE CITADO</span>
               <h3 class="stat-value">16:00 HRS</h3>
-              <span class="stat-change">Carlos Mendoza (Sanctum 01)</span>
+              <span class="stat-change">Carlos Mendoza (Cabina 01)</span>
             </div>
             <div class="stat-card">
               <span class="stat-label">MIS TURNOS HOY</span>
@@ -407,9 +407,9 @@
           <div class="filter-group">
             <span class="filter-label">Filtrar por Sala:</span>
             <button class="filter-chip" [class.active]="selectedRoomFilter === 'TODAS'" (click)="selectedRoomFilter = 'TODAS'">TODAS</button>
-            <button class="filter-chip" [class.active]="selectedRoomFilter === 'Sanctum 01'" (click)="selectedRoomFilter = 'Sanctum 01'">Sanctum 01</button>
-            <button class="filter-chip" [class.active]="selectedRoomFilter === 'Sanctum 02'" (click)="selectedRoomFilter = 'Sanctum 02'">Sanctum 02</button>
-            <button class="filter-chip" [class.active]="selectedRoomFilter === 'Podología'" (click)="selectedRoomFilter = 'Podología'">Podología</button>
+            <button class="filter-chip" [class.active]="selectedRoomFilter === 'Cabina 01'" (click)="selectedRoomFilter = 'Cabina 01'">Cabina 01</button>
+            <button class="filter-chip" [class.active]="selectedRoomFilter === 'Cabina 02'" (click)="selectedRoomFilter = 'Cabina 02'">Cabina 02</button>
+            <button class="filter-chip" [class.active]="selectedRoomFilter === 'Cabina 03'" (click)="selectedRoomFilter = 'Cabina 03'">Cabina 03</button>
           </div>
 
           <!-- Acción exclusiva de Recepcionista y Administrador -->
@@ -524,10 +524,10 @@
                   <div class="form-field">
                     <label>Protocolo de Spa</label>
                     <select [(ngModel)]="newBooking.service">
-                      <option value="Descompresión Miofascial">Descompresión Miofascial (60 min)</option>
-                      <option value="Masaje Terapéutico Deportivo">Masaje Terapéutico Deportivo (60 min)</option>
-                      <option value="Podología Clínica Deportiva">Podología Clínica Deportiva (45 min)</option>
-                      <option value="Ritual Sanctum Completo">Ritual Sanctum Completo (90 min)</option>
+                      <option value="Masaje Tántrico Sensitivo">Masaje Tántrico Sensitivo (60 min)</option>
+                      <option value="Masaje Relajante & Descontracturante">Masaje Relajante & Descontracturante (60 min)</option>
+                      <option value="Masaje Nuru Body Slide">Masaje Nuru Body Slide (75 min)</option>
+                      <option value="RECOVR VIP Hidromasaje">RECOVR VIP Hidromasaje (90 min)</option>
                     </select>
                   </div>
                   <div class="form-field">
@@ -541,9 +541,9 @@
                   <div class="form-field">
                     <label>Cabina / Sala</label>
                     <select [(ngModel)]="newBooking.room">
-                      <option value="Sanctum 01 (Descompresión)">Sanctum 01 (Descompresión)</option>
-                      <option value="Sanctum 02 (Masoterapia)">Sanctum 02 (Masoterapia)</option>
-                      <option value="Sala Podología Clínica">Sala Podología Clínica</option>
+                      <option value="Cabina 01 (Néon Rose)">Cabina 01 (Néon Rose)</option>
+                      <option value="Cabina 02 (Nuru Suite)">Cabina 02 (Nuru Suite)</option>
+                      <option value="Cabina 03 (Dúo / 4 Manos)">Cabina 03 (Dúo / 4 Manos)</option>
                     </select>
                   </div>
                   <div class="form-field">
@@ -664,7 +664,7 @@
 
             <div class="confidentiality-notice">
               <span class="lock-icon">🔒</span>
-              <p>Módulo de acceso restringido bajo secreto profesional terapéutico (Kinesiología &amp; Podología). Denegado a personal no clínico.</p>
+              <p>Módulo de acceso restringido bajo secreto profesional terapéutico (fichas de las terapeutas). Denegado a personal no clínico.</p>
             </div>
           </aside>
 
@@ -815,12 +815,12 @@
               </select>
             </div>
             <div class="pos-input-group">
-              <label>Servicio / Tratamiento Bubble</label>
+              <label>Servicio / Tratamiento</label>
               <select [(ngModel)]="newPayment.service">
-                <option value="Bubble Hydro Glow Facial">Bubble Hydro Glow Facial (S/ 130)</option>
-                <option value="Bubble Berry Relax Massage">Bubble Berry Relax Massage (S/ 150)</option>
-                <option value="Bubble Pop Podología Spa">Bubble Pop Podología Spa (S/ 85)</option>
-                <option value="Pack 4 Sesiones Bubble">Pack 4 Sesiones Bubble (S/ 450)</option>
+                <option value="Masaje Tántrico Sensitivo">Masaje Tántrico Sensitivo (S/ 200)</option>
+                <option value="Masaje Nuru Body Slide">Masaje Nuru Body Slide (S/ 280)</option>
+                <option value="Masaje a Cuatro Manos">Masaje a Cuatro Manos (S/ 380)</option>
+                <option value="RECOVR VIP Hidromasaje">RECOVR VIP Hidromasaje (S/ 450)</option>
               </select>
             </div>
             <div class="pos-input-group">
@@ -1155,7 +1155,7 @@
 
             <p class="progress-status-msg">
               @if (clientPoints >= 500) {
-                🎉 <strong>¡Felicidades!</strong> Has alcanzado la meta. Ya puedes canjear tu <strong>Sesión de Descompresión Miofascial 100% Gratuita</strong> en el catálogo inferior.
+                🎉 <strong>¡Felicidades!</strong> Has alcanzado la meta. Ya puedes canjear tu <strong>Sesión de Masaje Tántrico Sensitivo 100% Gratuita</strong> en el catálogo inferior.
               } @else {
                 Te faltan <strong>{{ 500 - clientPoints }} Puntos</strong> para desbloquear tu próxima sesión de descompresión 100% gratuita. ¡Agenda tu siguiente turno para sumar +100 pts!
               }

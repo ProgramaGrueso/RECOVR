@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService, AdminRole } from '../../services/auth.service';
+import { ApiService } from '../../services/api.service';
 import { BrandMarkComponent } from '../../components/brand-mark/brand-mark.component';
 
 @Component({
@@ -39,6 +40,7 @@ export class AdminLoginComponent implements OnInit {
   successMessage = '';
 
   auth = inject(AuthService);
+  private api = inject(ApiService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
 
@@ -161,6 +163,8 @@ export class AdminLoginComponent implements OnInit {
     });
 
     if (res.success) {
+      // También se guarda en la base de datos (si el backend no está encendido, la cuenta local sigue funcionando).
+      this.api.registrar(this.regName, this.regEmail, this.regPassword, this.regPhone).subscribe();
       this.successMessage = res.message;
       setTimeout(() => {
         const returnUrl = this.route.snapshot.queryParams['returnUrl'];

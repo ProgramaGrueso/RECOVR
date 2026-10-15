@@ -105,20 +105,34 @@
       </div>
     </div>
 
-    <div class="cabinas-grid" id="cabinas-grid">
-      <div
-        class="cabina-card"
-        *ngFor="let spc of spaces"
-        appCardTilt
+    <div class="cabinas-gallery" id="cabinas-grid" role="list">
+      <article
+        class="cabina-panel"
+        *ngFor="let spc of spaces; let i = index"
+        role="listitem"
+        tabindex="0"
+        [class.is-active]="activeSpace === i"
         [attr.data-cursor]="spc.code"
-        (click)="onReserve()">
-        <span class="cabina-code">{{ spc.code }} &bull; {{ spc.capacity }}</span>
-        <h3 class="cabina-name">{{ spc.name }}</h3>
-        <p class="cabina-desc">{{ spc.description }}</p>
-        <ul class="cabina-features">
-          <li *ngFor="let feat of spc.features">{{ feat }}</li>
-        </ul>
-      </div>
+        [attr.aria-label]="spc.code + ' · ' + spc.name"
+        (mouseenter)="setActiveSpace(i)"
+        (focus)="setActiveSpace(i)"
+        (click)="onSpaceClick(i)"
+        (keydown.enter)="onReserve()">
+        <img class="cabina-photo" [src]="spc.imageUrl" [alt]="'Cabina ' + spc.name" loading="lazy" decoding="async" />
+        <div class="cabina-shade"></div>
+        <span class="cabina-index">0{{ i + 1 }}</span>
+        <div class="cabina-caption">
+          <span class="cabina-code">{{ spc.code }} &bull; {{ spc.capacity }}</span>
+          <h3 class="cabina-name">{{ spc.name }}</h3>
+          <div class="cabina-more">
+            <p class="cabina-desc">{{ spc.description }}</p>
+            <ul class="cabina-features">
+              <li *ngFor="let feat of spc.features">{{ feat }}</li>
+            </ul>
+            <button type="button" class="cabina-cta" (click)="onReserve(); $event.stopPropagation()">Reservar esta cabina &rarr;</button>
+          </div>
+        </div>
+      </article>
     </div>
   </section>
 

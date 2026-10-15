@@ -325,10 +325,10 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
           id: response.id,
           service: this.selectedService?.name || 'Protocolo Sanctum',
           prof: this.selectedProfessional?.name || 'Especialista RECOVR',
-          room: 'Sanctum 01 (Descompresión)',
+          room: 'Cabina 01 (Néon Rose)',
           date: response.date,
           time: response.timeSlot,
-          price: this.selectedService?.price || 65000,
+          price: this.selectedService?.price || 200,
           status: response.status === 'PENDIENTE' ? 'EN ESPERA' : response.status,
           notes: this.bookingForm.value.notes
         });

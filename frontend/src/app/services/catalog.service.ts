@@ -228,7 +228,7 @@ export class CatalogService {
       subtitle: 'Cabina privada con iluminación neón tenue',
       description: 'Camilla térmica extra ancha, sábanas satinadas y control de iluminación neón.',
       features: ['Camilla Térmica Extra Ancha', 'Sábanas Satinadas', 'Control de Iluminación Neón'],
-      imageUrl: 'assets/img/cabinapriv.webp',
+      imageUrl: 'assets/img/cabinas/cabina-01.webp',
       capacity: '1 Persona'
     },
     {
@@ -238,7 +238,7 @@ export class CatalogService {
       subtitle: 'Especial para masaje cuerpo a cuerpo',
       description: 'Especial para cuerpo a cuerpo, equipada con colchón impermeable y ducha privada de alta presión.',
       features: ['Colchón Impermeable Nuru', 'Ducha Privada Alta Presión', 'Climatización Óptima'],
-      imageUrl: 'assets/img/cabinapriv.webp',
+      imageUrl: 'assets/img/cabinas/cabina-02.webp',
       capacity: '1 Persona'
     },
     {
@@ -248,7 +248,7 @@ export class CatalogService {
       subtitle: 'Espacio amplio para sesiones simultáneas',
       description: 'Espacio amplio para sesiones simultáneas con dos masajistas trabajando de manera sincronizada.',
       features: ['Sesiones a Cuatro Manos', 'Espacio Amplio Climatizado', 'Sonido Acústico Envolvente'],
-      imageUrl: 'assets/img/cabinapriv.webp',
+      imageUrl: 'assets/img/cabinas/cabina-03.webp',
       capacity: '1-2 Personas'
     },
     {
@@ -258,7 +258,7 @@ export class CatalogService {
       subtitle: 'Camilla especial y tina de hidromasaje privada',
       description: 'Camilla especial y tina de hidromasaje privada en suite con microburbujas para relajación total.',
       features: ['Tina de Hidromasaje Privada', 'Microburbujas Relajantes', 'Máxima Exclusividad & Confort'],
-      imageUrl: 'assets/img/cabinapriv.webp',
+      imageUrl: 'assets/img/cabinas/cabina-04.webp',
       capacity: '1 Persona'
     }
   ];

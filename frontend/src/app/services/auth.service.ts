@@ -41,36 +41,36 @@ export const DEMO_USERS: Record<string, AdminUser & { password: string }> = {
     badgeTone: 'silver'
   },
   'ESPECIALISTA': {
-    id: 'especialista',
-    name: 'Valentina Ross',
-    email: 'valentina@recovr.cl',
+    id: 'ely',
+    name: 'Ely',
+    email: 'ely@recovr.cl',
     password: 'recovr2026',
     role: 'ESPECIALISTA',
-    roleTitle: 'Kinesióloga & Masoterapeuta',
+    roleTitle: 'Masaje Tántrico Sensitivo',
     roleScope: 'Ficha Clínica, Evolución de Paciente y Turnos Propios',
-    avatar: 'VR',
+    avatar: 'EL',
     badgeTone: 'teal'
   },
-  'ESPECIALISTA_ELENA': {
-    id: 'elena',
-    name: 'Elena Roth',
-    email: 'elena@recovr.cl',
+  'ESPECIALISTA_MIRANDA': {
+    id: 'miranda',
+    name: 'Miranda',
+    email: 'miranda@recovr.cl',
     password: 'recovr2026',
     role: 'ESPECIALISTA',
-    roleTitle: 'Podóloga Clínica Especialista',
+    roleTitle: 'Masaje Nuru Body Slide',
     roleScope: 'Ficha Clínica, Evolución de Paciente y Turnos Propios',
-    avatar: 'ER',
+    avatar: 'MI',
     badgeTone: 'teal'
   },
-  'ESPECIALISTA_ASTRID': {
-    id: 'astrid',
-    name: 'Astrid Vane',
+  'ESPECIALISTA_PAMELA': {
+    id: 'pamela',
+    name: 'Pamela',
     email: 'astrid@recovr.cl',
     password: 'recovr2026',
     role: 'ESPECIALISTA',
-    roleTitle: 'Masoterapeuta & Recuperación Miofascial',
+    roleTitle: 'Descontracturante y Cuatro Manos',
     roleScope: 'Ficha Clínica, Evolución de Paciente y Turnos Propios',
-    avatar: 'AV',
+    avatar: 'PA',
     badgeTone: 'teal'
   },
   'CLIENTE': {
@@ -262,7 +262,7 @@ export class AuthService {
       amount: 50,
       reason: 'Bono de Bienvenida por creación de cuenta',
       type: 'EARNED'
-    });
+    }, newClient.id);
 
     this.persistUser(newClient);
     return { success: true, message: '¡Cuenta creada con éxito! Se han sumado +50 Puntos de Bienvenida a tu perfil.', user: newClient };
@@ -422,26 +422,34 @@ export class AuthService {
     return { success: true, message: `¡Beneficio canjeado exitosamente! Disfruta de "${benefitTitle}". Saldo restante: ${newTotal} pts.` };
   }
 
-  getPointsHistory(): Array<{ id: string; date: string; amount: number; reason: string; type: 'EARNED' | 'REDEEMED' }> {
+  private pointsHistoryKey(userId?: string): string {
+    return `${this.pointsStorageKey}_${userId ?? this.currentUser()?.id ?? 'anon'}`;
+  }
+
+  getPointsHistory(userId?: string): Array<{ id: string; date: string; amount: number; reason: string; type: 'EARNED' | 'REDEEMED' }> {
+    const key = this.pointsHistoryKey(userId);
     try {
-      const data = localStorage.getItem(this.pointsStorageKey);
+      const data = localStorage.getItem(key);
       if (data) return JSON.parse(data);
     } catch {}
 
-    // Eventos iniciales demo para Carlos Mendoza
+    // Solo la cuenta demo (Carlos Mendoza) trae movimientos de ejemplo; un cliente nuevo parte con el historial vacío.
+    if ((userId ?? this.currentUser()?.id) !== 'cliente') {
+      return [];
+    }
     const initialEvents = [
       { id: 'PT-01', date: '2026-08-01', amount: 50, reason: 'Bono de Bienvenida Sanctum Club', type: 'EARNED' as const },
-      { id: 'PT-02', date: '2026-08-10', amount: 100, reason: 'Sesión completada — Descompresión Miofascial', type: 'EARNED' as const },
+      { id: 'PT-02', date: '2026-08-10', amount: 100, reason: 'Sesión completada — Masaje Tántrico Sensitivo', type: 'EARNED' as const },
       { id: 'PT-03', date: '2026-08-15', amount: 200, reason: 'Check-in y asistencia puntual consecutiva', type: 'EARNED' as const }
     ];
-    localStorage.setItem(this.pointsStorageKey, JSON.stringify(initialEvents));
+    localStorage.setItem(key, JSON.stringify(initialEvents));
     return initialEvents;
   }
 
-  private addPointTransaction(tx: { id: string; date: string; amount: number; reason: string; type: 'EARNED' | 'REDEEMED' }): void {
-    const history = this.getPointsHistory();
+  private addPointTransaction(tx: { id: string; date: string; amount: number; reason: string; type: 'EARNED' | 'REDEEMED' }, userId?: string): void {
+    const history = this.getPointsHistory(userId);
     history.unshift(tx);
-    localStorage.setItem(this.pointsStorageKey, JSON.stringify(history));
+    localStorage.setItem(this.pointsHistoryKey(userId), JSON.stringify(history));
   }
 
   // -------------------------------------------------------------
@@ -485,17 +493,20 @@ export class AuthService {
       if (data) return JSON.parse(data);
     } catch {}
 
-    // Cita por defecto para Carlos Mendoza / demo
+    // Un cliente nuevo empieza SIN citas; solo la cuenta demo de Carlos Mendoza trae una cita de ejemplo.
+    if (current.id !== 'cliente') {
+      return [];
+    }
     const todayStr = this.serverTimeService.getNowISOString().substring(0, 10);
     const initialBookings: ClientBookingItem[] = [
       {
         id: 'REC-908123',
-        service: 'Descompresión Miofascial',
-        prof: 'Valentina Ross',
-        room: 'Sanctum 01 (Descompresión)',
+        service: 'Masaje Tántrico Sensitivo',
+        prof: 'Ely',
+        room: 'Cabina 01 (Néon Rose)',
         date: todayStr,
         time: '16:00',
-        price: 65000,
+        price: 200,
         status: 'CONFIRMADA'
       }
     ];

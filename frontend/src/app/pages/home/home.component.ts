@@ -38,6 +38,7 @@ export class HomeComponent implements OnInit {
   filteredServices: ServiceItem[] = [];
   professionals: Professional[] = [];
   spaces: SpaceItem[] = [];
+  activeSpace = 0;
   videoReels: VideoReel[] = [];
   reviews: ReviewItem[] = [];
   activeCategory: string = 'ALL';
@@ -47,6 +48,22 @@ export class HomeComponent implements OnInit {
 
   cinemaService: ServiceItem | null = null;
   showCinemaModal: boolean = false;
+
+  setActiveSpace(index: number): void {
+    if (this.activeSpace !== index) {
+      this.activeSpace = index;
+      this.cdr.markForCheck();
+    }
+  }
+
+  /** En pantallas táctiles el primer toque abre la cabina; el segundo reserva. */
+  onSpaceClick(index: number): void {
+    if (this.activeSpace === index) {
+      this.onReserve();
+    } else {
+      this.setActiveSpace(index);
+    }
+  }
 
   ngOnInit(): void {
     this.catalogService.getFeaturedServices().subscribe(services => {

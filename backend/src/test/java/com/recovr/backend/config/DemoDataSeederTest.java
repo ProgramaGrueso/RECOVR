@@ -17,6 +17,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(properties = {
+        "recovr.seed.catalogo=true",
         "recovr.seed.demo-data=true",
         "recovr.seed.demo-password=Demo12345!",
         "recovr.seed.inicio=2026-10-01",

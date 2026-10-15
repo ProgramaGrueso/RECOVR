@@ -141,13 +141,13 @@ export class AdminComponent implements OnInit, OnDestroy {
       id: 'REC-908123',
       client: 'Carlos Mendoza',
       clientPhone: '+56 9 8765 4321',
-      service: 'Descompresión Miofascial',
+      service: 'Masaje Tántrico Sensitivo',
       serviceCategory: 'MASAJE',
-      prof: 'Valentina Ross',
-      room: 'Sanctum 01 (Descompresión)',
+      prof: 'Ely',
+      room: 'Cabina 01 (Néon Rose)',
       date: '2026-08-21',
       time: '16:00',
-      price: 65000,
+      price: 200,
       status: 'CONFIRMADA',
       paymentStatus: 'PAGADO',
       paymentMethod: 'STRIPE WEB',
@@ -157,13 +157,13 @@ export class AdminComponent implements OnInit, OnDestroy {
       id: 'REC-871234',
       client: 'Ignacio Silva',
       clientPhone: '+56 9 9123 4567',
-      service: 'Podología Clínica Deportiva',
+      service: 'Masaje Nuru Body Slide',
       serviceCategory: 'PODOLOGÍA',
-      prof: 'Elena Roth',
-      room: 'Sala Podología Clínica',
+      prof: 'Miranda',
+      room: 'Cabina 03 (Dúo / 4 Manos)',
       date: '2026-08-21',
       time: '17:30',
-      price: 45000,
+      price: 280,
       status: 'EN ESPERA',
       paymentStatus: 'PENDIENTE',
       notes: 'Presenta molestia en talón izquierdo por trote.'
@@ -172,13 +172,13 @@ export class AdminComponent implements OnInit, OnDestroy {
       id: 'REC-761928',
       client: 'Esteban Paz',
       clientPhone: '+56 9 6543 2198',
-      service: 'Masaje Terapéutico Deportivo',
+      service: 'Masaje Relajante & Descontracturante',
       serviceCategory: 'MASAJE',
-      prof: 'Astrid Vane',
-      room: 'Sanctum 02 (Masoterapia)',
+      prof: 'Pamela',
+      room: 'Cabina 02 (Nuru Suite)',
       date: '2026-08-22',
       time: '09:00',
-      price: 58000,
+      price: 180,
       status: 'EN SESIÓN',
       paymentStatus: 'PAGADO',
       paymentMethod: 'POS TRANSBANK',
@@ -188,13 +188,13 @@ export class AdminComponent implements OnInit, OnDestroy {
       id: 'REC-654129',
       client: 'Mariano Torres',
       clientPhone: '+56 9 7890 1234',
-      service: 'Perfilado Podológico Preventivo',
+      service: 'Masaje a Cuatro Manos',
       serviceCategory: 'PODOLOGÍA',
-      prof: 'Elena Roth',
-      room: 'Sala Podología Clínica',
+      prof: 'Miranda',
+      room: 'Cabina 03 (Dúo / 4 Manos)',
       date: '2026-08-22',
       time: '10:30',
-      price: 40000,
+      price: 380,
       status: 'COMPLETADA',
       paymentStatus: 'PAGADO',
       paymentMethod: 'EFECTIVO'
@@ -203,13 +203,13 @@ export class AdminComponent implements OnInit, OnDestroy {
       id: 'REC-543210',
       client: 'Felipe Araneda',
       clientPhone: '+56 9 4321 0987',
-      service: 'Ritual Sanctum Completo',
+      service: 'RECOVR VIP Hidromasaje',
       serviceCategory: 'RITUAL',
-      prof: 'Valentina Ross',
-      room: 'Sanctum 01 (Descompresión)',
+      prof: 'Ely',
+      room: 'Cabina 01 (Néon Rose)',
       date: '2026-08-22',
       time: '12:00',
-      price: 95000,
+      price: 450,
       status: 'CONFIRMADA',
       paymentStatus: 'PAGADO',
       paymentMethod: 'STRIPE WEB',
@@ -222,13 +222,13 @@ export class AdminComponent implements OnInit, OnDestroy {
   newBooking: Partial<BookingAdminItem> = {
     client: '',
     clientPhone: '+56 9 ',
-    service: 'Descompresión Miofascial',
+    service: 'Masaje Tántrico Sensitivo',
     serviceCategory: 'MASAJE',
-    prof: 'Valentina Ross',
-    room: 'Sanctum 01 (Descompresión)',
+    prof: 'Ely',
+    room: 'Cabina 01 (Néon Rose)',
     date: '2026-08-22',
     time: '14:00',
-    price: 65000,
+    price: 200,
     status: 'CONFIRMADA',
     paymentStatus: 'PENDIENTE',
     paymentMethod: 'POS TRANSBANK'
@@ -253,7 +253,7 @@ export class AdminComponent implements OnInit, OnDestroy {
         {
           id: 'NOTE-101',
           date: '2026-08-14',
-          specialistName: 'Valentina Ross',
+          specialistName: 'Ely',
           treatment: 'Liberación miofascial lumbo-pélvica profunda + percusión',
           findings: 'Contractura severa en cuadrado lumbar derecho. Buena tolerancia a presión 8/10.',
           painScale: 7,
@@ -262,7 +262,7 @@ export class AdminComponent implements OnInit, OnDestroy {
         {
           id: 'NOTE-102',
           date: '2026-08-21',
-          specialistName: 'Valentina Ross',
+          specialistName: 'Ely',
           treatment: 'Descompresión miofascial y estiramiento activo asistido',
           findings: 'Disminución del tono muscular en 40%. Rango articular de cadera mejorado.',
           painScale: 4,
@@ -285,8 +285,8 @@ export class AdminComponent implements OnInit, OnDestroy {
         {
           id: 'NOTE-201',
           date: '2026-08-21',
-          specialistName: 'Elena Roth',
-          treatment: 'Podología clínica profiláctica + descarga de zonas de presión',
+          specialistName: 'Miranda',
+          treatment: 'Masaje relajante con descarga de zonas de presión',
           findings: 'Resección de callosidades plantares, corte terapéutico de uñas.',
           painScale: 5,
           recommendations: 'Plantillas de soporte de arco y reposo de impacto por 48 horas.'
@@ -306,14 +306,14 @@ export class AdminComponent implements OnInit, OnDestroy {
   // -------------------------------------------------------------
   // CAJA CHICA Y PUNTO DE VENTA (RECEPCIÓN & GERENCIA)
   // -------------------------------------------------------------
-  cashRegisterInitial = 120000;
+  cashRegisterInitial = 300;
   cashTransactions: CashTransaction[] = [
     {
       id: 'TRX-101',
       time: '09:45',
       client: 'Esteban Paz',
-      service: 'Masaje Deportivo 60m',
-      amount: 58000,
+      service: 'Masaje Relajante 60m',
+      amount: 180,
       method: 'POS TRANSBANK',
       voucherCode: 'VOUCH-88129',
       processedBy: 'Camila Morales'
@@ -322,8 +322,8 @@ export class AdminComponent implements OnInit, OnDestroy {
       id: 'TRX-102',
       time: '11:15',
       client: 'Mariano Torres',
-      service: 'Perfilado Podológico',
-      amount: 40000,
+      service: 'Masaje a Cuatro Manos',
+      amount: 380,
       method: 'EFECTIVO',
       voucherCode: 'VOUCH-88130',
       processedBy: 'Camila Morales'
@@ -332,8 +332,8 @@ export class AdminComponent implements OnInit, OnDestroy {
       id: 'TRX-103',
       time: '13:30',
       client: 'Rodrigo Vega',
-      service: 'Pack 4 Sesiones Descompresión',
-      amount: 220000,
+      service: 'Pack 4 Sesiones Tántrico',
+      amount: 720,
       method: 'POS TRANSBANK',
       voucherCode: 'VOUCH-88131',
       processedBy: 'Camila Morales'
@@ -342,8 +342,8 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   newPayment = {
     client: '',
-    service: 'Descompresión Miofascial',
-    amount: 65000,
+    service: 'Masaje Tántrico Sensitivo',
+    amount: 200,
     method: 'POS TRANSBANK' as const
   };
 
@@ -353,10 +353,10 @@ export class AdminComponent implements OnInit, OnDestroy {
   staffList: StaffMember[] = [
     {
       id: 'STF-01',
-      name: 'Valentina Ross',
+      name: 'Ely',
       role: 'ESPECIALISTA',
-      specialty: 'Kinesióloga & Masoterapeuta Deportiva',
-      email: 'valentina@recovr.cl',
+      specialty: 'Masaje Tántrico Sensitivo',
+      email: 'ely@recovr.cl',
       phone: '+56 9 7711 2233',
       shift: 'Turno Tarde (14:00 - 21:00)',
       commissionRate: 35,
@@ -365,10 +365,10 @@ export class AdminComponent implements OnInit, OnDestroy {
     },
     {
       id: 'STF-02',
-      name: 'Elena Roth',
+      name: 'Miranda',
       role: 'ESPECIALISTA',
-      specialty: 'Podóloga Clínica Especialista',
-      email: 'elena@recovr.cl',
+      specialty: 'Masaje Nuru Body Slide',
+      email: 'miranda@recovr.cl',
       phone: '+56 9 6622 3344',
       shift: 'Turno Mañana (09:00 - 15:00)',
       commissionRate: 38,
@@ -377,10 +377,10 @@ export class AdminComponent implements OnInit, OnDestroy {
     },
     {
       id: 'STF-03',
-      name: 'Astrid Vane',
+      name: 'Pamela',
       role: 'ESPECIALISTA',
-      specialty: 'Masoterapeuta & Recuperación Miofascial',
-      email: 'gabriel@recovr.cl',
+      specialty: 'Descontracturante y Cuatro Manos',
+      email: 'pamela@recovr.cl',
       phone: '+56 9 5533 4455',
       shift: 'Turno Completo (10:00 - 19:00)',
       commissionRate: 32,
@@ -414,17 +414,17 @@ export class AdminComponent implements OnInit, OnDestroy {
   }
 
   protocolStatuses: Record<string, boolean> = {
-    'Descompresión Miofascial': true,
-    'Masaje Deportivo Restaurativo': true,
-    'Podología Clínica Avanzada': true,
-    'Ritual Sanctum Completo': true
+    'Masaje Tántrico Sensitivo': true,
+    'Masaje Tántrico Completo': true,
+    'Masaje Nuru Body Slide': true,
+    'RECOVR VIP Hidromasaje': true
   };
 
   protocols = [
-    { name: 'Descompresión Miofascial', price: 65000, category: 'MASAJE TERAPÉUTICO', duration: 60, desc: 'Tratamiento profundo con ventosas y percusión mecánica para sobrecarga lumbar y escapular.' },
-    { name: 'Masaje Deportivo Restaurativo', price: 58000, category: 'MASAJE TERAPÉUTICO', duration: 60, desc: 'Enfocado en drenaje linfático, retorno venoso y alivio de ácido láctico en tren inferior.' },
-    { name: 'Podología Clínica Avanzada', price: 45000, category: 'PODOLOGÍA CLÍNICA', duration: 45, desc: 'Corte profiláctico, desbastado de callosidades, tratamiento de fascitis y asepsia profunda.' },
-    { name: 'Ritual Sanctum Completo', price: 95000, category: 'RITUAL COMPLETO', duration: 90, desc: 'Descompresión miofascial 60m + Podología clínica deportiva 30m + Aromaterapia sensorial.' }
+    { name: 'Masaje Tántrico Sensitivo', price: 200, category: 'TÁNTRICO', duration: 60, desc: 'Toques lentos y continuos con aceites tibios neutros para relajación total.' },
+    { name: 'Masaje Tántrico Completo', price: 250, category: 'TÁNTRICO', duration: 75, desc: 'Sesión integral con piedras tibias de cuarzo, aceites aromáticos y música binaural.' },
+    { name: 'Masaje Nuru Body Slide', price: 280, category: 'NURU', duration: 75, desc: 'Masaje cuerpo a cuerpo sobre colchón impermeable con gel tibio hiperdeslizante.' },
+    { name: 'RECOVR VIP Hidromasaje', price: 450, category: 'VIP', duration: 90, desc: 'Masaje sensitivo, técnica cuerpo a cuerpo y tina privada con microburbujas.' }
   ];
 
   deleteProtocol(name: string): void {
@@ -446,16 +446,16 @@ export class AdminComponent implements OnInit, OnDestroy {
   cabins: CabinRoom[] = [
     {
       id: 'CAB-01',
-      name: 'Sanctum 01 (Descompresión)',
+      name: 'Cabina 01 (Néon Rose)',
       code: 'S-01',
       type: 'Cabina de Descompresión & Masoterapia Avanzada',
       equipment: ['Camilla hidráulica de alta resistencia', 'Manta térmica infrarroja', 'Equipo de percusión Theragun Pro'],
       status: 'OCUPADA',
-      currentTherapist: 'Valentina Ross'
+      currentTherapist: 'Ely'
     },
     {
       id: 'CAB-02',
-      name: 'Sanctum 02 (Masoterapia)',
+      name: 'Cabina 02 (Nuru Suite)',
       code: 'S-02',
       type: 'Cabina Sensorial de Recuperación Miofascial',
       equipment: ['Camilla ergonómica acolchada', 'Difusor de aromaterapia de cedro', 'Sistema de sonido envolvente 432Hz'],
@@ -463,7 +463,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     },
     {
       id: 'CAB-03',
-      name: 'Sala de Podología Clínica',
+      name: 'Cabina 03 (Dúo / 4 Manos)',
       code: 'POD-01',
       type: 'Gabinete Clínico Especializado en Pie Masculino',
       equipment: ['Sillón podológico eléctrico', 'Micromotor con aspiración integrada', 'Esterilizador autoclave clase B'],
@@ -484,8 +484,8 @@ export class AdminComponent implements OnInit, OnDestroy {
   auditLogs: SystemAuditLog[] = [
     { id: 'LOG-8801', timestamp: '2026-08-21 16:04:12', actor: 'Alexei Rivera', role: 'SUPER ADMIN', action: 'Rotación de credenciales webhook Stripe', ip: '190.161.44.12', severity: 'SECURITY' },
     { id: 'LOG-8802', timestamp: '2026-08-21 15:55:02', actor: 'Camila Morales', role: 'RECEPCIONISTA', action: 'Check-in cliente Carlos Mendoza (REC-908123)', ip: '192.168.1.105', severity: 'INFO' },
-    { id: 'LOG-8803', timestamp: '2026-08-21 15:30:19', actor: 'Matías Harb', role: 'ADMINISTRADOR', action: 'Ajuste de comisión especialista Valentina Ross a 35%', ip: '190.161.88.90', severity: 'INFO' },
-    { id: 'LOG-8804', timestamp: '2026-08-21 14:10:44', actor: 'Valentina Ross', role: 'ESPECIALISTA', action: 'Registro de evolución clínica paciente PAT-001', ip: '192.168.1.112', severity: 'INFO' },
+    { id: 'LOG-8803', timestamp: '2026-08-21 15:30:19', actor: 'Matías Harb', role: 'ADMINISTRADOR', action: 'Ajuste de comisión especialista Ely a 35%', ip: '190.161.88.90', severity: 'INFO' },
+    { id: 'LOG-8804', timestamp: '2026-08-21 14:10:44', actor: 'Ely', role: 'ESPECIALISTA', action: 'Registro de evolución clínica paciente PAT-001', ip: '192.168.1.112', severity: 'INFO' },
     { id: 'LOG-8805', timestamp: '2026-08-21 12:00:00', actor: 'SYSTEM_CRON', role: 'SUPER ADMIN', action: 'Backup automatizado de base de datos exitoso (GCS)', ip: '127.0.0.1', severity: 'INFO' }
   ];
 
@@ -547,7 +547,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     },
     {
       id: 'BEN-04',
-      title: 'Upgrade a Suite VIP Sanctum 01',
+      title: 'Upgrade a Cabina VIP Hidromasaje',
       pointsCost: 800,
       description: 'Acceso a la suite privada con camilla hidráulica, manta térmica infrarroja y Theragun Pro.',
       icon: '👑',
@@ -779,7 +779,7 @@ export class AdminComponent implements OnInit, OnDestroy {
     return this.staffList.filter(s => s.role === 'ESPECIALISTA').map(staff => {
       const activeSession = this.activeSessions.find(b => b.prof === staff.name);
       if (activeSession) {
-        const isEndingSoon = staff.name === 'Valentina Ross'; // Mock for demo
+        const isEndingSoon = staff.name === 'Ely'; // Mock for demo
         return {
           ...staff,
           availability: isEndingSoon ? 'PRÓXIMAMENTE LIBRE' : 'OCUPADO',
@@ -878,13 +878,13 @@ export class AdminComponent implements OnInit, OnDestroy {
       id: `REC-${Math.floor(100000 + Math.random() * 900000)}`,
       client: this.newBooking.client || 'Cliente Walk-in',
       clientPhone: this.newBooking.clientPhone || '+56 9 ',
-      service: this.newBooking.service || 'Descompresión Miofascial',
+      service: this.newBooking.service || 'Masaje Tántrico Sensitivo',
       serviceCategory: this.newBooking.serviceCategory || 'MASAJE',
-      prof: this.newBooking.prof || 'Valentina Ross',
-      room: this.newBooking.room || 'Sanctum 01 (Descompresión)',
+      prof: this.newBooking.prof || 'Ely',
+      room: this.newBooking.room || 'Cabina 01 (Néon Rose)',
       date: this.newBooking.date || '2026-08-22',
       time: this.newBooking.time || '15:00',
-      price: this.newBooking.price || 65000,
+      price: this.newBooking.price || 200,
       status: 'CONFIRMADA',
       paymentStatus: this.newBooking.paymentStatus || 'PAGADO',
       paymentMethod: this.newBooking.paymentMethod || 'POS TRANSBANK',

@@ -511,66 +511,199 @@
       }
     }
 
-    .cabinas-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
+    .cabinas-gallery {
+      display: flex;
+      gap: 0.9rem;
+      height: clamp(460px, 68vh, 640px);
 
-      .cabina-card {
-        background: var(--color-bg-card, rgba(255, 240, 248, 0.65));
-        border: 1px solid var(--color-card-border, rgba(255, 42, 133, 0.22));
-        border-radius: 20px;
-        padding: 2rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1.25rem;
-        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      .cabina-panel {
         position: relative;
+        flex: 1 1 0;
+        min-width: 0;
+        border-radius: 28px;
         overflow: hidden;
         cursor: pointer;
+        isolation: isolate;
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        box-shadow: 0 18px 50px rgba(168, 85, 247, 0.16);
+        transition: flex-grow 0.7s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s ease;
+        outline: none;
 
-        &:hover {
-          transform: translateY(-8px);
-          border-color: var(--color-bubble-pink, #ff2a85);
-          box-shadow: 0 20px 45px rgba(255, 42, 133, 0.25);
+        &.is-active {
+          flex-grow: 3.6;
+          box-shadow: 0 30px 70px rgba(255, 42, 133, 0.28);
+        }
+
+        &:focus-visible {
+          box-shadow: 0 0 0 3px var(--color-bubble-pink, #ff2a85);
+        }
+
+        .cabina-photo {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          z-index: -2;
+          transform: scale(1.12);
+          filter: saturate(0.85) brightness(0.92);
+          transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), filter 0.7s ease;
+        }
+
+        &.is-active .cabina-photo {
+          transform: scale(1);
+          filter: saturate(1.05) brightness(1);
+        }
+
+        .cabina-shade {
+          position: absolute;
+          inset: 0;
+          z-index: -1;
+          background: linear-gradient(to top, rgba(74, 29, 70, 0.78) 0%, rgba(74, 29, 70, 0.18) 48%, rgba(255, 255, 255, 0) 70%);
+          transition: opacity 0.6s ease;
+        }
+
+        .cabina-index {
+          position: absolute;
+          top: 1.4rem;
+          left: 1.6rem;
+          font-family: var(--font-hero, 'Syne', sans-serif);
+          font-size: 0.95rem;
+          font-weight: 700;
+          letter-spacing: 0.18em;
+          color: #fff;
+          padding: 0.35rem 0.8rem;
+          border-radius: 999px;
+          background: rgba(255, 255, 255, 0.22);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .cabina-caption {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          padding: 1.6rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.55rem;
+          color: #fff;
         }
 
         .cabina-code {
           font-family: var(--font-display, 'Outfit', sans-serif);
-          font-size: 0.75rem;
+          font-size: 0.72rem;
           font-weight: 800;
-          letter-spacing: 0.15em;
-          color: var(--color-bubble-pink, #ff2a85);
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #ffd6ec;
+          white-space: nowrap;
         }
 
         .cabina-name {
           font-family: var(--font-hero, 'Syne', sans-serif);
-          font-size: 1.8rem;
+          font-size: clamp(1.25rem, 1.9vw, 2.1rem);
           font-weight: 700;
-          color: var(--color-text);
+          line-height: 1.1;
           margin: 0;
+          color: #fff;
+          text-shadow: 0 2px 18px rgba(74, 29, 70, 0.45);
+        }
+
+        .cabina-more {
+          display: grid;
+          grid-template-rows: 0fr;
+          opacity: 0;
+          transition: grid-template-rows 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease 0.1s;
+
+          > * {
+            overflow: hidden;
+            min-height: 0;
+          }
+        }
+
+        &.is-active .cabina-more {
+          grid-template-rows: 1fr;
+          opacity: 1;
+        }
+
+        // Paneles cerrados (escritorio): solo el nombre, en vertical, para que nunca se corte.
+        @media (min-width: 769px) {
+          &:not(.is-active) .cabina-caption {
+            height: 100%;
+            justify-content: flex-end;
+            align-items: flex-start;
+            padding: 1.6rem 1.1rem;
+          }
+          &:not(.is-active) .cabina-code { display: none; }
+          &:not(.is-active) .cabina-name {
+            position: absolute;
+            left: 1.1rem;
+            bottom: 1.6rem;
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            font-size: clamp(1rem, 1.35vw, 1.4rem);
+            white-space: nowrap;
+            max-height: calc(100% - 5.5rem);
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
         }
 
         .cabina-desc {
-          font-size: 0.9rem;
-          color: var(--color-text-muted);
+          font-size: 0.92rem;
           line-height: 1.55;
-          margin: 0;
+          margin: 0.2rem 0 0;
+          color: rgba(255, 255, 255, 0.92);
+          max-width: 46ch;
         }
 
         .cabina-features {
           list-style: none;
           display: flex;
-          flex-direction: column;
-          gap: 0.5rem;
-          font-size: 0.82rem;
-          color: var(--color-text-muted);
+          flex-wrap: wrap;
+          gap: 0.45rem;
+          margin: 0.9rem 0 0;
           padding: 0;
-          margin: 0;
 
-          li::before {
-            content: '✦ ';
-            color: var(--color-bubble-pink, #ff2a85);
+          li {
+            font-size: 0.74rem;
+            font-weight: 600;
+            padding: 0.35rem 0.75rem;
+            border-radius: 999px;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(8px);
+
+            &::before {
+              content: '✦ ';
+              color: #ffc2e2;
+            }
+          }
+        }
+
+        .cabina-cta {
+          justify-self: start;
+          margin-top: 1rem;
+          font-family: var(--font-display, 'Outfit', sans-serif);
+          font-size: 0.8rem;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          padding: 0.8rem 1.4rem;
+          border-radius: 999px;
+          border: 0;
+          cursor: pointer;
+          color: #fff;
+          background: linear-gradient(135deg, #ff2a85, #a855f7);
+          box-shadow: 0 10px 28px rgba(255, 42, 133, 0.4);
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+          &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 34px rgba(255, 42, 133, 0.55);
           }
         }
       }
@@ -762,7 +895,7 @@
     .project-card.span-7, .project-card.span-5, .project-card.span-6, .project-card.span-4, .project-card.span-8 {
       grid-column: auto !important;
     }
-    .cabinas-grid, .staff-grid {
+    .staff-grid {
       grid-template-columns: repeat(2, 1fr) !important;
     }
   }
@@ -772,8 +905,26 @@
       padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
-    .cabinas-grid, .staff-grid {
+    .staff-grid {
       grid-template-columns: 1fr !important;
+    }
+    .cabinas-section .cabinas-gallery {
+      flex-direction: column;
+      height: auto;
+
+      .cabina-panel {
+        flex: none;
+        height: 150px;
+        transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+
+        .cabina-shade {
+          background: linear-gradient(to top, rgba(74, 29, 70, 0.88) 0%, rgba(74, 29, 70, 0.55) 60%, rgba(74, 29, 70, 0.3) 100%);
+        }
+
+        &.is-active {
+          height: 460px;
+        }
+      }
     }
   }
 
@@ -1228,7 +1379,7 @@
 
   // --- Responsive: columnas que no se ensanchan por su contenido, titulares que se ajustan ---
   .work-section .projects-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); > * { min-width: 0; } }
-  .cabinas-grid > *, .staff-grid > *, .section-head > * { min-width: 0; }
+  .staff-grid > *, .section-head > * { min-width: 0; }
   .section-title-group h2 { overflow-wrap: anywhere; }
   @media (max-width: 768px) {
     .work-section .section-head { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
