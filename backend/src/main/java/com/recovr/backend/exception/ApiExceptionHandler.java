@@ -72,6 +72,11 @@ public class ApiExceptionHandler {
         return respuesta(HttpStatus.TOO_MANY_REQUESTS, "Demasiados intentos", ex.getMessage());
     }
 
+    @ExceptionHandler(ReservaBloqueadaException.class)
+    public ResponseEntity<Map<String, Object>> handleReservaBloqueada(ReservaBloqueadaException ex) {
+        return respuesta(HttpStatus.TOO_MANY_REQUESTS, "Reservas bloqueadas temporalmente", ex.getMessage());
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<Map<String, Object>> handleAccesoDenegado(AccessDeniedException ex) {
         return respuesta(HttpStatus.FORBIDDEN, "Acceso denegado", ex.getMessage());

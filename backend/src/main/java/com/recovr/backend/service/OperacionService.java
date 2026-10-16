@@ -91,7 +91,7 @@ public class OperacionService {
                 && !r.getFechaHora().isBefore(ahora.minusMinutes(ReglasReserva.TOLERANCIA_CONFIRMACION_MIN))).count();
 
         long minutosAtencion = Duration.between(ReglasReserva.APERTURA, ReglasReserva.CIERRE).toMinutes();
-        long cabinas = salaRepository.count();
+        long cabinas = salaRepository.findAll().stream().filter(Sala::isActiva).count();
         long minutosReservados = deHoy.stream().filter(r -> r.getEstado() != EstadoReserva.CANCELADA)
                 .mapToLong(ReglasReserva::duracion).sum();
         double ocupacion = cabinas == 0 ? 0 : redondear(100.0 * minutosReservados / (cabinas * minutosAtencion));
@@ -111,6 +111,9 @@ public class OperacionService {
         LocalDateTime proxima = deLaSala.stream().filter(r -> ReglasReserva.activa(r) && r.getFechaHora().isAfter(ahora))
                 .map(Reserva::getFechaHora).findFirst().orElse(null);
 
+        if (!sala.isActiva()) {
+            return new SalaEstadoResponse(sala.getId(), sala.getNombre(), sala.getCapacidad(), "MANTENIMIENTO", null, null, proxima);
+        }
         if (ocupada.isPresent()) {
             Reserva r = ocupada.get();
             return new SalaEstadoResponse(sala.getId(), sala.getNombre(), sala.getCapacidad(), "OCUPADA",

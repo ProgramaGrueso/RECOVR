@@ -16,7 +16,9 @@ import java.util.List;
  * Mantiene los estados al día sin intervención humana. Se ejecuta al arrancar y cada minuto
  * (planificador desactivable con recovr.lifecycle.enabled=false). Aplica sobre las reservas activas cuyo inicio ya pasó:
  * <ol>
- *   <li><b>PENDIENTE</b> que no se confirmó a los {@value ReglasReserva#TOLERANCIA_CONFIRMACION_MIN} min de su inicio → CANCELADA (expirada).</li>
+ *   <li><b>PENDIENTE</b> que no se pagó completa a los {@value ReglasReserva#HOLD_PAGO_MIN} min de crearse → CANCELADA (expirada,
+ *       el cupo se libera). Las creadas antes de registrarse la fecha de creación expiran a los
+ *       {@value ReglasReserva#TOLERANCIA_CONFIRMACION_MIN} min de su inicio.</li>
  *   <li><b>CONFIRMADA con check-in</b> cuya sesión ya terminó → COMPLETADA.</li>
  *   <li><b>CONFIRMADA sin check-in</b> a los {@value ReglasReserva#TOLERANCIA_NO_SHOW_MIN} min de su inicio → CANCELADA (no asistió).</li>
  * </ol>
@@ -51,32 +53,44 @@ public class ReservaCicloVidaService {
     /** @return cuántas reservas cambiaron de estado. */
     @Transactional
     public int actualizarEstados(LocalDateTime ahora) {
-        List<Reserva> candidatas = reservaRepository.buscarActivasIniciadasAntesDe(ahora);
         int cambios = 0;
+        List<Reserva> sinPagar = reservaRepository.buscarPendientesCreadasHasta(ahora.minusMinutes(ReglasReserva.HOLD_PAGO_MIN));
+        for (Reserva r : sinPagar) {
+            r.setEstado(EstadoReserva.CANCELADA);
+            r.setCanceladaEn(ahora);
+            r.setObservacion(ReglasReserva.EXPIRADA_SIN_PAGO);
+            cambios++;
+        }
+        if (cambios > 0) {
+            reservaRepository.saveAll(sinPagar);
+        }
+        List<Reserva> candidatas = reservaRepository.buscarActivasIniciadasAntesDe(ahora);
+        int cambiosInicio = 0;
         for (Reserva r : candidatas) {
             if (r.getEstado() == EstadoReserva.PENDIENTE) {
                 if (!ahora.isBefore(r.getFechaHora().plusMinutes(ReglasReserva.TOLERANCIA_CONFIRMACION_MIN))) {
                     r.setEstado(EstadoReserva.CANCELADA);
                     r.setCanceladaEn(ahora);
-                    r.setObservacion("Expirada automáticamente: no se confirmó el pago antes del inicio de la sesión.");
-                    cambios++;
+                    r.setObservacion(ReglasReserva.EXPIRADA_SIN_PAGO);
+                    cambiosInicio++;
                 }
             } else if (r.getCheckIn() != null) {
                 if (!ahora.isBefore(ReglasReserva.finSesion(r))) {
                     r.setEstado(EstadoReserva.COMPLETADA);
                     r.setObservacion("Completada automáticamente al terminar la sesión.");
-                    cambios++;
+                    cambiosInicio++;
                 }
             } else if (!ahora.isBefore(r.getFechaHora().plusMinutes(ReglasReserva.TOLERANCIA_NO_SHOW_MIN))) {
                 r.setEstado(EstadoReserva.CANCELADA);
                 r.setCanceladaEn(ahora);
-                r.setObservacion("No asistió: no hubo check-in dentro de la tolerancia.");
-                cambios++;
+                r.setObservacion(ReglasReserva.NO_ASISTIO);
+                cambiosInicio++;
             }
         }
-        if (cambios > 0) {
+        if (cambiosInicio > 0) {
             reservaRepository.saveAll(candidatas);
         }
+        cambios += cambiosInicio;
         ultimaEjecucion = ahora;
         ultimosCambios = cambios;
         totalCambios.addAndGet(cambios);

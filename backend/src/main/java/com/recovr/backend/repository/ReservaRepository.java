@@ -2,12 +2,15 @@ package com.recovr.backend.repository;
 
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Reserva;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
@@ -23,7 +26,32 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             + "com.recovr.backend.entity.EstadoReserva.CONFIRMADA)";
 
     boolean existsByClienteId(Long clienteId);
+    /** Pendientes con plazo de pago en curso (las anteriores a existir la fecha de creación, p. ej. datos demo, no cuentan). */
+    long countByClienteIdAndEstadoAndCreadaEnIsNotNull(Long clienteId, EstadoReserva estado);
+
+    /** Lee la reserva bloqueando su fila: dos cobros o cancelaciones simultáneos de la misma reserva se hacen en fila. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT r FROM Reserva r WHERE r.id = :id")
+    Optional<Reserva> buscarParaActualizar(@Param("id") Long id);
+
+    /** Reservas PENDIENTES cuyo plazo de pago (contado desde la creación) ya venció. */
+    @Query("SELECT r FROM Reserva r WHERE r.estado = com.recovr.backend.entity.EstadoReserva.PENDIENTE "
+            + "AND r.creadaEn IS NOT NULL AND r.creadaEn <= :limite")
+    List<Reserva> buscarPendientesCreadasHasta(@Param("limite") LocalDateTime limite);
+
+    /**
+     * Reservas activas del mismo cliente cuya sesión (sin limpieza) se cruza con [inicio, fin): una persona no puede
+     * estar en dos sesiones a la vez.
+     */
+    @Query("SELECT r FROM Reserva r WHERE " + ACTIVA + " AND r.cliente.id = :clienteId"
+            + " AND r.fechaHora < :fin AND (r.fechaHora + COALESCE(r.servicio.duracionMinutos, 60) minute) > :inicio"
+            + " AND (:excluirId IS NULL OR r.id <> :excluirId)")
+    List<Reserva> buscarConflictosCliente(@Param("clienteId") Long clienteId,
+                                          @Param("inicio") LocalDateTime inicio,
+                                          @Param("fin") LocalDateTime fin,
+                                          @Param("excluirId") Long excluirId);
     boolean existsByEmpleadoIdAndClienteId(Long empleadoId, Long clienteId);
+    boolean existsByEmpleadoIdAndClienteIdAndEstadoIn(Long empleadoId, Long clienteId, java.util.Collection<EstadoReserva> estados);
     long countByEstado(EstadoReserva estado);
     long countByClienteIdAndObservacionAndCanceladaEnGreaterThanEqual(Long clienteId, String observacion, LocalDateTime desde);
 

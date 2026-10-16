@@ -373,7 +373,7 @@
             "url": "{{baseUrl}}/api/db/reservas",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"empleadoId\": {{empleadoId}},\n  \"servicioId\": {{servicioId}},\n  \"salaId\": {{salaId}},\n  \"fechaHora\": \"2026-10-15T10:00:00\"\n}"
+              "raw": "{\n  \"empleadoId\": {{empleadoId}},\n  \"servicioId\": {{servicioId}},\n  \"salaId\": {{salaId}},\n  \"fechaHora\": \"2026-11-18T15:00:00\"\n}"
             }
           }
         },
@@ -472,7 +472,7 @@
             "url": "{{baseUrl}}/api/db/reservas",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"clienteId\": {{clienteId}},\n  \"empleadoId\": {{empleadoId}},\n  \"servicioId\": {{servicioId}},\n  \"salaId\": {{salaId}},\n  \"fechaHora\": \"2026-10-15T12:00:00\"\n}"
+              "raw": "{\n  \"clienteId\": {{clienteId}},\n  \"empleadoId\": {{empleadoId}},\n  \"servicioId\": {{servicioId}},\n  \"salaId\": {{salaId}},\n  \"fechaHora\": \"2026-11-19T15:00:00\"\n}"
             }
           }
         },

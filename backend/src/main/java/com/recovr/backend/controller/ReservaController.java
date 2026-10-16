@@ -3,6 +3,7 @@ package com.recovr.backend.controller;
 import com.recovr.backend.dto.PagoRequest;
 import com.recovr.backend.dto.ReservaRequest;
 import com.recovr.backend.dto.ReservaResponse;
+import com.recovr.backend.dto.TurnoDisponibleResponse;
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Reserva;
 import com.recovr.backend.service.ReservaService;
@@ -34,7 +35,7 @@ public class ReservaController {
         this.reservaService = reservaService;
     }
 
-    @Operation(summary = "Listar todas las reservas (DB)", description = "Retorna todas las reservas persistidas. Requiere rol ADMIN o RECEPCIONISTA.")
+    @Operation(summary = "Listar todas las reservas (DB)", description = "Retorna las reservas persistidas por páginas (la más reciente primero; la cabecera X-Total-Count trae el total). Requiere rol ADMIN o RECEPCIONISTA.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado de reservas",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponse.class)))),
@@ -42,8 +43,27 @@ public class ReservaController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere ADMIN o RECEPCIONISTA)", content = @Content)
     })
     @GetMapping
-    public List<ReservaResponse> listar() {
-        return aRespuesta(reservaService.listarTodos());
+    public org.springframework.http.ResponseEntity<List<ReservaResponse>> listar(
+            @Parameter(description = "Número de página (desde 0)", example = "0") @RequestParam(defaultValue = "0") int pagina,
+            @Parameter(description = "Reservas por página (máximo 1000)", example = "1000") @RequestParam(defaultValue = "1000") int tamano) {
+        var resultado = reservaService.listarPagina(pagina, tamano);
+        return org.springframework.http.ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(resultado.getTotalElements()))
+                .body(aRespuesta(resultado.getContent()));
+    }
+
+    @Operation(summary = "Turnos disponibles de una terapeuta en una fecha",
+            description = "Para cada turno del día indica si se puede reservar y, si no, por qué (terapeuta ocupada, sin cabinas, "
+                    + "fuera de horario, ausencia, o que el propio cliente ya tiene otra reserva). Cualquier usuario autenticado.")
+    @GetMapping("/disponibilidad")
+    public List<TurnoDisponibleResponse> disponibilidad(
+            @Parameter(description = "ID de la terapeuta", example = "1") @RequestParam Long empleadoId,
+            @Parameter(description = "ID del servicio", example = "1") @RequestParam Long servicioId,
+            @Parameter(description = "Fecha (ISO-8601)", example = "2026-10-20")
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate fecha,
+            Authentication authentication) {
+        String correoCliente = esGestionDeReservas(authentication) ? null : authentication.getName();
+        return reservaService.disponibilidad(empleadoId, servicioId, fecha, correoCliente);
     }
 
     @Operation(summary = "Obtener reserva por ID (DB)", description = "Consulta una reserva persistida según su ID. Requiere rol ADMIN o RECEPCIONISTA.")
@@ -62,7 +82,7 @@ public class ReservaController {
     @Operation(
             summary = "Crear reserva",
             description = "Un CLIENTE reserva siempre a su nombre (se ignora clienteId). ADMIN y RECEPCIONISTA deben indicar clienteId. "
-                    + "Se valida que la sala y el especialista no tengan otra reserva activa que se cruce, considerando duración y tiempo de limpieza."
+                    + "Se valida el horario de atención (12:00–23:00), que la sala, el especialista y el propio cliente no tengan otra reserva activa que se cruce (duración y limpieza), que el cliente no acapare pendientes y que la terapeuta no esté ausente. La reserva retiene el cupo 15 min hasta que se pague completa."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Reserva creada en estado PENDIENTE",
@@ -122,6 +142,13 @@ public class ReservaController {
     @PostMapping("/{id}/check-in")
     public ReservaResponse checkIn(@Parameter(description = "ID de la reserva", example = "1") @PathVariable Long id) {
         return ReservaResponse.de(reservaService.checkIn(id));
+    }
+
+    @Operation(summary = "Reabrir una sesión dada por no asistida",
+            description = "Si el cliente llegó tarde (después de la tolerancia) y la sesión pagada sigue en curso con el cupo libre, vuelve a CONFIRMADA. ADMIN o RECEPCIONISTA.")
+    @PostMapping("/{id}/reabrir")
+    public ReservaResponse reabrir(@Parameter(description = "ID de la reserva", example = "1") @PathVariable Long id) {
+        return ReservaResponse.de(reservaService.reabrirNoAsistio(id));
     }
 
     @Operation(summary = "Finalizar sesión",
@@ -207,7 +234,7 @@ public class ReservaController {
 
     @Operation(
             summary = "Confirmar y registrar pago de una reserva",
-            description = "Transaccionalmente confirma una reserva PENDIENTE y registra el pago correspondiente. Un CLIENTE solo puede pagar las suyas."
+            description = "Transaccionalmente confirma una reserva PENDIENTE y registra el pago correspondiente. Un CLIENTE solo puede pagar las suyas. El monto debe ser el total del servicio y llegar dentro del plazo de 15 min desde la creación."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Reserva confirmada y pago registrado",

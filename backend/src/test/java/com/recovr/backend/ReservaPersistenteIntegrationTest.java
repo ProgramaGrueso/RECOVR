@@ -61,6 +61,8 @@ class ReservaPersistenteIntegrationTest {
     private String tokenAdmin;
     private String tokenRecepcion;
     private String tokenCliente;
+    private String tokenCliente2;
+    private String tokenCliente3;
     private Cliente cliente;
     private Empleado empleado;
     private Empleado empleado2;
@@ -71,7 +73,7 @@ class ReservaPersistenteIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        manana10 = LocalDateTime.now().plusDays(2).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        manana10 = LocalDateTime.now().plusDays(2).withHour(15).withMinute(0).withSecond(0).withNano(0);
         tokenAdmin = token("admin@test.com", Rol.ADMIN);
         tokenRecepcion = token("recepcion@test.com", Rol.RECEPCIONISTA);
         tokenCliente = token("cliente@test.com", Rol.CLIENTE);
@@ -81,6 +83,8 @@ class ReservaPersistenteIntegrationTest {
         cliente.setCorreo("cliente@test.com");
         cliente.setUsuarioId(usuarioRepository.findByCorreo("cliente@test.com").orElseThrow().getId());
         cliente = clienteRepository.save(cliente);
+        tokenCliente2 = tokenDeOtroCliente("cliente2@test.com");
+        tokenCliente3 = tokenDeOtroCliente("cliente3@test.com");
 
         empleado = guardarEmpleado("Especialista A");
         empleado2 = guardarEmpleado("Especialista B");
@@ -106,19 +110,19 @@ class ReservaPersistenteIntegrationTest {
                 .andExpect(jsonPath("$.finBloque").value(fmt(manana10.plusMinutes(75))));
 
         // 11:00 cae dentro de la limpieza (10:00 + 60 + 15 = 11:15)
-        crearReserva(tokenCliente, empleado2, sala, manana10.plusMinutes(60))
+        crearReserva(tokenCliente2, empleado2, sala, manana10.plusMinutes(60))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("sala")));
 
-        crearReserva(tokenCliente, empleado2, sala, manana10.plusMinutes(75)).andExpect(status().isCreated());
+        crearReserva(tokenCliente2, empleado2, sala, manana10.plusMinutes(75)).andExpect(status().isCreated());
     }
 
     @Test
     @DisplayName("El mismo especialista no puede atender dos sesiones que se cruzan aunque sean en salas distintas")
     void solapamientoPorEspecialista() throws Exception {
         crearReserva(tokenCliente, empleado, sala, manana10).andExpect(status().isCreated());
-        crearReserva(tokenCliente, empleado, sala2, manana10.plusMinutes(30))
+        crearReserva(tokenCliente2, empleado, sala2, manana10.plusMinutes(30))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("especialista")));
     }
@@ -127,7 +131,7 @@ class ReservaPersistenteIntegrationTest {
     @DisplayName("Una reserva que empieza antes y termina dentro del intervalo también se detecta")
     void solapamientoQueEmpiezaAntes() throws Exception {
         crearReserva(tokenCliente, empleado, sala, manana10).andExpect(status().isCreated());
-        crearReserva(tokenCliente, empleado2, sala, manana10.minusMinutes(30)).andExpect(status().isConflict());
+        crearReserva(tokenCliente2, empleado2, sala, manana10.minusMinutes(30)).andExpect(status().isConflict());
     }
 
     @Test
@@ -143,9 +147,9 @@ class ReservaPersistenteIntegrationTest {
         Reserva r = guardarReserva(empleado, sala, manana10, EstadoReserva.PENDIENTE);
         mockMvc.perform(auth(put("/api/db/reservas/" + r.getId()), tokenRecepcion)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(json(empleado, sala, manana10, "\"estado\":\"CONFIRMADA\"")))
+                        .content(json(empleado, sala, manana10, null)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estado").value("CONFIRMADA"));
+                .andExpect(jsonPath("$.estado").value("PENDIENTE"));
     }
 
     @Test
@@ -173,15 +177,16 @@ class ReservaPersistenteIntegrationTest {
 
         // Misma hora con otro terapeuta: toma la otra cabina libre
         String otroTerapeuta = sinSala.replace("\"empleadoId\":" + empleado.getId(), "\"empleadoId\":" + empleado2.getId());
-        mockMvc.perform(auth(post("/api/db/reservas"), tokenCliente).contentType(MediaType.APPLICATION_JSON).content(otroTerapeuta))
+        mockMvc.perform(auth(post("/api/db/reservas"), tokenCliente2).contentType(MediaType.APPLICATION_JSON).content(otroTerapeuta))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.salaId").value(sala2.getId()));
 
         // Sin cabinas libres en ese turno -> 409 (el terapeuta A ya está ocupado por la primera reserva, usamos un tercero)
         Empleado tercero = guardarEmpleado("Especialista C");
         String sinCabinas = sinSala.replace("\"empleadoId\":" + empleado.getId(), "\"empleadoId\":" + tercero.getId());
-        mockMvc.perform(auth(post("/api/db/reservas"), tokenCliente).contentType(MediaType.APPLICATION_JSON).content(sinCabinas))
-                .andExpect(status().isConflict());
+        mockMvc.perform(auth(post("/api/db/reservas"), tokenCliente3).contentType(MediaType.APPLICATION_JSON).content(sinCabinas))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("cabinas")));
     }
 
     @Test
@@ -409,6 +414,17 @@ class ReservaPersistenteIntegrationTest {
         u.setRol(rol);
         usuarioRepository.save(u);
         return jwtService.generarToken(userDetailsService.loadUserByUsername(correo));
+    }
+
+    /** Otro cliente con su propia cuenta: dos personas distintas sí pueden reservar a la misma hora. */
+    private String tokenDeOtroCliente(String correo) {
+        String t = token(correo, Rol.CLIENTE);
+        Cliente c = new Cliente();
+        c.setNombre("Cliente " + correo);
+        c.setCorreo(correo);
+        c.setUsuarioId(usuarioRepository.findByCorreo(correo).orElseThrow().getId());
+        clienteRepository.save(c);
+        return t;
     }
 
     private Empleado guardarEmpleado(String nombre) {

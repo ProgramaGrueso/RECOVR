@@ -44,6 +44,20 @@ public class SalaService {
         return salaRepository.save(sala);
     }
 
+    /**
+     * Pone la cabina en mantenimiento o la reactiva. Igual que dar de baja a una terapeuta, no se puede mientras
+     * tenga reservas activas: primero se cancelan o se reubican.
+     */
+    public Sala cambiarActiva(Long id, boolean activa) {
+        Sala sala = buscarPorId(id);
+        if (!activa && reservaRepository.existsBySalaIdAndEstadoIn(id, RESERVAS_ACTIVAS)) {
+            throw new IllegalStateException("No se puede poner en mantenimiento " + sala.getNombre()
+                    + ": tiene reservas activas (PENDIENTE o CONFIRMADA). Cancélalas o reubícalas primero.");
+        }
+        sala.setActiva(activa);
+        return salaRepository.save(sala);
+    }
+
     public void eliminar(Long id) {
         if (!salaRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Sala", id);

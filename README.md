@@ -67,8 +67,9 @@ RECOVR/
   - `ROLE_ADMIN`: Control total: catálogo de servicios, tarifas, cabinas, personal y clientes.
   - `ROLE_RECEPCIONISTA`: Gestión de reservas (crear, buscar, actualizar, cancelar) y confirmación de pagos.
   - `ROLE_ESPECIALISTA`: Consulta de su propia agenda futura (vinculado a su ficha de empleado).
-  - `ROLE_CLIENTE`: Consulta de catálogo, reserva a su nombre, pago y cancelación de sus propias reservas.
+  - `ROLE_CLIENTE`: Consulta de catálogo, disponibilidad de turnos, reserva a su nombre, pago completo y cancelación de sus propias reservas.
 - **Cancelación sin borrado:** cancelar una reserva (`PATCH /api/db/reservas/{id}/cancelar`) solo cambia su estado a `CANCELADA`; se conserva el historial y se libera el horario. Un servicio, especialista o cabina con reservas activas (o con historial) no se puede eliminar (400).
+- **Sin pérdida para el cliente:** si se cancela una sesión ya pagada (por el personal o por el cliente dentro de la política), el importe pagado queda como un **crédito** (código de un solo uso, sin costo en puntos) que se aplica al cobrar otra sesión; si el crédito supera el precio, el saldo queda como crédito nuevo. Un código de canje consumido por esa reserva vuelve a quedar disponible. No asistir (no-show) no genera crédito.
 - **Persistencia Dual (Producción & Testing):** Soporte nativo para MySQL 8 mediante Docker Compose y perfiles en memoria H2 para pruebas unitarias automatizadas.
 - **Documentación Viva OpenAPI 3 / Swagger UI:** Interfaz interactiva para pruebas directas de endpoints en `/swagger-ui/index.html`.
 - **Validaciones Rigurosas:** Validación declarativa con `spring-boot-starter-validation` (`@NotNull`, `@NotBlank`, `@Email`, `@Size`, `@Positive`, `@Max`; la fecha futura de la reserva se valida en `ReservaService`) y manejador global de excepciones con respuestas estructuradas RFC 7807.
@@ -111,7 +112,14 @@ Todas las experiencias están configuradas con tarifas oficiales en moneda nacio
 - **Puntos:** 1 punto por cada S/ 1 pagado en una sesión completada; saldo = ganados − canjeados; el nivel (Bronce, Plata, Oro, Diamante) depende de lo ganado. Se canjean por un código de un solo uso que recepción aplica al cobrar (el servidor recalcula el monto). Todo se calcula de reservas y canjes reales y se explica en *Mi cuenta*.
 - **Perfil público de las terapeutas:** el sitio lee de la base de datos (solo activas): nombre, especialidad, presentación y la **foto que sube la propia terapeuta** (o el administrador) con su consentimiento. Las fotos se validan por firma (JPG/PNG, máx. 3 MB) y se re-codifican, lo que elimina metadatos.
 - **Modo demo vs. modo real:** `./run-demo.sh` (`SEED_DEMO_DATA=true`) carga 11 cuentas y ~600 reservas de práctica; `./run-real.sh` arranca sin nada de eso (catálogo oficial + primer admin por configuración). `backend/bdd/limpiar-demo.sql` borra los datos de demostración de una base ya usada.
-- **Reservas:** ciclo de vida con expiración automática (ver `ReglasReserva`); el cliente cancela con 4 h de anticipación y máximo 2 veces al mes.
+- **Reservas (reglas en `ReglasReserva` y `ReservaService`):**
+  - **Solo el pago completo asegura el turno.** Una reserva nace `PENDIENTE` y retiene el cupo **15 min** desde que se crea; si no se paga el total del servicio en ese plazo, expira y el cupo se libera. El servidor rechaza cualquier monto distinto del precio (menos el código de canje, que decide el servidor) y el estado no se cambia a mano por `PUT` (confirmar exige el pago; completar exige el check-in).
+  - **Contra el acaparamiento:** un cliente puede tener **1 reserva pendiente** a la vez, y quien deja vencer **3 reservas sin pagar en 24 h** queda bloqueado temporalmente (HTTP 429).
+  - **Una persona no está en dos sitios:** un cliente no puede tener dos sesiones que se crucen, aunque sean con terapeutas y cabinas distintas. Dos clientes distintos sí pueden reservar a la misma hora con terapeuta y cabina distintas.
+  - **Horario de atención 12:00–23:00:** la sesión completa debe caber en el horario (lo valida el servidor, no solo la pantalla). Una terapeuta con **ausencia** registrada o una **cabina en mantenimiento** no reciben reservas.
+  - **Concurrencia:** crear, mover, cobrar y canjear bloquean la fila del cliente, de la terapeuta y de la cabina (bloqueo pesimista, en orden fijo, con aislamiento `READ_COMMITTED`). Dos peticiones simultáneas por el mismo recurso se procesan una tras otra y la segunda recibe `409`. Verificado con hilos en H2 y en MySQL 8.
+  - **Cancelación del cliente:** con 4 h de anticipación y máximo 2 veces al mes. El negocio opera en hora de Lima (`America/Lima`).
+  - **Capacidad de la cabina** es informativa (personas que caben); una cabina atiende una reserva a la vez.
 
 ---
 
@@ -200,15 +208,19 @@ npm run dev
 | `POST` `PUT` `DELETE` | `/api/servicios/**` | `ADMIN` | CRUD del catálogo (201 al crear, 204 al eliminar). |
 | `GET` | `/api/empleados/catalogo` | Cualquier rol autenticado | Terapeutas (id, nombre, especialidad) para armar una reserva, sin datos de contacto. |
 | `*` | `/api/clientes/**`, `/api/empleados/**`, `/api/salas/**`, `/api/pagos/**` | `ADMIN` | CRUD de administración; `GET /api/salas/disponibles` y `/api/empleados/disponibles` consideran duración + limpieza. |
-| `POST` | `/api/db/reservas` | `CLIENTE`, `RECEPCIONISTA`, `ADMIN` | Crea una reserva PENDIENTE (si no se indica `salaId`, asigna la primera cabina libre); responde 409 si la sala o el especialista ya tienen una sesión que se cruza. |
+| `POST` | `/api/db/reservas` | `CLIENTE`, `RECEPCIONISTA`, `ADMIN` | Crea una reserva PENDIENTE que retiene el cupo 15 min (si no se indica `salaId`, asigna la primera cabina libre); responde 409 si la sala, la terapeuta o el propio cliente ya tienen una sesión que se cruza, o si ya tiene una pendiente de pago; 400 fuera del horario 12:00–23:00; 429 si dejó vencer demasiadas reservas sin pagar. |
+| `GET` | `/api/db/reservas/disponibilidad?empleadoId&servicioId&fecha` | `CLIENTE`, `RECEPCIONISTA`, `ADMIN` | Turnos del día con su disponibilidad real y el motivo cuando no se puede (terapeuta ocupada, sin cabinas, fuera de horario, ausencia, cliente con otra sesión). |
 | `GET` | `/api/db/reservas/mias` | `CLIENTE` | Historial del cliente autenticado. |
 | `GET` | `/api/db/reservas/agenda` | `ESPECIALISTA` | Agenda futura del especialista autenticado. |
 | `GET` | `/api/db/reservas/cliente/{id}` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Historial de un cliente. |
-| `POST` | `/api/db/reservas/{id}/confirmar-y-pagar` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Confirma la reserva y registra el pago en una transacción. |
-| `PATCH` | `/api/db/reservas/{id}/cancelar` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Cancela una reserva PENDIENTE o CONFIRMADA cambiando su estado a CANCELADA (no borra la fila). |
-| `GET` `PUT` `DELETE` | `/api/db/reservas`, `/api/db/reservas/{id}`, `/api/db/reservas/buscar` | `RECEPCIONISTA`, `ADMIN` | Gestión completa y búsqueda JPQL por rango de fechas y estado. |
+| `POST` | `/api/db/reservas/{id}/confirmar-y-pagar` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Confirma la reserva y registra el pago en una transacción. El monto debe ser el total del servicio (400 si no); fuera del plazo de 15 min se rechaza. |
+| `PATCH` | `/api/db/reservas/{id}/cancelar` | `CLIENTE` (solo las suyas), `RECEPCIONISTA`, `ADMIN` | Cancela una reserva PENDIENTE o CONFIRMADA cambiando su estado a CANCELADA (no borra la fila); si ya estaba pagada, el importe queda como crédito del cliente. |
+| `GET` `PUT` | `/api/db/reservas`, `/api/db/reservas/{id}`, `/api/db/reservas/buscar` | `RECEPCIONISTA`, `ADMIN` | Listado, reprogramación (misma validación de agenda; el estado no se cambia a mano salvo cancelar) y búsqueda JPQL por rango de fechas y estado. |
+| `DELETE` | `/api/db/reservas/{id}` | `ADMIN` | Elimina solo reservas CANCELADAS (las demás son historial). |
+| `PATCH` | `/api/salas/{id}/activa?valor=` | `ADMIN` | Pone una cabina en mantenimiento o la reactiva (400 si tiene reservas activas). |
+| `GET` `POST` `DELETE` | `/api/empleados/{id}/ausencias`, `/api/empleados/ausencias/{id}` | `ADMIN` | Vacaciones o licencias de una terapeuta: mientras duran no recibe reservas. |
 
-Códigos de error: `400` datos inválidos (con detalle por campo), `401` sin token o token inválido, `403` rol sin permiso, `404` recurso inexistente (o intento de eliminar un servicio, especialista o cabina con reservas: `400`), `409` cruce de horario o registro duplicado.
+Códigos de error: `400` datos inválidos (con detalle por campo), `401` sin token o token inválido, `403` rol sin permiso, `404` recurso inexistente (o intento de eliminar un servicio, especialista o cabina con reservas: `400`), `409` cruce de horario, reserva pendiente sin pagar o registro duplicado, `429` demasiados intentos de acceso o demasiadas reservas vencidas sin pagar.
 
 ---
 
@@ -223,13 +235,15 @@ mvn test
 - Pruebas de controladores REST con `MockMvc`.
 - Validaciones de negocio en `ReservaService` y `ClienteService`.
 - Pruebas de integración con perfiles de base de datos H2 en memoria (JWT real, roles, conflictos de agenda, asignación de cabina, cancelación sin borrado, borrado protegido y seed de datos demo).
+- `ReglasNegocioTest`: reglas de agenda, cobro completo, plazo de pago, bloqueo por reservas vencidas, horario, crédito por cancelación, cabinas en mantenimiento, ausencias y disponibilidad.
+- `ConcurrenciaReservaTest`: dos hilos con transacciones reales compiten por la misma terapeuta, cabina, cliente, cobro o saldo de puntos; solo uno gana. Sin los bloqueos, el mismo test crea doble reserva. Para repetirlo sobre MySQL 8, sobrescribe `spring.datasource.*` con `-D` (ver `docker-compose.yml`).
 
 ### Pruebas del Frontend
 ```bash
 cd frontend
 npm test
 ```
-Cubren `ApiService` (login, creación de reserva y error 409) y `BookingService` (respaldo local cuando el backend no responde).
+Cubren `ApiService` (login, creación de reserva y error 409), `BookingService` (sin sesión o sin backend informa el error: nunca simula una reserva), disponibilidad de turnos y pago completo.
 
 ### Compilación y Verificación de Presupuestos de Frontend
 Verifica que el bundle de producción no supere los presupuestos estrictos de rendimiento:

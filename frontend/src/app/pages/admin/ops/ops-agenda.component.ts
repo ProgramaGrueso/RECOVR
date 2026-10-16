@@ -95,6 +95,9 @@ type Rango = 'HOY' | 'MANANA' | 'SEMANA' | 'PASADAS' | 'TODAS';
                         <button type="button" class="ops-btn sm danger" (click)="cancelar(r)">Cancelar</button>
                       }
                       @case ('CANCELADA') {
+                        @if (r.observacion?.startsWith('No asistió') && r.pagado) {
+                          <button type="button" class="ops-btn sm ok" title="El cliente llegó tarde y la sesión sigue en curso" (click)="accion(admin.reabrir(r.id), 'Sesión reabierta: vuelve a estar confirmada.')">Reabrir (llegó tarde)</button>
+                        }
                         @if (esAdmin()) {
                           <button type="button" class="ops-btn sm danger" (click)="eliminar(r)">Eliminar</button>
                         } @else { <span class="muted">Solo ADMIN elimina</span> }

@@ -97,6 +97,13 @@ public class SalaController {
         salaService.eliminar(id);
     }
 
+    @Operation(summary = "Poner una cabina en mantenimiento o reactivarla",
+            description = "En mantenimiento no recibe reservas. Falla si tiene reservas activas. Requiere rol ADMIN.")
+    @PatchMapping("/{id}/activa")
+    public SalaResponse cambiarActiva(@PathVariable Long id, @RequestParam boolean valor) {
+        return SalaResponse.de(salaService.cambiarActiva(id, valor));
+    }
+
     @Operation(
             summary = "Consultar salas disponibles",
             description = "Filtra salas libres de reservas dentro de la ventana horaria especificada. Requiere rol ADMIN."

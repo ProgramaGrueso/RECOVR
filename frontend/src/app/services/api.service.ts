@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, map, of, switchMap, throwError } from 'rxjs';
-import { BookingRequest, BookingResponse } from '../models/booking.model';
+import { BookingRequest, BookingResponse, TurnoDisponible } from '../models/booking.model';
 
 const TOKEN_KEY = 'recovr-api-token';
 const URL_KEY = 'recovr-api-url';
@@ -17,6 +17,7 @@ interface ReservaApi {
   empleadoNombre: string;
   fechaHora: string;
   estado: BookingResponse['status'];
+  precio?: number;
 }
 
 export interface PerfilApi {
@@ -164,15 +165,53 @@ export class ApiService {
           fechaHora: `${request.date}T${request.timeSlot}:00`
         }, opts);
       }),
-      map(r => ({
-        id: 'REC-' + String(r.id).padStart(6, '0'),
-        status: r.estado,
-        createdAt: new Date().toISOString(),
-        serviceName: r.servicioNombre,
-        professionalName: r.empleadoNombre,
-        date: r.fechaHora.split('T')[0],
-        timeSlot: r.fechaHora.split('T')[1].substring(0, 5)
-      })),
+      map(r => this.aBooking(r)),
+      catchError((err: unknown) => throwError(() => this.traducir(err)))
+    );
+  }
+
+  private aBooking(r: ReservaApi): BookingResponse {
+    return {
+      id: 'REC-' + String(r.id).padStart(6, '0'),
+      status: r.estado,
+      createdAt: new Date().toISOString(),
+      serviceName: r.servicioNombre,
+      professionalName: r.empleadoNombre,
+      date: r.fechaHora.split('T')[0],
+      timeSlot: r.fechaHora.split('T')[1].substring(0, 5),
+      reservaId: r.id,
+      price: r.precio
+    };
+  }
+
+  /** Turnos del día con su disponibilidad real para esa terapeuta y servicio (el servidor explica los que no se pueden). */
+  disponibilidad(servicioCodigo: string, terapeuta: string, fecha: string): Observable<TurnoDisponible[]> {
+    const opts = { headers: this.headers() };
+    return this.http.get<ServicioApi[]>(`${this.base}/servicios`, opts).pipe(
+      switchMap(servicios => this.http.get<EmpleadoApi[]>(`${this.base}/empleados/catalogo`, opts).pipe(
+        map(empleados => ({ servicios, empleados }))
+      )),
+      switchMap(({ servicios, empleados }) => {
+        const servicio = servicios.find(s => s.nombre.toUpperCase().startsWith(servicioCodigo.toUpperCase()));
+        const empleado = empleados.find(e => e.nombre.toLowerCase() === terapeuta.toLowerCase());
+        if (!servicio || !empleado) {
+          return throwError(() => new ApiBusinessError('El servicio o la terapeuta elegida no existe en el sistema.'));
+        }
+        return this.http.get<TurnoDisponible[]>(
+          `${this.base}/db/reservas/disponibilidad?empleadoId=${empleado.id}&servicioId=${servicio.id}&fecha=${fecha}`, opts);
+      }),
+      catchError((err: unknown) => throwError(() => this.traducir(err)))
+    );
+  }
+
+  /**
+   * Paga la reserva por el importe completo (el servidor rechaza cualquier otro monto) y la deja CONFIRMADA.
+   * No hay pasarela de pagos conectada: el método elegido queda registrado tal cual.
+   */
+  pagarReserva(reservaId: number, monto: number, metodoPago: string): Observable<BookingResponse> {
+    return this.http.post<ReservaApi>(`${this.base}/db/reservas/${reservaId}/confirmar-y-pagar`,
+      { monto, metodoPago }, { headers: this.headers() }).pipe(
+      map(r => this.aBooking(r)),
       catchError((err: unknown) => throwError(() => this.traducir(err)))
     );
   }

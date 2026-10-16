@@ -135,7 +135,9 @@ public class FichaService {
         if (!clienteRepository.existsById(clienteId)) {
             throw new RecursoNoEncontradoException("Cliente", clienteId);
         }
-        if (!reservaRepository.existsByEmpleadoIdAndClienteId(yo.getId(), clienteId)) {
+        // Solo quien atiende (o va a atender) al cliente: una reserva cancelada, vencida o sin pagar no da acceso a su ficha
+        if (!reservaRepository.existsByEmpleadoIdAndClienteIdAndEstadoIn(yo.getId(), clienteId,
+                java.util.List.of(com.recovr.backend.entity.EstadoReserva.CONFIRMADA, com.recovr.backend.entity.EstadoReserva.COMPLETADA))) {
             throw new AccessDeniedException("Solo puedes ver las fichas de clientes que atiendes");
         }
         return yo;

@@ -44,6 +44,7 @@ class SeguridadRolesTest {
     @Autowired private SalaRepository salaRepository;
     @Autowired private ServicioRepository servicioRepository;
     @Autowired private ReservaRepository reservaRepository;
+    @Autowired private com.recovr.backend.repository.PagoRepository pagoRepository;
     @Autowired private PasswordEncoder passwordEncoder;
     @Autowired private JwtService jwtService;
     @Autowired private CustomUserDetailsService userDetailsService;
@@ -316,6 +317,16 @@ class SeguridadRolesTest {
         r.setSala(sala);
         r.setFechaHora(inicio);
         r.setEstado(estado);
-        return reservaRepository.save(r);
+        r = reservaRepository.save(r);
+        if (estado == EstadoReserva.COMPLETADA) {
+            // Los puntos salen de lo realmente pagado: una sesión completada sin pago no suma
+            com.recovr.backend.entity.Pago pago = new com.recovr.backend.entity.Pago();
+            pago.setReserva(r);
+            pago.setMonto(servicio.getPrecio());
+            pago.setMetodoPago("EFECTIVO");
+            pago.setFechaPago(inicio);
+            r.setPago(pagoRepository.save(pago));
+        }
+        return r;
     }
 }

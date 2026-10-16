@@ -44,6 +44,10 @@ public class Reserva {
     @Column(nullable = false)
     private EstadoReserva estado;
 
+    @Schema(description = "Momento en que se creó la reserva (inicia el plazo para pagarla)")
+    @Column(name = "creada_en")
+    private LocalDateTime creadaEn;
+
     @Schema(description = "Momento en que el cliente llegó (check-in). Nulo si aún no llegó", example = "2026-10-15T10:02:00")
     @Column(name = "check_in")
     private LocalDateTime checkIn;
@@ -82,6 +86,9 @@ public class Reserva {
 
     public EstadoReserva getEstado() { return estado; }
     public void setEstado(EstadoReserva estado) { this.estado = estado; }
+
+    public LocalDateTime getCreadaEn() { return creadaEn; }
+    public void setCreadaEn(LocalDateTime creadaEn) { this.creadaEn = creadaEn; }
 
     public LocalDateTime getCheckIn() { return checkIn; }
     public void setCheckIn(LocalDateTime checkIn) { this.checkIn = checkIn; }

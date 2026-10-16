@@ -74,6 +74,29 @@ public class EmpleadoController {
         return EmpleadoResponse.de(empleadoService.cambiarActivo(id, valor));
     }
 
+    @Operation(summary = "Ausencias de un especialista", description = "Periodos en que no atiende. Requiere rol ADMIN.")
+    @GetMapping("/{id}/ausencias")
+    public List<com.recovr.backend.dto.AusenciaDtos.AusenciaResponse> ausencias(@PathVariable Long id) {
+        return empleadoService.ausencias(id).stream().map(com.recovr.backend.dto.AusenciaDtos.AusenciaResponse::de).toList();
+    }
+
+    @Operation(summary = "Registrar una ausencia (vacaciones, licencia)",
+            description = "Mientras dura no recibe reservas. Falla si ya tiene reservas activas en ese periodo. Requiere rol ADMIN.")
+    @PostMapping("/{id}/ausencias")
+    @ResponseStatus(HttpStatus.CREATED)
+    public com.recovr.backend.dto.AusenciaDtos.AusenciaResponse registrarAusencia(
+            @PathVariable Long id, @Valid @RequestBody com.recovr.backend.dto.AusenciaDtos.AusenciaRequest request) {
+        return com.recovr.backend.dto.AusenciaDtos.AusenciaResponse.de(
+                empleadoService.registrarAusencia(id, request.desde(), request.hasta(), request.motivo()));
+    }
+
+    @Operation(summary = "Eliminar una ausencia", description = "Requiere rol ADMIN.")
+    @DeleteMapping("/ausencias/{ausenciaId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void eliminarAusencia(@PathVariable Long ausenciaId) {
+        empleadoService.eliminarAusencia(ausenciaId);
+    }
+
     @Operation(summary = "Obtener especialista por ID", description = "Obtiene los detalles del especialista según su ID. Requiere rol ADMIN.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Empleado encontrado",

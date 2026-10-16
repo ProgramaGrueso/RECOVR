@@ -55,10 +55,12 @@ import { ESTADO_TXT, codigoReserva, fechaHoraTxt, soles } from './ops.util';
         @if (p.canjes.length) {
           <div class="ops-head"><h3 class="ops-title">Mis códigos de canje</h3><span class="muted">Muéstralos en recepción al pagar tu sesión</span></div>
           <div class="ops-table-wrap" style="margin-bottom:1.6rem"><table class="ops-table" style="min-width:560px">
-            <thead><tr><th>Código</th><th>Beneficio</th><th>Descuento</th><th>Estado</th></tr></thead>
+            <thead><tr><th>Código</th><th>Beneficio</th><th>Descuento</th><th>Vence</th><th>Estado</th></tr></thead>
             <tbody>@for (k of p.canjes; track k.codigo) {
               <tr><td class="mono" style="font-size:1rem; color:var(--ops-text)">{{ k.codigo }}</td><td>{{ k.titulo }}</td><td>{{ soles(k.descuento) }}</td>
-                <td><span [class]="k.estado === 'DISPONIBLE' ? 'badge CONFIRMADA' : 'badge COMPLETADA'">{{ k.estado === 'DISPONIBLE' ? 'Disponible' : 'Usado' }}</span></td></tr>
+                <td>{{ k.venceEn ? fechaHora(k.venceEn) : 'Sin vencimiento' }}</td>
+                <td><span [class]="k.estado === 'DISPONIBLE' ? 'badge CONFIRMADA' : (k.estado === 'USADO' ? 'badge COMPLETADA' : 'badge CANCELADA')">{{ estadoCanje[k.estado] }}</span>
+                  @if (k.anulable) { <button type="button" class="ops-btn sm" style="margin-left:0.5rem" (click)="anularCanje(k.codigo)">Anular y recuperar puntos</button> }</td></tr>
             }</tbody></table></div>
         }
 
@@ -170,6 +172,17 @@ export class OpsMiCuentaComponent implements OnInit {
       },
       error: e => this.error.set(e.message)
     });
+  }
+
+  readonly estadoCanje: Record<string, string> = { DISPONIBLE: 'Disponible', USADO: 'Usado', ANULADO: 'Anulado', VENCIDO: 'Vencido' };
+
+  anularCanje(codigo: string): void {
+    if (confirm(`¿Anular el código ${codigo}? Recuperas los puntos y el código deja de servir.`)) {
+      this.admin.anularCanje(codigo).subscribe({
+        next: () => { this.aviso('Código anulado: tus puntos volvieron a tu saldo.'); this.cargar(); },
+        error: e => this.aviso(e.message, true)
+      });
+    }
   }
 
   canjear(id: string, titulo: string, costo: number): void {

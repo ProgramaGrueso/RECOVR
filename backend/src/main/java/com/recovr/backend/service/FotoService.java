@@ -31,6 +31,8 @@ public class FotoService {
 
     static final int MAX_BYTES = 3 * 1024 * 1024;
     static final int LADO_MAX = 1000;
+    /** Tope de píxeles a decodificar (25 MP): una foto de perfil nunca necesita más. */
+    static final long MAX_PIXELES = 25_000_000L;
 
     private final FotoEmpleadoRepository fotoRepository;
     private final EmpleadoRepository empleadoRepository;
@@ -72,6 +74,32 @@ public class FotoService {
         fotoRepository.deleteById(empleadoId);
     }
 
+    /**
+     * Una imagen pequeña en bytes puede declarar dimensiones enormes (un PNG de 3 MB de 30 000 × 30 000 píxeles ocupa
+     * gigas al decodificarse y agota la memoria del servidor). Se leen solo las dimensiones de la cabecera, sin
+     * decodificar los píxeles, y se rechaza lo desproporcionado antes de decodificar.
+     */
+    static void validarDimensiones(byte[] original) throws IOException {
+        try (javax.imageio.stream.ImageInputStream in = ImageIO.createImageInputStream(new ByteArrayInputStream(original))) {
+            java.util.Iterator<javax.imageio.ImageReader> lectores = ImageIO.getImageReaders(in);
+            if (!lectores.hasNext()) {
+                throw new IllegalArgumentException("El archivo no es una imagen válida");
+            }
+            javax.imageio.ImageReader lector = lectores.next();
+            try {
+                lector.setInput(in, true, true);
+                long w = lector.getWidth(0);
+                long h = lector.getHeight(0);
+                if (w * h > MAX_PIXELES) {
+                    throw new IllegalArgumentException("La imagen es demasiado grande (" + w + " × " + h
+                            + " px). El máximo es de " + MAX_PIXELES / 1_000_000 + " megapíxeles.");
+                }
+            } finally {
+                lector.dispose();
+            }
+        }
+    }
+
     static boolean esJpeg(byte[] b) {
         return b.length > 3 && (b[0] & 0xFF) == 0xFF && (b[1] & 0xFF) == 0xD8 && (b[2] & 0xFF) == 0xFF;
     }
@@ -82,6 +110,7 @@ public class FotoService {
 
     private static byte[] recodificar(byte[] original) {
         try {
+            validarDimensiones(original);
             BufferedImage src = ImageIO.read(new ByteArrayInputStream(original));
             if (src == null) {
                 throw new IllegalArgumentException("El archivo no es una imagen válida");

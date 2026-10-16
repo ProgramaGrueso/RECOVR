@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
-import { BookingRequest, BookingResponse } from '../models/booking.model';
+import { BookingRequest, BookingResponse, TurnoDisponible } from '../models/booking.model';
 import { ServiceItem } from '../models/service.model';
 import { ApiService, ApiBusinessError } from './api.service';
 import { AuthService } from './auth.service';
@@ -57,5 +57,15 @@ export class BookingService {
       return throwError(() => new ApiBusinessError('Elige un servicio y una terapeuta antes de confirmar.'));
     }
     return this.api.reservar(request, serviceCode, professionalName);
+  }
+
+  /** Turnos del día con su disponibilidad real (terapeuta ocupada, sin cabinas, fuera de horario...). */
+  availability(serviceCode: string, professionalName: string, date: string): Observable<TurnoDisponible[]> {
+    return this.api.disponibilidad(serviceCode, professionalName, date);
+  }
+
+  /** Paga completa la reserva recién creada: solo el pago total asegura el turno. */
+  payBooking(reservaId: number, amount: number, method: string): Observable<BookingResponse> {
+    return this.api.pagarReserva(reservaId, amount, method);
   }
 }

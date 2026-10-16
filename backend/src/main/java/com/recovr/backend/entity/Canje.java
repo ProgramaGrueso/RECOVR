@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "canjes")
 public class Canje {
 
-    public enum Estado { DISPONIBLE, USADO }
+    public enum Estado { DISPONIBLE, USADO, ANULADO }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,6 +35,8 @@ public class Canje {
 
     @Column(name = "creado_en", nullable = false) private LocalDateTime creadoEn;
     @Column(name = "usado_en") private LocalDateTime usadoEn;
+    /** Hasta cuándo sirve el código (nulo en los emitidos antes de existir la vigencia: no vencen). */
+    @Column(name = "vence_en") private LocalDateTime venceEn;
 
     @ManyToOne
     @JoinColumn(name = "reserva_id")
@@ -59,6 +61,9 @@ public class Canje {
     public void setEstado(Estado estado) { this.estado = estado; }
     public LocalDateTime getCreadoEn() { return creadoEn; }
     public void setCreadoEn(LocalDateTime creadoEn) { this.creadoEn = creadoEn; }
+    public LocalDateTime getVenceEn() { return venceEn; }
+    public void setVenceEn(LocalDateTime venceEn) { this.venceEn = venceEn; }
+    public boolean vencido(LocalDateTime ahora) { return estado == Estado.DISPONIBLE && venceEn != null && !ahora.isBefore(venceEn); }
     public LocalDateTime getUsadoEn() { return usadoEn; }
     public void setUsadoEn(LocalDateTime usadoEn) { this.usadoEn = usadoEn; }
     public Reserva getReserva() { return reserva; }

@@ -11,6 +11,7 @@ import com.recovr.backend.repository.ClienteRepository;
 import com.recovr.backend.repository.ReservaRepository;
 import com.recovr.backend.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -49,7 +50,8 @@ public class PuntosService {
             "Las sesiones canceladas, expiradas o a las que no asistes no suman puntos.",
             "Tu saldo es lo ganado menos lo canjeado. Tu nivel depende de lo ganado en total, así que canjear no te baja de nivel.",
             "Al canjear obtienes un código de un solo uso. Recepción lo aplica al cobrar tu sesión y el monto baja automáticamente.",
-            "El descuento nunca supera el precio de la sesión y no se puede combinar con otro código.");
+            "El descuento nunca supera el precio de la sesión y no se puede combinar con otro código.",
+            "Los códigos canjeados con puntos vencen a los 90 días; puedes anular uno sin usar y recuperar tus puntos. Si una sesión pagada se cancela, recibes un crédito por lo pagado (vence a los 180 días).");
 
     private static final String CODIGO_ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -67,10 +69,9 @@ public class PuntosService {
         this.canjeRepository = canjeRepository;
     }
 
-    /** Puntos de una sesión: lo pagado (o el precio si aún no hay pago registrado), redondeado hacia abajo. */
+    /** Puntos de una sesión: solo lo efectivamente pagado, redondeado hacia abajo. Sin pago no hay puntos. */
     static int puntosDe(Reserva r) {
-        BigDecimal base = r.getPago() != null && r.getPago().getMonto() != null ? r.getPago().getMonto() : r.getServicio().getPrecio();
-        return base.intValue();
+        return r.getPago() != null && r.getPago().getMonto() != null ? r.getPago().getMonto().intValue() : 0;
     }
 
     @Transactional(readOnly = true)
@@ -105,13 +106,15 @@ public class PuntosService {
                 .filter(r -> r.getEstado() == EstadoReserva.COMPLETADA).toList();
         List<Canje> canjes = canjeRepository.findByClienteIdOrderByCreadoEnDesc(cliente.getId());
         int ganados = completadas.stream().mapToInt(PuntosService::puntosDe).sum();
-        int canjeados = canjes.stream().mapToInt(Canje::getPuntos).sum();
+        // Un código anulado devolvió sus puntos: no cuenta como canjeado
+        int canjeados = canjes.stream().filter(c -> c.getEstado() != Canje.Estado.ANULADO).mapToInt(Canje::getPuntos).sum();
         int saldo = ganados - canjeados;
 
         List<Movimiento> movimientos = new ArrayList<>();
         completadas.forEach(r -> movimientos.add(new Movimiento(r.getFechaHora(), "GANADO",
                 "Sesión completada: " + r.getServicio().getNombre(), puntosDe(r))));
-        canjes.forEach(c -> movimientos.add(new Movimiento(c.getCreadoEn(), "CANJE", "Canje: " + c.getTitulo() + " (" + c.getCodigo() + ")", -c.getPuntos())));
+        canjes.stream().filter(c -> c.getEstado() != Canje.Estado.ANULADO && c.getPuntos() > 0)
+                .forEach(c -> movimientos.add(new Movimiento(c.getCreadoEn(), "CANJE", "Canje: " + c.getTitulo() + " (" + c.getCodigo() + ")", -c.getPuntos())));
         movimientos.sort(Comparator.comparing(Movimiento::fecha).reversed());
 
         Nivel actual = nivelPara(ganados);
@@ -122,12 +125,16 @@ public class PuntosService {
                 NIVELES.stream().map(n -> new NivelPuntos(n.nombre(), n.desde(), n.equals(actual))).toList(),
                 BENEFICIOS.stream().map(b -> new BeneficioInfo(b.id(), b.titulo(), b.descripcion(), b.puntos(), b.descuento(), saldo >= b.puntos())).toList(),
                 movimientos,
-                canjes.stream().map(c -> new CanjeInfo(c.getCodigo(), c.getTitulo(), c.getDescuento(), c.getEstado().name(), c.getCreadoEn(), c.getUsadoEn())).toList());
+                canjes.stream().map(this::info).toList());
     }
 
-    @Transactional
+    /**
+     * Canjea puntos por un beneficio. Se bloquea la fila del cliente y se lee en READ_COMMITTED: dos canjes
+     * simultáneos se hacen en fila y el segundo ve el saldo ya descontado (no se gasta dos veces el mismo saldo).
+     */
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     public CanjeInfo canjear(String correo, String beneficioId) {
-        Cliente cliente = clienteDe(correo);
+        Cliente cliente = clienteRepository.buscarBloqueado(clienteDe(correo).getId()).orElseThrow();
         Beneficio b = BENEFICIOS.stream().filter(x -> x.id().equals(beneficioId)).findFirst()
                 .orElseThrow(() -> new RecursoNoEncontradoException("Beneficio no encontrado: " + beneficioId));
         int saldo = saldo(cliente.getId());
@@ -142,8 +149,42 @@ public class PuntosService {
         c.setDescuento(b.descuento());
         c.setCodigo(codigoUnico());
         c.setCreadoEn(LocalDateTime.now());
+        c.setVenceEn(c.getCreadoEn().plusDays(ReglasReserva.VIGENCIA_CANJE_DIAS));
         c = canjeRepository.save(c);
-        return new CanjeInfo(c.getCodigo(), c.getTitulo(), c.getDescuento(), c.getEstado().name(), c.getCreadoEn(), null);
+        return info(c);
+    }
+
+    private CanjeInfo info(Canje c) {
+        boolean vencido = c.vencido(LocalDateTime.now());
+        boolean anulable = c.getEstado() == Canje.Estado.DISPONIBLE && c.getPuntos() > 0;
+        return new CanjeInfo(c.getCodigo(), c.getTitulo(), c.getDescuento(), vencido ? "VENCIDO" : c.getEstado().name(),
+                c.getCreadoEn(), c.getUsadoEn(), c.getVenceEn(), anulable);
+    }
+
+    /**
+     * El cliente anula un código que no usó y recupera los puntos. Los créditos por cancelación (que no costaron
+     * puntos) no se anulan, y uno ya vencido no devuelve puntos: caducó sin usarse.
+     */
+    @Transactional
+    public CanjeInfo anular(String correo, String codigo) {
+        Cliente cliente = clienteDe(correo);
+        Canje c = canjeRepository.buscarPorCodigoBloqueado(codigo.trim().toUpperCase())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Código de canje no encontrado: " + codigo));
+        if (!c.getCliente().getId().equals(cliente.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Ese código no es tuyo");
+        }
+        if (c.getEstado() != Canje.Estado.DISPONIBLE) {
+            throw new IllegalStateException("Solo se puede anular un código que no se haya usado");
+        }
+        if (c.getPuntos() <= 0) {
+            throw new IllegalStateException("Un crédito por cancelación no se anula: se aplica al pagar tu próxima sesión");
+        }
+        if (c.vencido(LocalDateTime.now())) {
+            throw new IllegalStateException("El código ya venció: los puntos de un código vencido no se devuelven");
+        }
+        c.setEstado(Canje.Estado.ANULADO);
+        canjeRepository.save(c);
+        return info(c);
     }
 
     /** Vista previa para recepción: monto que corresponde cobrar si se aplica el código a esa reserva. */
@@ -159,9 +200,9 @@ public class PuntosService {
     }
 
     /** Valida un código al cobrar. Falla con un motivo claro si no corresponde. */
-    @Transactional(readOnly = true)
+    @Transactional
     public Canje canjeParaCobro(String codigo, Cliente clienteDeLaReserva) {
-        Canje c = canjeRepository.findByCodigo(codigo.trim().toUpperCase())
+        Canje c = canjeRepository.buscarPorCodigoBloqueado(codigo.trim().toUpperCase())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Código de canje no encontrado: " + codigo));
         String motivo = motivoInvalido(c, clienteDeLaReserva);
         if (motivo != null) {
@@ -170,9 +211,46 @@ public class PuntosService {
         return c;
     }
 
+    /**
+     * Crédito a favor del cliente por una sesión pagada que se canceló. Es un código de un solo uso (como un canje)
+     * por el importe pagado, sin costo en puntos; recepción lo aplica al cobrar la siguiente sesión.
+     */
+    @Transactional
+    public Canje crearCredito(Cliente cliente, BigDecimal importe, String titulo) {
+        Canje c = new Canje();
+        c.setCliente(cliente);
+        c.setBeneficioId(ReglasReserva.CREDITO_CANCELACION);
+        c.setTitulo(titulo);
+        c.setPuntos(0);
+        c.setDescuento(importe);
+        c.setCodigo(codigoUnico());
+        c.setCreadoEn(LocalDateTime.now());
+        c.setVenceEn(c.getCreadoEn().plusDays(ReglasReserva.VIGENCIA_CREDITO_DIAS));
+        return canjeRepository.save(c);
+    }
+
+    /** Si la reserva que se cancela había consumido un código, el código vuelve a quedar disponible. */
+    @Transactional
+    public void liberarCanjesDe(Reserva reserva) {
+        for (Canje c : canjeRepository.findByReservaId(reserva.getId())) {
+            if (c.getEstado() == Canje.Estado.USADO) {
+                c.setEstado(Canje.Estado.DISPONIBLE);
+                c.setUsadoEn(null);
+                c.setReserva(null);
+                canjeRepository.save(c);
+            }
+        }
+    }
+
     private static String motivoInvalido(Canje c, Cliente cliente) {
+        if (c.getEstado() == Canje.Estado.ANULADO) {
+            return "El código fue anulado";
+        }
         if (c.getEstado() != Canje.Estado.DISPONIBLE) {
             return "El código ya fue usado";
+        }
+        if (c.vencido(LocalDateTime.now())) {
+            return "El código venció el " + c.getVenceEn().toLocalDate();
         }
         if (!c.getCliente().getId().equals(cliente.getId())) {
             return "El código pertenece a otro cliente";

@@ -9,7 +9,7 @@ import { AuthService } from '../../services/auth.service';
 import { ApiService, ApiBusinessError } from '../../services/api.service';
 import { ServiceItem } from '../../models/service.model';
 import { Professional } from '../../models/professional.model';
-import { BookingResponse } from '../../models/booking.model';
+import { BookingResponse, TurnoDisponible } from '../../models/booking.model';
 import { ServerTimeService } from '../../services/server-time.service';
 
 import { BrandMarkComponent } from '../brand-mark/brand-mark.component';
@@ -35,7 +35,16 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
   private api = inject(ApiService);
   private cdr = inject(ChangeDetectorRef);
 
-  currentStep = 1;
+  private step = 1;
+  /** Al entrar al paso de fecha y turno se consulta la disponibilidad real de la terapeuta elegida. */
+  get currentStep(): number { return this.step; }
+  set currentStep(value: number) {
+    const previo = this.step;
+    this.step = value;
+    if (value === 3 && previo !== 3) {
+      this.refreshSlots();
+    }
+  }
   isSubmitting = false;
   isLoadingServices = true;
   isLoadingProfessionals = true;
@@ -60,9 +69,19 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
   bookingForm!: FormGroup;
   private subs = new Subscription();
 
-  timeSlots = [
-    '09:00', '10:30', '12:00', '14:30', '16:00', '17:30', '19:00'
-  ];
+  /** Turnos del día con su disponibilidad real (el servidor explica por qué un turno no se puede tomar). */
+  slots: TurnoDisponible[] = [];
+  isLoadingSlots = false;
+  slotsError = '';
+
+  // Pago: solo el pago completo asegura el turno. Mientras tanto la reserva queda apartada un tiempo limitado.
+  readonly holdMinutes = 15;
+  readonly payMethods = ['YAPE', 'PLIN', 'TARJETA', 'TRANSFERENCIA'];
+  payMethod = 'YAPE';
+  isPaying = false;
+  payError = '';
+  secondsLeft = 0;
+  private payTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private bookingService: BookingService,
@@ -103,6 +122,41 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
       clientPhone: ['', [Validators.required, Validators.pattern('^[0-9+\\s-]{8,}$')]],
       notes: ['']
     });
+    this.subs.add(this.bookingForm.get('date')!.valueChanges.subscribe(() => {
+      this.bookingForm.patchValue({ timeSlot: '' }, { emitEvent: false });
+      if (this.currentStep === 3) {
+        this.refreshSlots();
+      }
+    }));
+  }
+
+  /** Consulta al servidor qué turnos de la fecha elegida se pueden reservar con esa terapeuta y servicio. */
+  refreshSlots(): void {
+    const srv = this.selectedService;
+    const pro = this.selectedProfessional;
+    const date = this.bookingForm.get('date')?.value;
+    if (!srv || !pro || !date) {
+      return;
+    }
+    this.isLoadingSlots = true;
+    this.slotsError = '';
+    this.subs.add(this.bookingService.availability(srv.code, pro.name, date).subscribe({
+      next: slots => {
+        this.slots = slots;
+        const elegido = this.bookingForm.get('timeSlot')?.value;
+        if (elegido && !slots.some(s => s.hora === elegido && s.disponible)) {
+          this.bookingForm.patchValue({ timeSlot: '' });
+        }
+        this.isLoadingSlots = false;
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        this.slots = [];
+        this.isLoadingSlots = false;
+        this.slotsError = err instanceof ApiBusinessError ? err.message : 'No se pudo consultar la disponibilidad. Intenta de nuevo.';
+        this.cdr.markForCheck();
+      }
+    }));
   }
 
   loadInitialData(): void {
@@ -187,8 +241,11 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     this.currentStep = 3;
   }
 
-  selectTimeSlot(slot: string): void {
-    this.bookingForm.patchValue({ timeSlot: slot });
+  selectTimeSlot(slot: TurnoDisponible): void {
+    if (!slot.disponible) {
+      return;
+    }
+    this.bookingForm.patchValue({ timeSlot: slot.hora });
   }
 
   get isClientLoggedIn(): boolean {
@@ -304,6 +361,10 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
       next: (response) => {
         this.isSubmitting = false;
         this.bookingSuccess = response;
+        this.payError = '';
+        if (response.status === 'PENDIENTE') {
+          this.startCountdown();
+        }
         this.cdr.markForCheck();
       },
       error: (err) => {
@@ -319,13 +380,74 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Cuenta regresiva del plazo para pagar; al llegar a cero el servidor libera el cupo. */
+  private startCountdown(): void {
+    this.stopCountdown();
+    const limite = Date.now() + this.holdMinutes * 60_000;
+    const tick = () => {
+      this.secondsLeft = Math.max(0, Math.round((limite - Date.now()) / 1000));
+      if (this.secondsLeft === 0) {
+        this.stopCountdown();
+      }
+      this.cdr.markForCheck();
+    };
+    tick();
+    this.payTimer = setInterval(tick, 1000);
+  }
+
+  private stopCountdown(): void {
+    if (this.payTimer) {
+      clearInterval(this.payTimer);
+      this.payTimer = null;
+    }
+  }
+
+  get countdownText(): string {
+    const m = Math.floor(this.secondsLeft / 60);
+    const s = this.secondsLeft % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+
+  get hasAvailableSlots(): boolean {
+    return this.slots.some(s => s.disponible);
+  }
+
+  get holdExpired(): boolean {
+    return this.bookingSuccess?.status === 'PENDIENTE' && this.secondsLeft === 0;
+  }
+
+  /** Paga el importe completo que fija el servidor; solo así la reserva queda CONFIRMADA y el turno asegurado. */
+  payNow(): void {
+    const b = this.bookingSuccess;
+    if (!b || b.reservaId == null || b.price == null || this.isPaying || this.holdExpired) {
+      return;
+    }
+    this.isPaying = true;
+    this.payError = '';
+    this.subs.add(this.bookingService.payBooking(b.reservaId, b.price, this.payMethod).subscribe({
+      next: paid => {
+        this.isPaying = false;
+        this.stopCountdown();
+        this.bookingSuccess = { ...b, status: paid.status };
+        this.cdr.markForCheck();
+      },
+      error: err => {
+        this.isPaying = false;
+        this.payError = err instanceof ApiBusinessError ? err.message : 'No se pudo registrar el pago. Intenta de nuevo.';
+        this.cdr.markForCheck();
+      }
+    }));
+  }
+
   resetFlow(): void {
+    this.stopCountdown();
     this.bookingSuccess = null;
     this.currentStep = 1;
     this.bookingForm.reset();
   }
 
   ngOnDestroy(): void {
+    this.stopCountdown();
     this.subs.unsubscribe();
   }
 }

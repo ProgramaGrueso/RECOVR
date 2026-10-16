@@ -33,6 +33,12 @@ public class MiCuentaController {
         return puntosService.detalle(auth.getName());
     }
 
+    @Operation(summary = "Anular un código de canje sin usar", description = "Devuelve los puntos del código. No aplica a códigos usados, vencidos ni a créditos por cancelación.")
+    @PostMapping("/canjes/{codigo}/anular")
+    public com.recovr.backend.dto.PuntosDtos.CanjeInfo anular(@PathVariable String codigo, Authentication auth) {
+        return puntosService.anular(auth.getName(), codigo);
+    }
+
     @Operation(summary = "Canjear puntos por un beneficio", description = "Genera un código de un solo uso que recepción aplica al cobrar.")
     @PostMapping("/canjes")
     @org.springframework.web.bind.annotation.ResponseStatus(org.springframework.http.HttpStatus.CREATED)

@@ -6,7 +6,7 @@ import { AuthService } from './auth.service';
 import { ApiService } from './api.service';
 import {
   AuditoriaOps, CanjeOps, CanjeValidoOps, ClienteOps, EmpleadoEstado, EmpleadoOps, EstadoSistemaOps, FichaForm, FichaOps, MiClienteOps,
-  MiCuentaOps, MiPerfilOps, PermisoOps, PuntosOps, ReservaOps, ResumenOps, SalaEstado, SalaOps, ServicioOps, UsuarioNuevoOps, UsuarioOps
+  AusenciaOps, MiCuentaOps, MiPerfilOps, PermisoOps, PuntosOps, ReservaOps, ResumenOps, SalaEstado, SalaOps, ServicioOps, UsuarioNuevoOps, UsuarioOps
 } from '../models/ops.model';
 
 /** Error con un mensaje listo para mostrar al personal. */
@@ -70,6 +70,7 @@ export class AdminApiService {
   }
   checkIn(id: number): Observable<ReservaOps> { return this.req('POST', `/db/reservas/${id}/check-in`); }
   finalizar(id: number): Observable<ReservaOps> { return this.req('POST', `/db/reservas/${id}/finalizar`); }
+  reabrir(id: number): Observable<ReservaOps> { return this.req('POST', `/db/reservas/${id}/reabrir`); }
   cancelar(id: number): Observable<ReservaOps> { return this.req('PATCH', `/db/reservas/${id}/cancelar`); }
   eliminarReserva(id: number): Observable<void> { return this.req('DELETE', `/db/reservas/${id}`); }
 
@@ -119,9 +120,16 @@ export class AdminApiService {
   crearSala(b: { nombre: string; capacidad: number }): Observable<SalaOps> { return this.req('POST', '/salas', b); }
   editarSala(id: number, b: { nombre: string; capacidad: number }): Observable<SalaOps> { return this.req('PUT', `/salas/${id}`, b); }
   eliminarSala(id: number): Observable<void> { return this.req('DELETE', `/salas/${id}`); }
+  cambiarActivaSala(id: number, valor: boolean): Observable<SalaOps> { return this.req('PATCH', `/salas/${id}/activa?valor=${valor}`); }
+  ausencias(empleadoId: number): Observable<AusenciaOps[]> { return this.req('GET', `/empleados/${empleadoId}/ausencias`); }
+  crearAusencia(empleadoId: number, b: { desde: string; hasta: string; motivo: string }): Observable<AusenciaOps> {
+    return this.req('POST', `/empleados/${empleadoId}/ausencias`, b);
+  }
+  eliminarAusencia(ausenciaId: number): Observable<void> { return this.req('DELETE', `/empleados/ausencias/${ausenciaId}`); }
 
   // ---- Puntos y canjes ----
   puntos(): Observable<PuntosOps> { return this.req('GET', '/mi-cuenta/puntos'); }
+  anularCanje(codigo: string): Observable<CanjeOps> { return this.req('POST', `/mi-cuenta/canjes/${encodeURIComponent(codigo)}/anular`); }
   canjear(beneficioId: string): Observable<CanjeOps> { return this.req('POST', '/mi-cuenta/canjes', { beneficioId }); }
 
   // ---- Portal del cliente ----

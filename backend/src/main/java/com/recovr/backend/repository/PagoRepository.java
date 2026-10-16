@@ -12,4 +12,5 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
                                        @org.springframework.data.repository.query.Param("hasta") java.time.LocalDateTime hasta);
 
     boolean existsByReservaId(Long reservaId);
+    java.util.Optional<com.recovr.backend.entity.Pago> findByReservaId(Long reservaId);
 }

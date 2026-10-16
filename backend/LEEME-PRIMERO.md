@@ -51,7 +51,7 @@
 
 - `entity/` → Cliente, Empleado, Servicio, Sala, Reserva, Pago, EstadoReserva
 - `repository/` → uno por entidad, con las consultas JPQL en `ReservaRepository`
-- `service/` → CRUD completo de cada entidad + `confirmarYPagar` (transacción de ejemplo)
+- `service/` → CRUD completo de cada entidad + `confirmarYPagar` (transacción: confirma la reserva y registra el pago completo) y las reglas de agenda en `ReglasReserva`
 - `controller/` → endpoints REST bajo `/api/<recurso>`
 
 ## Para subirlo a tu rama de Git

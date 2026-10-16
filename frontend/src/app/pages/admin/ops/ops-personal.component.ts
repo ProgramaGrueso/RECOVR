@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../../../services/admin-api.service';
 import { ApiService } from '../../../services/api.service';
-import { EmpleadoEstado } from '../../../models/ops.model';
+import { AusenciaOps, EmpleadoEstado } from '../../../models/ops.model';
 import { EMPLEADO_ESTADO_TXT, fechaHoraTxt, horaTxt } from './ops.util';
 import { prepararFoto } from './ops.imagen';
 
@@ -47,6 +47,7 @@ import { prepararFoto } from './ops.imagen';
                   <button type="button" class="ops-btn sm info" [disabled]="subiendoId() === e.id" (click)="selector.click()">{{ subiendoId() === e.id ? 'Subiendo…' : 'Foto' }}</button>
                   <input #selector type="file" accept="image/*" hidden (change)="subirFoto(e, $event)">
                   @if (e.tieneFoto) { <button type="button" class="ops-btn sm" (click)="quitarFoto(e)">Quitar foto</button> }
+                  <button type="button" class="ops-btn sm" (click)="abrirAusencias(e)">Ausencias</button>
                   @if (e.activo) { <button type="button" class="ops-btn sm warn" (click)="cambiarActivo(e, false)">Dar de baja</button> }
                   @else { <button type="button" class="ops-btn sm ok" (click)="cambiarActivo(e, true)">Reactivar</button> }
                   <button type="button" class="ops-btn sm danger" (click)="eliminar(e)">Eliminar</button>
@@ -56,6 +57,33 @@ import { prepararFoto } from './ops.imagen';
           </tbody>
         </table>
       </div>
+
+      @if (ausentes(); as a) {
+        <div class="modal-back" (click)="ausentes.set(null)">
+          <form class="modal" (click)="$event.stopPropagation()" (ngSubmit)="guardarAusencia()">
+            <h3>Ausencias · {{ a.nombre }}</h3>
+            <p class="ops-sub" style="margin-bottom:0.75rem">Vacaciones, licencias o capacitaciones: en esas fechas no recibe reservas.</p>
+            @if (errorForm()) { <div class="ops-banner err">{{ errorForm() }}</div> }
+            <ul class="muted" style="list-style:none; padding:0; margin:0 0 1rem">
+              @for (x of listaAusencias(); track x.id) {
+                <li style="display:flex; justify-content:space-between; gap:0.5rem; padding:0.3rem 0">
+                  <span>{{ fechaHora(x.desde) }} → {{ fechaHora(x.hasta) }} · {{ x.motivo || 'Sin motivo' }}</span>
+                  <button type="button" class="ops-btn sm danger" (click)="quitarAusencia(x.id)">Quitar</button>
+                </li>
+              } @empty { <li>No tiene ausencias registradas.</li> }
+            </ul>
+            <div class="form-grid">
+              <div class="field"><label for="au-desde">Desde</label><input id="au-desde" class="ops-input" type="datetime-local" name="desde" [(ngModel)]="nuevaAusencia.desde" required></div>
+              <div class="field"><label for="au-hasta">Hasta</label><input id="au-hasta" class="ops-input" type="datetime-local" name="hasta" [(ngModel)]="nuevaAusencia.hasta" required></div>
+              <div class="field full"><label for="au-motivo">Motivo</label><input id="au-motivo" class="ops-input" name="motivo" maxlength="150" [(ngModel)]="nuevaAusencia.motivo" placeholder="Vacaciones"></div>
+            </div>
+            <div class="modal-foot">
+              <button type="button" class="ops-btn" (click)="ausentes.set(null)">Cerrar</button>
+              <button type="submit" class="ops-btn primary">Registrar ausencia</button>
+            </div>
+          </form>
+        </div>
+      }
 
       @if (form(); as f) {
         <div class="modal-back" (click)="form.set(null)">
@@ -91,6 +119,9 @@ export class OpsPersonalComponent implements OnInit {
   versionTxt = () => String(this.version());
   editandoId = signal<number | null>(null);
   errorForm = signal('');
+  ausentes = signal<EmpleadoEstado | null>(null);
+  listaAusencias = signal<AusenciaOps[]>([]);
+  nuevaAusencia = { desde: '', hasta: '', motivo: '' };
 
   readonly estTxt = EMPLEADO_ESTADO_TXT; hora = horaTxt; fechaHora = fechaHoraTxt;
 
@@ -111,6 +142,36 @@ export class OpsPersonalComponent implements OnInit {
     this.editandoId.set(e?.id ?? null);
     this.errorForm.set('');
     this.form.set({ nombre: e?.nombre ?? '', especialidad: e?.especialidad ?? '', telefono: e?.telefono ?? '', bio: e?.bio ?? '' });
+  }
+
+  abrirAusencias(e: EmpleadoEstado): void {
+    this.errorForm.set('');
+    this.nuevaAusencia = { desde: '', hasta: '', motivo: '' };
+    this.ausentes.set(e);
+    this.cargarAusencias(e.id);
+  }
+
+  private cargarAusencias(id: number): void {
+    this.admin.ausencias(id).subscribe({ next: l => this.listaAusencias.set(l), error: err => this.errorForm.set(err.message) });
+  }
+
+  guardarAusencia(): void {
+    const e = this.ausentes();
+    if (!e) { return; }
+    this.errorForm.set('');
+    const { desde, hasta, motivo } = this.nuevaAusencia;
+    this.admin.crearAusencia(e.id, { desde: `${desde}:00`.slice(0, 19), hasta: `${hasta}:00`.slice(0, 19), motivo }).subscribe({
+      next: () => { this.nuevaAusencia = { desde: '', hasta: '', motivo: '' }; this.cargarAusencias(e.id); },
+      error: err => this.errorForm.set(err.message)
+    });
+  }
+
+  quitarAusencia(id: number): void {
+    const e = this.ausentes();
+    this.admin.eliminarAusencia(id).subscribe({
+      next: () => { if (e) { this.cargarAusencias(e.id); } },
+      error: err => this.errorForm.set(err.message)
+    });
   }
 
   guardar(): void {

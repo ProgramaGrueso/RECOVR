@@ -36,9 +36,11 @@ export interface EmpleadoEstado extends EmpleadoOps {
   estado: 'LIBRE' | 'EN_SESION' | 'POR_INICIAR';
   sala: string | null; hasta: string | null; proximaReserva: string | null;
 }
-export interface SalaOps { id: number; nombre: string; capacidad: number | null; }
+export interface SalaOps { id: number; nombre: string; capacidad: number | null; activa?: boolean; }
+/** Periodo en que una terapeuta no atiende (vacaciones, licencia). */
+export interface AusenciaOps { id: number; empleadoId: number; desde: string; hasta: string; motivo: string | null; }
 export interface SalaEstado extends SalaOps {
-  estado: 'DISPONIBLE' | 'OCUPADA' | 'ESPERANDO_CLIENTE' | 'EN_SANITIZACION';
+  estado: 'DISPONIBLE' | 'OCUPADA' | 'ESPERANDO_CLIENTE' | 'EN_SANITIZACION' | 'MANTENIMIENTO';
   terapeuta: string | null; hasta: string | null; proximaReserva: string | null;
 }
 export interface ServicioOps {
@@ -103,7 +105,10 @@ export interface MiPerfilOps { id: number; nombre: string; especialidad: string 
 export interface MovimientoPuntos { fecha: string; tipo: 'GANADO' | 'CANJE'; descripcion: string; puntos: number; }
 export interface BeneficioPuntos { id: string; titulo: string; descripcion: string; puntos: number; descuento: number; alcanza: boolean; }
 export interface NivelPuntos { nombre: string; desde: number; actual: boolean; }
-export interface CanjeOps { codigo: string; titulo: string; descuento: number; estado: 'DISPONIBLE' | 'USADO'; creadoEn: string; usadoEn: string | null; }
+export interface CanjeOps {
+  codigo: string; titulo: string; descuento: number; estado: 'DISPONIBLE' | 'USADO' | 'ANULADO' | 'VENCIDO';
+  creadoEn: string; usadoEn: string | null; venceEn: string | null; anulable: boolean;
+}
 export interface PuntosOps {
   saldo: number; ganados: number; canjeados: number; nivel: string; siguienteNivel: string | null; puntosParaSiguiente: number;
   reglas: string[]; niveles: NivelPuntos[]; beneficios: BeneficioPuntos[]; movimientos: MovimientoPuntos[]; canjes: CanjeOps[];

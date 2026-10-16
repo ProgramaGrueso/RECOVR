@@ -31,8 +31,9 @@ import { METODOS_PAGO, codigoReserva, soles } from './ops.util';
             }
           </div>
           <div class="field">
-            <label for="cobro-monto">Monto (S/)</label>
-            <input id="cobro-monto" class="ops-input" type="number" min="0" step="0.01" name="monto" [(ngModel)]="monto" [disabled]="validado?.valido === true">
+            <label for="cobro-monto">Total a cobrar (S/)</label>
+            <input id="cobro-monto" class="ops-input" type="number" name="monto" [ngModel]="monto" readonly>
+            <span class="muted">Solo el pago completo asegura el turno: el sistema no admite cobros parciales.</span>
           </div>
           <div class="field">
             <label for="cobro-metodo">Método de pago</label>
@@ -89,10 +90,6 @@ export class OpsCobroModalComponent {
 
   cobrar(): void {
     const conCanje = this.validado?.valido === true;
-    if (!conCanje && !(this.monto > 0)) {
-      this.error = 'El monto debe ser mayor que cero.';
-      return;
-    }
     this.enviando = true;
     this.error = '';
     this.admin.cobrarYConfirmar(this.reserva.id, this.monto, this.metodo, conCanje ? this.codigoCanje.trim() : undefined).subscribe({

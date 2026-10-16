@@ -183,7 +183,7 @@
       <app-brand-mark size="lg" color="var(--color-bubble-pink)"></app-brand-mark>
     </div>
 
-    <h3 class="success-title">{{ bookingSuccess.status === 'PENDIENTE' ? 'CITA REGISTRADA CON ÉXITO' : 'CITA CONFIRMADA CON ÉXITO' }}</h3>
+    <h3 class="success-title">{{ bookingSuccess.status === 'PENDIENTE' ? 'TURNO APARTADO — FALTA EL PAGO' : 'CITA CONFIRMADA CON ÉXITO' }}</h3>
     <p class="success-code">CÓDIGO DE SEGUIMIENTO: <strong>{{ bookingSuccess.id }}</strong></p>
 
     <div class="summary-box">
@@ -209,8 +209,29 @@
       </div>
     </div>
 
-    <p class="success-note">
-      Hemos enviado los detalles y la confirmación de acceso a <em>{{ bookingForm.value.clientEmail }}</em>.
+    <div class="pay-box" *ngIf="bookingSuccess.status === 'PENDIENTE'">
+      <ng-container *ngIf="!holdExpired; else holdOver">
+        <p class="pay-lead">
+          Solo el <strong>pago completo</strong> asegura tu turno. Lo apartamos por
+          <strong class="pay-timer">{{ countdownText }}</strong>; si no se paga a tiempo, el cupo se libera.
+        </p>
+        <div class="pay-methods" role="radiogroup" aria-label="Método de pago">
+          <button type="button" *ngFor="let m of payMethods" class="pay-method" role="radio"
+                  [attr.aria-checked]="payMethod === m" [class.selected]="payMethod === m" (click)="payMethod = m">{{ m }}</button>
+        </div>
+        <button type="button" class="btn-primary" [disabled]="isPaying || bookingSuccess.price == null" (click)="payNow()">
+          <span>{{ isPaying ? 'Registrando pago…' : 'Pagar S/ ' + bookingSuccess.price + ' y asegurar mi turno' }}</span>
+        </button>
+        <p class="form-error" *ngIf="payError">{{ payError }}</p>
+        <p class="pay-fine">También puedes pagar en recepción antes de que venza el plazo. No hay pasarela de pagos conectada: el método queda registrado tal como lo eliges.</p>
+      </ng-container>
+      <ng-template #holdOver>
+        <p class="pay-lead">El plazo para pagar venció y el cupo se liberó. Vuelve a reservar si aún quieres el turno.</p>
+      </ng-template>
+    </div>
+
+    <p class="success-note" *ngIf="bookingSuccess.status !== 'PENDIENTE'">
+      Tu turno está asegurado. Puedes ver el detalle y tus puntos en Mi Cuenta.
     </p>
 
     <div class="success-actions">
@@ -306,16 +327,22 @@
 
           <div class="slots-group">
             <label class="form-label">TURNOS DISPONIBLES *</label>
-            <div class="slots-grid">
+            <div class="slots-grid" [attr.aria-busy]="isLoadingSlots">
               <button
                 type="button"
-                *ngFor="let slot of timeSlots"
+                *ngFor="let slot of slots"
                 class="slot-btn"
-                [class.selected]="bookingForm.get('timeSlot')?.value === slot"
+                [class.selected]="bookingForm.get('timeSlot')?.value === slot.hora"
+                [class.unavailable]="!slot.disponible"
+                [disabled]="!slot.disponible"
+                [attr.title]="slot.motivo"
                 (click)="selectTimeSlot(slot)">
-                {{ slot }} HS
+                {{ slot.hora }} HS
               </button>
             </div>
+            <p class="slots-hint" *ngIf="isLoadingSlots">Consultando disponibilidad…</p>
+            <p class="form-error" *ngIf="slotsError">{{ slotsError }}</p>
+            <p class="slots-hint" *ngIf="!isLoadingSlots && slots.length && !hasAvailableSlots">No quedan turnos libres ese día con esta masajista. Prueba otra fecha u otra masajista.</p>
             <div *ngIf="bookingForm.get('timeSlot')?.touched && bookingForm.get('timeSlot')?.invalid" class="form-error">
               Por favor selecciona un turno horario.
             </div>

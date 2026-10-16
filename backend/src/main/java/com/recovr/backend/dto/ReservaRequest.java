@@ -23,6 +23,6 @@ public record ReservaRequest(
         @Schema(description = "Fecha y hora de inicio (ISO-8601)", example = "2026-10-15T10:00:00", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull LocalDateTime fechaHora,
 
-        @Schema(description = "Estado. Solo se considera en actualizaciones hechas por ADMIN o RECEPCIONISTA", example = "PENDIENTE")
+        @Schema(description = "Solo se admite CANCELADA en actualizaciones de ADMIN o RECEPCIONISTA: confirmar exige el pago completo (confirmar-y-pagar) y completar exige el check-in", example = "CANCELADA")
         EstadoReserva estado
 ) {}

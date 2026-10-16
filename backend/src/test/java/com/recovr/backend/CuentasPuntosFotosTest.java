@@ -176,7 +176,7 @@ class CuentasPuntosFotosTest {
 
         mockMvc.perform(get("/api/mi-cuenta/puntos").header("Authorization", t)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.ganados").value(320)).andExpect(jsonPath("$.saldo").value(320))
-                .andExpect(jsonPath("$.nivel").value("Bronce")).andExpect(jsonPath("$.reglas.length()").value(5))
+                .andExpect(jsonPath("$.nivel").value("Bronce")).andExpect(jsonPath("$.reglas.length()").value(6))
                 .andExpect(jsonPath("$.movimientos.length()").value(2)).andExpect(jsonPath("$.beneficios[0].alcanza").value(true))
                 .andExpect(jsonPath("$.beneficios[1].alcanza").value(false));
         // no alcanza para el beneficio de 700

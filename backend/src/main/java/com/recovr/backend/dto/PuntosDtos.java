@@ -17,7 +17,8 @@ public final class PuntosDtos {
 
     public record NivelPuntos(String nombre, int desde, boolean actual) {}
 
-    public record CanjeInfo(String codigo, String titulo, BigDecimal descuento, String estado, LocalDateTime creadoEn, LocalDateTime usadoEn) {}
+    public record CanjeInfo(String codigo, String titulo, BigDecimal descuento, String estado, LocalDateTime creadoEn, LocalDateTime usadoEn,
+                            LocalDateTime venceEn, boolean anulable) {}
 
     public record PuntosResponse(int saldo, int ganados, int canjeados, String nivel, String siguienteNivel, int puntosParaSiguiente,
                                  List<String> reglas, List<NivelPuntos> niveles, List<BeneficioInfo> beneficios,

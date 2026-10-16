@@ -12,7 +12,8 @@ export const SALA_ESTADO_TXT: Record<string, string> = {
   DISPONIBLE: 'Disponible',
   OCUPADA: 'Ocupada',
   ESPERANDO_CLIENTE: 'Esperando cliente',
-  EN_SANITIZACION: 'En sanitización'
+  EN_SANITIZACION: 'En sanitización',
+  MANTENIMIENTO: 'En mantenimiento'
 };
 
 export const EMPLEADO_ESTADO_TXT: Record<string, string> = {

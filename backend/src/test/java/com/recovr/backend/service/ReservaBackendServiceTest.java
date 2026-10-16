@@ -40,6 +40,9 @@ public class ReservaBackendServiceTest {
     @Mock
     private PagoRepository pagoRepository;
 
+    @Mock
+    private com.recovr.backend.repository.AusenciaEmpleadoRepository ausenciaRepository;
+
     @InjectMocks
     private ReservaService reservaService;
 
@@ -51,7 +54,7 @@ public class ReservaBackendServiceTest {
 
     @BeforeEach
     void setUp() {
-        manana10 = LocalDateTime.now().plusDays(1).withHour(10).withMinute(0).withSecond(0).withNano(0);
+        manana10 = LocalDateTime.now().plusDays(1).withHour(15).withMinute(0).withSecond(0).withNano(0);
 
         sala = new Sala();
         sala.setId(1L);
@@ -162,6 +165,65 @@ public class ReservaBackendServiceTest {
 
         assertThatThrownBy(() -> reservaService.confirmarYPagar(10L, new Pago()))
                 .isInstanceOf(IllegalStateException.class);
+        verify(pagoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Debe rechazar una sesión fuera del horario de atención (12:00 a 23:00)")
+    void debeRechazarFueraDeHorario() {
+        assertThatThrownBy(() -> reservaService.crear(nuevaReserva(manana10.withHour(10))))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("horario de atención");
+        assertThatThrownBy(() -> reservaService.crear(nuevaReserva(manana10.withHour(22).withMinute(30))))
+                .isInstanceOf(IllegalArgumentException.class);
+        verify(reservaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Debe rechazar si el cliente ya tiene otra sesión que se cruza (una persona no está en dos lugares)")
+    void debeRechazarClienteConSesionCruzada() {
+        com.recovr.backend.entity.Cliente cliente = new com.recovr.backend.entity.Cliente();
+        cliente.setId(7L);
+        Reserva nueva = nuevaReserva(manana10);
+        nueva.setCliente(cliente);
+        given(reservaRepository.buscarConflictosCliente(eq(7L), eq(manana10), eq(manana10.plusMinutes(60)), isNull()))
+                .willReturn(List.of(reservaPrueba));
+
+        assertThatThrownBy(() -> reservaService.crear(nueva))
+                .isInstanceOf(ReservaConflictException.class)
+                .hasMessageContaining("dos sesiones a la vez");
+        verify(reservaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Debe rechazar una cabina en mantenimiento")
+    void debeRechazarSalaEnMantenimiento() {
+        sala.setActiva(false);
+        assertThatThrownBy(() -> reservaService.crear(nuevaReserva(manana10)))
+                .isInstanceOf(ReservaConflictException.class)
+                .hasMessageContaining("mantenimiento");
+    }
+
+    @Test
+    @DisplayName("Debe rechazar si la terapeuta tiene una ausencia programada en el horario")
+    void debeRechazarTerapeutaAusente() {
+        empleado.setNombre("María");
+        given(ausenciaRepository.buscarCruces(eq(1L), any(), any())).willReturn(List.of(new com.recovr.backend.entity.AusenciaEmpleado()));
+
+        assertThatThrownBy(() -> reservaService.crear(nuevaReserva(manana10)))
+                .isInstanceOf(ReservaConflictException.class)
+                .hasMessageContaining("ausencia");
+    }
+
+    @Test
+    @DisplayName("Una pendiente cuyo plazo de pago venció no se puede cobrar")
+    void noDebeCobrarPendienteVencida() {
+        reservaPrueba.setCreadaEn(LocalDateTime.now().minusMinutes(ReglasReserva.HOLD_PAGO_MIN + 1));
+        given(reservaRepository.findById(10L)).willReturn(Optional.of(reservaPrueba));
+
+        assertThatThrownBy(() -> reservaService.confirmarYPagar(10L, new Pago()))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("plazo");
         verify(pagoRepository, never()).save(any());
     }
 }

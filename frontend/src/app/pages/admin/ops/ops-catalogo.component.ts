@@ -51,6 +51,8 @@ import { SALA_ESTADO_TXT, fechaHoraTxt, horaTxt, soles } from './ops.util';
                 <td>{{ fechaHora(s.proximaReserva) }}</td>
                 <td><div class="ops-actions">
                   <button type="button" class="ops-btn sm" (click)="abrirSala(s)">Editar</button>
+                  @if (s.estado === 'MANTENIMIENTO') { <button type="button" class="ops-btn sm ok" (click)="cambiarActivaSala(s, true)">Reactivar</button> }
+                  @else { <button type="button" class="ops-btn sm warn" (click)="cambiarActivaSala(s, false)">Mantenimiento</button> }
                   <button type="button" class="ops-btn sm danger" (click)="eliminarSala(s)">Eliminar</button>
                 </div></td>
               </tr>
@@ -163,6 +165,17 @@ export class OpsCatalogoComponent implements OnInit {
       next: () => { this.formSala.set(null); this.aviso(id ? 'Cabina actualizada.' : 'Cabina creada.'); this.cargar(); },
       error: e => this.errorForm.set(e.message)
     });
+  }
+
+  cambiarActivaSala(s: SalaEstado, valor: boolean): void {
+    const texto = valor ? `¿Reactivar "${s.nombre}"? Volverá a recibir reservas.`
+      : `¿Poner "${s.nombre}" en mantenimiento? No recibirá reservas hasta reactivarla (no se puede si tiene reservas activas).`;
+    if (confirm(texto)) {
+      this.admin.cambiarActivaSala(s.id, valor).subscribe({
+        next: () => { this.aviso(valor ? 'Cabina reactivada.' : 'Cabina en mantenimiento.'); this.cargar(); },
+        error: e => this.aviso(e.message, true)
+      });
+    }
   }
 
   eliminarSala(s: SalaEstado): void {

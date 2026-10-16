@@ -52,10 +52,18 @@ public class AuthService {
     @Transactional
     public AuthResponse registrarCliente(RegistroRequest request) {
         Usuario usuario = crearUsuario(request, Rol.CLIENTE);
-        Cliente cliente = new Cliente();
-        cliente.setNombre(request.nombre());
-        cliente.setCorreo(request.correo());
-        cliente.setTelefono(request.telefono());
+        // Si recepción ya lo había registrado en mostrador con ese correo, se vincula su ficha en lugar de duplicarla:
+        // conserva su historial, sus puntos y su ficha (el correo del cliente es único).
+        Cliente cliente = clienteRepository.findByCorreo(request.correo()).orElse(null);
+        if (cliente != null && cliente.getUsuarioId() != null) {
+            throw new IllegalArgumentException("Ya existe un usuario con ese correo");
+        }
+        if (cliente == null) {
+            cliente = new Cliente();
+            cliente.setNombre(request.nombre());
+            cliente.setCorreo(request.correo());
+            cliente.setTelefono(request.telefono());
+        }
         cliente.setUsuarioId(usuario.getId());
         clienteRepository.save(cliente);
         return respuesta(usuario);

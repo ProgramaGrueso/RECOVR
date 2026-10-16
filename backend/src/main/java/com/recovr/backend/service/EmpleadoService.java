@@ -18,10 +18,52 @@ public class EmpleadoService {
 
     private final EmpleadoRepository empleadoRepository;
     private final ReservaRepository reservaRepository;
+    private final com.recovr.backend.repository.AusenciaEmpleadoRepository ausenciaRepository;
+    private final com.recovr.backend.repository.FotoEmpleadoRepository fotoRepository;
+    private final com.recovr.backend.repository.UsuarioRepository usuarioRepository;
 
-    public EmpleadoService(EmpleadoRepository empleadoRepository, ReservaRepository reservaRepository) {
+    public EmpleadoService(EmpleadoRepository empleadoRepository, ReservaRepository reservaRepository,
+                           com.recovr.backend.repository.AusenciaEmpleadoRepository ausenciaRepository,
+                           com.recovr.backend.repository.FotoEmpleadoRepository fotoRepository,
+                           com.recovr.backend.repository.UsuarioRepository usuarioRepository) {
         this.empleadoRepository = empleadoRepository;
         this.reservaRepository = reservaRepository;
+        this.ausenciaRepository = ausenciaRepository;
+        this.fotoRepository = fotoRepository;
+        this.usuarioRepository = usuarioRepository;
+    }
+
+    public List<com.recovr.backend.entity.AusenciaEmpleado> ausencias(Long empleadoId) {
+        buscarPorId(empleadoId);
+        return ausenciaRepository.findByEmpleadoIdOrderByDesdeAsc(empleadoId);
+    }
+
+    /**
+     * Registra una ausencia (vacaciones, licencia). Mientras dura no recibe reservas; si ya tiene reservas activas
+     * en ese periodo no se puede registrar: primero se cancelan o se reasignan, igual que con la baja.
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public com.recovr.backend.entity.AusenciaEmpleado registrarAusencia(Long empleadoId, LocalDateTime desde,
+                                                                         LocalDateTime hasta, String motivo) {
+        Empleado empleado = buscarPorId(empleadoId);
+        ReservaService.validarRango(desde, hasta);
+        if (!reservaRepository.buscarConflictos(-1L, empleadoId, desde, hasta, null).isEmpty()) {
+            throw new IllegalStateException("No se puede registrar la ausencia de " + empleado.getNombre()
+                    + ": tiene reservas activas en ese periodo. Cancélalas o reasígnalas primero.");
+        }
+        com.recovr.backend.entity.AusenciaEmpleado a = new com.recovr.backend.entity.AusenciaEmpleado();
+        a.setEmpleado(empleado);
+        a.setDesde(desde);
+        a.setHasta(hasta);
+        a.setMotivo(motivo);
+        return ausenciaRepository.save(a);
+    }
+
+    public void eliminarAusencia(Long ausenciaId) {
+        if (!ausenciaRepository.existsById(ausenciaId)) {
+            throw new RecursoNoEncontradoException("Ausencia", ausenciaId);
+        }
+        ausenciaRepository.deleteById(ausenciaId);
     }
 
     public List<Empleado> listarTodos() {
@@ -65,6 +107,7 @@ public class EmpleadoService {
         return empleadoRepository.save(empleado);
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void eliminar(Long id) {
         if (!empleadoRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Empleado", id);
@@ -75,6 +118,17 @@ public class EmpleadoService {
         if (reservaRepository.existsByEmpleadoId(id)) {
             throw new IllegalStateException("No se puede eliminar al empleado: tiene historial de reservas. Dala de baja para que deje de recibir reservas conservando su historial.");
         }
+        // No dejar huérfanos: la foto se borra con la terapeuta y su acceso (si lo tenía) se desactiva,
+        // porque una cuenta ESPECIALISTA sin ficha vinculada solo produciría errores.
+        Empleado empleado = buscarPorId(id);
+        if (empleado.getUsuarioId() != null) {
+            usuarioRepository.findById(empleado.getUsuarioId()).ifPresent(u -> {
+                u.setActivo(false);
+                usuarioRepository.save(u);
+            });
+        }
+        ausenciaRepository.deleteAll(ausenciaRepository.findByEmpleadoIdOrderByDesdeAsc(id));
+        fotoRepository.deleteById(id);
         empleadoRepository.deleteById(id);
     }
 
