@@ -87,10 +87,11 @@ public class ReservaController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Reserva creada en estado PENDIENTE",
                     content = @Content(schema = @Schema(implementation = ReservaResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos o fecha en el pasado", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos, fecha en el pasado o fuera del horario de atención (12:00–23:00)", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "404", description = "Cliente, especialista, servicio o sala inexistente", content = @Content),
-            @ApiResponse(responseCode = "409", description = "Conflicto por solapamiento de horario", content = @Content)
+            @ApiResponse(responseCode = "409", description = "Cruce de sala, especialista o cliente, o ya tiene una reserva pendiente de pago", content = @Content),
+            @ApiResponse(responseCode = "429", description = "El cliente dejó vencer 3 reservas sin pagar en 24 horas", content = @Content)
     })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
