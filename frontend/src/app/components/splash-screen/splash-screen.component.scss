@@ -80,6 +80,23 @@
   filter: brightness(0.88);
 }
 
+// En vertical (celular) el video 16:9 se recorta al centro y deja fuera a la modelo,
+// que está en el tercio izquierdo: se encuadra sobre ella.
+@media (max-aspect-ratio: 1/1) {
+  .splash-video {
+    object-position: 36% 50%;
+  }
+
+  .splash-screen-container .splash-skip-btn {
+    top: 1.25rem;
+    right: 1rem;
+  }
+
+  .splash-screen-container .splash-bubble-loader {
+    bottom: 2rem;
+  }
+}
+
 .splash-screen-container.fade-out {
   opacity: 0;
   visibility: hidden;
