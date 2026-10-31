@@ -262,216 +262,30 @@
   }
 
   // =========================================================================
-  // 2. CARTA DE TRATAMIENTOS (SESIONES SENSORIALES - WARM & FUZZY STYLE)
+  // 2. CARTA DE TRATAMIENTOS: carrusel interactivo (app-tratamientos-carrusel)
   // =========================================================================
-  .work-section {
+  app-tratamientos-carrusel {
+    position: relative;
+    z-index: 2;
+  }
+
+  // =========================================================================
+  // 4b. OSITOS RECOVR (página interactiva en /gummy/, traída de Wimbledon)
+  // =========================================================================
+  .ositos-section {
     padding: 6rem 3rem;
     position: relative;
 
-    .section-head {
-      display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      margin-bottom: 3.5rem;
-      flex-wrap: wrap;
-      gap: 2rem;
-
-      .section-title-group {
-        h2 {
-          font-family: var(--font-hero, 'Syne', sans-serif);
-          font-size: clamp(2.4rem, 6vw, 5.5rem);
-          font-weight: 800;
-          letter-spacing: -0.02em;
-          text-transform: uppercase;
-          line-height: 1;
-          color: var(--color-text);
-        }
-
-        .section-subtitle {
-          font-size: 0.9rem;
-          letter-spacing: 0.15em;
-          color: var(--color-bubble-pink, #ff2a85);
-          font-weight: 700;
-          text-transform: uppercase;
-          margin-bottom: 0.5rem;
-          display: block;
-        }
-      }
-    }
-
-    .filter-bar {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-
-      .filter-btn {
-        font-family: var(--font-display, 'Outfit', sans-serif);
-        font-size: 0.75rem;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        color: var(--color-text-muted);
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 999px;
-        padding: 0.5rem 1.25rem;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-
-        &:hover, &.active {
-          color: var(--color-text);
-          background: rgba(255, 42, 133, 0.22);
-          border-color: var(--color-bubble-pink, #ff2a85);
-          box-shadow: 0 0 16px rgba(255, 42, 133, 0.35);
-          transform: translateY(-2px);
-        }
-      }
-    }
-
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 2.5rem;
-
-      .project-card {
-        position: relative;
-        border-radius: 24px;
-        overflow: hidden;
-        background: var(--color-bg-card, rgba(255, 240, 248, 0.65));
-        border: 1px solid var(--color-card-border, rgba(255, 42, 133, 0.22));
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.4s ease, box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        cursor: pointer;
-
-        &:hover {
-          transform: translateY(-10px) scale(1.01);
-          border-color: var(--color-card-border-hover, rgba(255, 42, 133, 0.75));
-          box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(255, 42, 133, 0.35);
-
-          .card-img {
-            transform: scale(1.06);
-          }
-
-          .card-video {
-            opacity: 1;
-          }
-        }
-
-        &.span-7 { grid-column: span 7; }
-        &.span-5 { grid-column: span 5; }
-        &.span-6 { grid-column: span 6; }
-        &.span-4 { grid-column: span 4; }
-        &.span-8 { grid-column: span 8; }
-
-        .card-media-wrapper {
-          position: relative;
-          width: 100%;
-          aspect-ratio: 16 / 10;
-          overflow: hidden;
-          background: #000;
-
-          .card-img, .card-video {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
-          }
-
-          .card-video {
-            opacity: 0;
-            pointer-events: none;
-          }
-
-          .card-overlay-gradient {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(255, 240, 248, 0.2) 0%, rgba(255, 240, 248, 0.85) 100%);
-            z-index: 2;
-          }
-
-          .card-tag-pill {
-            position: absolute;
-            top: 1.25rem;
-            left: 1.25rem;
-            z-index: 3;
-            font-size: 0.7rem;
-            font-family: var(--font-display, 'Outfit', sans-serif);
-            font-weight: 800;
-            letter-spacing: 0.12em;
-            padding: 0.35rem 0.8rem;
-            border-radius: 999px;
-            background: rgba(255, 240, 248, 0.85);
-            border: 1px solid rgba(255, 42, 133, 0.4);
-            color: var(--color-text);
-            backdrop-filter: blur(8px);
-          }
-        }
-
-        &.tall .card-media-wrapper {
-          aspect-ratio: 4 / 3;
-        }
-
-        .card-info {
-          padding: 2rem;
-          position: relative;
-          z-index: 3;
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-
-          .card-meta-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: var(--color-bubble-pink, #ff2a85);
-            font-weight: 700;
-            letter-spacing: 0.1em;
-          }
-
-          .card-title {
-            font-family: var(--font-display, 'Outfit', sans-serif);
-            font-size: 1.8rem;
-            font-weight: 800;
-            line-height: 1.2;
-            color: var(--color-text);
-            margin: 0;
-          }
-
-          .card-desc {
-            font-family: var(--font-body, 'Plus Jakarta Sans', sans-serif);
-            font-size: 0.9rem;
-            color: var(--color-text-muted);
-            line-height: 1.6;
-            margin: 0;
-          }
-
-          .card-specs {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-top: 0.5rem;
-
-            .spec-tag {
-              font-size: 0.72rem;
-              padding: 0.25rem 0.65rem;
-              border-radius: 6px;
-              background: rgba(255, 255, 255, 0.05);
-              border: 1px solid rgba(255, 255, 255, 0.1);
-              color: var(--color-text-muted);
-            }
-          }
-
-          .card-price-badge {
-            font-family: var(--font-hero, 'Syne', sans-serif);
-            font-size: 1.25rem;
-            font-weight: 800;
-            color: var(--color-bubble-cyan, #00f0ff);
-          }
-        }
-      }
+    .ositos-frame {
+      display: block;
+      width: 100%;
+      max-width: 1400px;
+      height: min(75vh, 720px);
+      margin: 0 auto;
+      border: 1px solid rgba(255, 110, 170, 0.4);
+      border-radius: 24px;
+      background: #ffeef6;
+      box-shadow: 0 24px 60px -30px rgba(255, 42, 133, 0.55);
     }
   }
 
@@ -891,17 +705,13 @@
   }
 
   @media (max-width: 1100px) {
-    .work-section .projects-grid { grid-template-columns: minmax(0, 1fr) !important; }
-    .project-card.span-7, .project-card.span-5, .project-card.span-6, .project-card.span-4, .project-card.span-8 {
-      grid-column: auto !important;
-    }
     .staff-grid {
       grid-template-columns: repeat(2, 1fr) !important;
     }
   }
 
   @media (max-width: 768px) {
-    .work-section, .cabinas-section, .staff-section {
+    .cabinas-section, .staff-section {
       padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
@@ -1378,14 +1188,11 @@
   }
 
   // --- Responsive: columnas que no se ensanchan por su contenido, titulares que se ajustan ---
-  .work-section .projects-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); > * { min-width: 0; } }
   .staff-grid > *, .section-head > * { min-width: 0; }
   .section-title-group h2 { overflow-wrap: anywhere; }
   @media (max-width: 768px) {
-    .work-section .section-head { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
-    .work-section .projects-grid { gap: 1.25rem; }
-    .work-section .project-card .card-info { padding: 1.25rem !important; }
-    .filter-bar { flex-wrap: wrap; }
+    .ositos-section { padding: 4rem 1rem; }
+    .ositos-section .ositos-frame { height: 70vh; border-radius: 18px; }
   }
   @media (max-width: 480px) {
     .section-title-group h2 { font-size: clamp(1.5rem, 7.4vw, 2.4rem) !important; overflow-wrap: normal; }

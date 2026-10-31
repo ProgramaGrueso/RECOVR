@@ -49,6 +49,9 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/auth/registro", "/api/auth/login").permitAll()
                         .requestMatchers("/api/publico/**").permitAll()
+                        // Asistente de IA: público (con límites por IP en IaLimitador); solo consulta datos públicos
+                        .requestMatchers(HttpMethod.POST, "/api/ia/chat").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/ia/estado").permitAll()
                         .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/servicios/**")
                             .hasAnyRole("ADMIN", "RECEPCIONISTA", "ESPECIALISTA", "CLIENTE")

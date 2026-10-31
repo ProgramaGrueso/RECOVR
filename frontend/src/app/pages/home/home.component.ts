@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, DestroyRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HeroComponent } from '../../components/hero/hero.component';
 import { ScrollShowcaseComponent } from '../../components/scroll-showcase/scroll-showcase.component';
@@ -12,6 +12,8 @@ import { Professional } from '../../models/professional.model';
 import { SpaceItem } from '../../models/space.model';
 import { CardTiltDirective } from '../../directives/card-tilt.directive';
 import { InViewVideoDirective } from '../../directives/in-view-video.directive';
+import { FiltroTratamiento, TratamientosCarruselComponent } from '../../components/tratamientos-carrusel/tratamientos-carrusel.component';
+import { AccionesPaginaService } from '../../services/acciones-pagina.service';
 
 @Component({
   selector: 'app-home',
@@ -23,7 +25,8 @@ import { InViewVideoDirective } from '../../directives/in-view-video.directive';
     ScrollShowcaseComponent,
     SectionDividerComponent,
     CardTiltDirective,
-    InViewVideoDirective
+    InViewVideoDirective,
+    TratamientosCarruselComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
@@ -35,13 +38,19 @@ export class HomeComponent implements OnInit {
   private cdr = inject(ChangeDetectorRef);
 
   featuredServices: ServiceItem[] = [];
-  filteredServices: ServiceItem[] = [];
+  readonly filtrosTratamientos: FiltroTratamiento[] = [
+    { key: 'ALL', label: 'TODOS' },
+    { key: 'TÁNTRICO', label: 'TÁNTRICO' },
+    { key: 'NURU', label: 'NURU BODY SLIDE' },
+    { key: 'DESCONTRACTURANTE', label: 'DESCONTRACTURANTE' },
+    { key: '4 MANOS', label: '4 MANOS' },
+    { key: 'VIP', label: 'VIP HIDROMASAJE' }
+  ];
   professionals: Professional[] = [];
   spaces: SpaceItem[] = [];
   activeSpace = 0;
   videoReels: VideoReel[] = [];
   reviews: ReviewItem[] = [];
-  activeCategory: string = 'ALL';
 
   activeReel: VideoReel | null = null;
   showVideoModal: boolean = false;
@@ -65,10 +74,15 @@ export class HomeComponent implements OnInit {
     }
   }
 
+  constructor() {
+    // La asistente puede abrir un tratamiento (su video) desde el chat
+    const quitar = inject(AccionesPaginaService).registrarPortada(s => this.openCinemaModal(s));
+    inject(DestroyRef).onDestroy(quitar);
+  }
+
   ngOnInit(): void {
     this.catalogService.getFeaturedServices().subscribe(services => {
       this.featuredServices = services;
-      this.filteredServices = services;
       this.cdr.markForCheck();
     });
 
@@ -93,22 +107,7 @@ export class HomeComponent implements OnInit {
     });
   }
 
-  filterCategory(category: string): void {
-    this.activeCategory = category;
-    if (category === 'ALL') {
-      this.filteredServices = this.featuredServices;
-    } else {
-      this.filteredServices = this.featuredServices.filter(s =>
-        s.category && s.category.toUpperCase().includes(category.toUpperCase())
-      );
-    }
-    this.cdr.markForCheck();
-  }
 
-  getSpanClass(index: number): string {
-    const spans = ['span-7 tall', 'span-5', 'span-6', 'span-6', 'span-5', 'span-7 tall'];
-    return spans[index % spans.length];
-  }
 
   openVideoModal(reel: VideoReel): void {
     this.activeReel = reel;
@@ -163,19 +162,7 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  onCardVideoHover(video: HTMLVideoElement): void {
-    if (video) {
-      video.muted = true;
-      video.currentTime = 0;
-      video.play().catch(() => {});
-    }
-  }
 
-  onCardVideoLeave(video: HTMLVideoElement): void {
-    if (video) {
-      video.pause();
-    }
-  }
 
   onStaffVideoHover(video: HTMLVideoElement): void {
     if (video) {
