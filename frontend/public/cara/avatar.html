@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Avatar</title>
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; transition: opacity .5s ease; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="c" aria-hidden="true"></canvas>
+<script>
+(() => {
+'use strict';
+const IMG_W = 2048, IMG_H = 1152;
+// Facial landmarks in image pixels (measured on foto.png)
+const L = {
+  eye: [{ c: [917, 394], box: [828, 352], col: 0 }, { c: [1232, 386], box: [1140, 342], col: 160 }],
+  brow: [[900, 326], [1212, 318]],
+  mouth: [1060, 712],
+  focus: [1050, 560],
+};
+
+const canvas = document.getElementById('c');
+const gl = canvas.getContext('webgl2', { antialias: false, alpha: false, premultipliedAlpha: false });
+if (!gl) { canvas.remove(); return; }
+
+const VS = `#version 300 es
+in vec2 a; void main(){ gl_Position = vec4(a, 0., 1.); }`;
+const FS = `#version 300 es
+precision highp float;
+uniform sampler2D uPhoto, uAtlas;
+uniform vec2 uRes, uImg, uOff, uHead, uGaze, uLid;
+uniform float uScale, uSmileL, uSmileR, uBrowL, uBrowR, uTilt, uBreath, uCheekL, uCheekR;
+out vec4 o;
+const float PW = 160., PH = 100., AW = 320., AH = 304.;
+
+float g(vec2 p, vec2 c, vec2 s) { vec2 d = (p - c) / s; return exp(-.5 * dot(d, d)); }
+vec3 photo(vec2 q) { return texture(uPhoto, q / uImg).rgb; }
+vec4 atl(vec2 t) { return texture(uAtlas, t / vec2(AW, AH)); }
+
+vec2 deform(vec2 p) {
+  // breathing: very small global swell anchored at the chest
+  vec2 c0 = vec2(1040., 1152.);
+  p = c0 + (p - c0) / (1. + uBreath * .0018);
+  // head: rotation around the neck + small translation, fading out towards hair / shoulders
+  vec2 hc = vec2(1045., 470.);
+  float w = 1. - smoothstep(.72, 1.32, length((p - hc) / vec2(430., 540.)));
+  vec2 piv = vec2(1050., 930.);
+  float a = uTilt * w;
+  vec2 r = p - piv;
+  p = piv + mat2(cos(a), -sin(a), sin(a), cos(a)) * r;
+  p -= (uHead + vec2(0., uBreath * 1.1)) * w;
+  // local expression fields (inverse warp: sample from p - d)
+  vec2 d = vec2(0.);
+  // mouth corners up / out
+  d += vec2(-6., -11.) * uSmileL * g(p, vec2(952., 690.), vec2(30., 26.));
+  d += vec2( 6., -11.) * uSmileR * g(p, vec2(1170., 688.), vec2(30., 26.));
+  float sm = .5 * (uSmileL + uSmileR);
+  d += vec2(0., -1.6) * sm * g(p, vec2(1060., 702.), vec2(70., 18.));
+  d += vec2(0., -2.6) * sm * g(p, vec2(1060., 742.), vec2(80., 22.));
+  // smile folds and cheeks lift
+  d += vec2(-3., -7.) * uSmileL * g(p, vec2(925., 640.), vec2(40., 40.));
+  d += vec2( 3., -7.) * uSmileR * g(p, vec2(1195., 636.), vec2(40., 40.));
+  d += vec2(-1.5, -8.) * uCheekL * g(p, vec2(880., 530.), vec2(75., 60.));
+  d += vec2( 1.5, -8.) * uCheekR * g(p, vec2(1225., 522.), vec2(75., 60.));
+  // lower lids pushed up by the cheeks (gentle squint)
+  d += vec2(0., -2.4) * uCheekL * g(p, vec2(910., 428.), vec2(48., 11.));
+  d += vec2(0., -2.4) * uCheekR * g(p, vec2(1222., 420.), vec2(46., 11.));
+  // brows (and forehead) raise
+  d += vec2(0., -9.) * uBrowL * g(p, vec2(895., 326.), vec2(80., 26.));
+  d += vec2(0., -4.) * uBrowL * g(p, vec2(895., 285.), vec2(95., 45.));
+  d += vec2(0., -9.) * uBrowR * g(p, vec2(1215., 318.), vec2(80., 26.));
+  d += vec2(0., -4.) * uBrowR * g(p, vec2(1215., 277.), vec2(95., 45.));
+  return p - d;
+}
+
+// eye: iris over clean sclera inside the aperture, then upper lid slides down for blinks
+bool eye(vec2 q, vec2 box, float ox, float cl, out vec3 col) {
+  vec2 l = q - box;
+  if (l.x < 0. || l.y < 0. || l.x > PW || l.y > PH) return false;
+  vec4 cv = atl(vec2(ox + clamp(l.x, .5, PW - .5), 202.));
+  float top = cv.r * PH, bot = cv.g * PH;
+  float E = mix(top, bot + 1.2 * cv.b, cl);
+  vec3 base = photo(q);
+  vec4 cm = atl(vec2(ox, 0.) + clamp(l, vec2(.5), vec2(PW, PH) - .5));
+  vec2 li = l - uGaze;
+  vec4 ir = vec4(0.);
+  if (li.x > .5 && li.y > .5 && li.x < PW - .5 && li.y < PH - .5) ir = atl(vec2(ox, PH) + li);
+  vec3 ec = mix(cm.rgb, ir.rgb, ir.a);
+  ec *= 1. - .32 * smoothstep(0., .5, cl) * exp(-max(l.y - E, 0.) / 4.5);
+  vec3 eyeCol = mix(base, ec, cm.a);
+  float B0 = top - 34.;
+  if (E - top < .02 || l.y < B0 || l.y > E + 1.) { col = eyeCol; return true; }
+  float open = E - top;
+  float lx = clamp(l.x, .5, PW - .5);
+  // lashes + lid margin ride down with the edge, foreshortened as the lid rotates
+  float hb = 34. - .38 * open;
+  float ls = top - 34. + (l.y - (E - hb)) * 34. / hb;
+  bool inBand = l.y >= E - hb;
+  // (a) photo: lash band translated/compressed; above it the untouched photo
+  vec3 lidA = inBand ? photo(vec2(q.x, box.y + min(ls, top - .5))) : base;
+  // (b) synthetic lash-free lid skin stretched over the eye + lashes composited from the photo
+  float sk = B0 + (l.y - B0) * (top - B0) / max(E - B0, .001);
+  vec3 lid = atl(vec2(ox, 204.) + vec2(lx, clamp(sk, .5, PH - .5))).rgb;
+  if (inBand && ls < top) {
+    float la = atl(vec2(ox, 204.) + vec2(lx, ls)).a;
+    la = max(la, smoothstep(top - 5., top - 1., ls));
+    lid = mix(lid, lidA, la);
+  }
+  lid = mix(lidA, lid, smoothstep(1.5, 9., open));
+  lid *= 1. - .1 * cl * smoothstep(E - 7., E, l.y);
+  // dense lash line along the closed edge
+  float lashLine = smoothstep(1.5, 9., open) * exp(-pow((l.y - E + 1.2) / 1.5, 2.));
+  lid *= 1. - .55 * lashLine;
+  col = mix(eyeCol, lid, smoothstep(E + .8, E - .8, l.y));
+  return true;
+}
+
+void main() {
+  vec2 fc = vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y);
+  vec2 q = deform((fc - uOff) / uScale);
+  vec3 col;
+  if (!eye(q, vec2(828., 332.), 0., uLid.x, col) && !eye(q, vec2(1140., 322.), 160., uLid.y, col)) col = photo(q);
+  o = vec4(col, 1.);
+}`;
+
+function sh(type, src) {
+  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+gl.linkProgram(prog);
+if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+gl.useProgram(prog);
+const buf = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+const aLoc = gl.getAttribLocation(prog, 'a');
+gl.enableVertexAttribArray(aLoc);
+gl.vertexAttribPointer(aLoc, 2, gl.FLOAT, false, 0, 0);
+const U = {};
+for (const n of ['uPhoto', 'uAtlas', 'uRes', 'uImg', 'uOff', 'uHead', 'uGaze', 'uLid', 'uScale', 'uSmileL', 'uSmileR',
+  'uBrowL', 'uBrowR', 'uTilt', 'uBreath', 'uCheekL', 'uCheekR']) U[n] = gl.getUniformLocation(prog, n);
+
+function loadTex(url, unit, mip) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const t = gl.createTexture();
+      gl.activeTexture(gl.TEXTURE0 + unit);
+      gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+      gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      if (mip) { gl.generateMipmap(gl.TEXTURE_2D); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR); }
+      else gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      res(t);
+    };
+    img.onerror = () => rej(new Error('No se pudo cargar ' + url));
+    img.src = url;
+  });
+}
+
+// ---------- view (object-fit: cover, centred on the face) ----------
+const view = { scale: 1, ox: 0, oy: 0, dpr: 1 };
+function resize() {
+  view.dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.round(innerWidth * view.dpr), h = Math.round(innerHeight * view.dpr);
+  canvas.width = w; canvas.height = h;
+  gl.viewport(0, 0, w, h);
+}
+addEventListener('resize', resize);
+resize();
+function layout() {
+  const W = canvas.width, H = canvas.height;
+  const s = Math.min(W, H) / 780;
+  view.scale = s; view.ox = W / 2 - 1060 * s; view.oy = H / 2 - 520 * s;
+}
+function toImage(clientX, clientY) {
+  return [(clientX * view.dpr - view.ox) / view.scale, (clientY * view.dpr - view.oy) / view.scale];
+}
+
+// ---------- animation state ----------
+class Spring {
+  constructor(v = 0, k = 60, z = 1) { this.v = v; this.t = v; this.vel = 0; this.k = k; this.z = z; }
+  step(dt) {
+    const c = 2 * Math.sqrt(this.k) * this.z;
+    this.vel += (this.k * (this.t - this.v) - c * this.vel) * dt;
+    this.v += this.vel * dt;
+    return this.v;
+  }
+}
+const S = {
+  gx: new Spring(0, 260, .9), gy: new Spring(0, 260, .9),
+  hx: new Spring(0, 14, 1), hy: new Spring(0, 14, 1), lean: new Spring(0, 14, 1),
+  smileL: new Spring(0, 22, 1), smileR: new Spring(0, 22, 1),
+  browL: new Spring(0, 30, .95), browR: new Spring(0, 30, .95),
+  tilt: new Spring(0, 12, 1), squint: new Spring(0, 22, 1),
+  px: new Spring(0, 8, 1), py: new Spring(0, 8, 1),
+};
+let expr = 'neutral';
+const mouse = { x: 0, y: 0, has: false, last: -1e9 };
+const lids = [{ ev: [] }, { ev: [] }];   // envelopes: {t0, close, hold, open, amt}
+let tNow = 0;
+
+const ease = {
+  inQ: t => t * t,
+  outC: t => 1 - Math.pow(1 - t, 3),
+  inOut: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+};
+function envelope(e, t) {
+  const u = t - e.t0;
+  if (u < 0) return 0;
+  if (u < e.close) return e.amt * ease.inQ(u / e.close);
+  if (u < e.close + e.hold) return e.amt;
+  const v = (u - e.close - e.hold) / e.open;
+  return v < 1 ? e.amt * (1 - ease.outC(v)) : -1;
+}
+function blink(both = true, delay = 0) {
+  for (const l of lids) l.ev.push({ t0: tNow + delay, close: .075, hold: .045, open: .17, amt: 1 });
+}
+const winkFx = [{ t0: -9, dur: 1 }, { t0: -9, dur: 1 }];
+function wink(i) {
+  lids[i].ev.push({ t0: tNow, close: .13, hold: .2, open: .32, amt: 1 });
+  winkFx[i] = { t0: tNow, dur: .13 + .2 + .32 };
+}
+function winkPulse(i) {
+  const f = winkFx[i], u = (tNow - f.t0) / f.dur;
+  if (u < 0 || u > 1) return 0;
+  const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  return ss(0, .3, u) * (1 - ss(.55, 1, u));
+}
+
+let nextBlink = 1.6;
+function scheduleBlink() { nextBlink = tNow + 2.6 + Math.random() * 4.2; }
+
+function setExpr(e, opts = {}) {
+  expr = e;
+  const T = { smileL: 0, smileR: 0, browL: 0, browR: 0, tilt: 0, squint: 0 };
+  if (e === 'smile') Object.assign(T, { smileL: 1, smileR: 1, squint: 1 });
+  if (e === 'curious') {
+    const side = opts.brow ?? 1;
+    Object.assign(T, side === 1 ? { browR: 1, browL: -.12, tilt: -.042 } : { browL: 1, browR: -.12, tilt: .042 });
+    Object.assign(T, { smileL: .22, smileR: .22 });
+  }
+  for (const k in T) S[k].t = T[k];
+}
+
+let hablando = false;   // la pagina avisa cuando suena la voz del asistente
+// ---------- input: la pagina que nos contiene manda la posicion del cursor (px CSS relativos al avatar) ----------
+addEventListener('message', e => {
+  if (e.origin !== location.origin || !e.data) return;
+  if (e.data.t === 'voz') { hablando = !!e.data.hablando; return; }
+  if (e.data.t !== 'p') return;
+  mouse.x = +e.data.x || 0; mouse.y = +e.data.y || 0; mouse.has = true; mouse.last = performance.now() / 1000;
+});
+
+// ---------- loop ----------
+let last = performance.now() / 1000, sacc = [0, 0], nextSacc = 1;
+function frame() {
+  const now = performance.now() / 1000;
+  const dt = Math.min(.05, now - last); last = now; tNow += dt;
+  const idle = !mouse.has || now - mouse.last > 2.6;
+
+  // gaze target from pointer, relative to the midpoint between the eyes
+  let tx = 0, ty = 0, nx = 0, ny = 0;
+  if (!idle) {
+    const vx = mouse.x - innerWidth / 2, vy = mouse.y - innerHeight / 2;
+    tx = 9 * Math.tanh(vx / 480);
+    ty = vy > 0 ? 6.5 * Math.tanh(vy / 420) : 2.2 * Math.tanh(vy / 340);
+    const r = Math.hypot(tx / 9, ty / (ty > 0 ? 6.5 : 2.2));
+    if (r > 1) { tx /= r; ty /= r; }
+    nx = Math.tanh(vx / 1000); ny = Math.tanh(vy / 800);
+  } else if (expr === 'curious') { tx = 2.5; ty = -1.6; }
+  // micro saccades keep the eyes alive
+  if (tNow > nextSacc) { sacc = [(Math.random() - .5) * 1.4, (Math.random() - .5) * .9]; nextSacc = tNow + .6 + Math.random() * 1.8; }
+  S.gx.t = tx + sacc[0]; S.gy.t = ty + sacc[1];
+  S.hx.t = nx * 7; S.hy.t = ny * 4.5; S.lean.t = -nx * .012;
+  S.px.t = nx; S.py.t = ny;
+  if (hablando) {
+    // al hablar la sonrisa late (comisuras y mejillas) y la cabeza asiente un poco
+    const m = .5 + .5 * Math.sin(tNow * 11) * Math.sin(tNow * 4.3 + 1.2);
+    S.smileL.t = S.smileR.t = .38 + .62 * m;
+    S.hy.t += Math.sin(tNow * 5.2) * 1.4;
+  } else if (expr === 'smile') { S.smileL.t = S.smileR.t = 1; }
+  for (const k in S) S[k].step(dt);
+
+  // blinks
+  if (tNow > nextBlink) { blink(); if (Math.random() < .16) blink(true, .32); scheduleBlink(); }
+  const breath = Math.sin(tNow * 2 * Math.PI / 4.6);
+  const lookDown = Math.max(0, S.gy.v) / 6.5;
+  const lidV = lids.map((l, i) => {
+    let a = 0;
+    l.ev = l.ev.filter(e => { const v = envelope(e, tNow); if (v < 0) return false; a = Math.max(a, v); return true; });
+    return Math.min(1, a + .2 * lookDown + .06 * S.squint.v);
+  });
+  const wp = [winkPulse(0), winkPulse(1)];
+  const ov = window.__rostro && window.__rostro.lid;
+  if (ov) { lidV[0] = ov[0]; lidV[1] = ov[1]; }
+
+  layout();
+  gl.uniform1i(U.uPhoto, 0); gl.uniform1i(U.uAtlas, 1);
+  gl.uniform2f(U.uRes, canvas.width, canvas.height);
+  gl.uniform2f(U.uImg, IMG_W, IMG_H);
+  gl.uniform2f(U.uOff, view.ox, view.oy);
+  gl.uniform1f(U.uScale, view.scale);
+  gl.uniform2f(U.uHead, S.hx.v, S.hy.v);
+  gl.uniform2f(U.uGaze, S.gx.v, S.gy.v);
+  gl.uniform2f(U.uLid, lidV[0], lidV[1]);
+  gl.uniform1f(U.uSmileL, S.smileL.v + .45 * wp[0]);
+  gl.uniform1f(U.uSmileR, S.smileR.v + .45 * wp[1]);
+  gl.uniform1f(U.uCheekL, S.squint.v + .7 * wp[0]);
+  gl.uniform1f(U.uCheekR, S.squint.v + .7 * wp[1]);
+  gl.uniform1f(U.uBrowL, S.browL.v - .3 * wp[0]);
+  gl.uniform1f(U.uBrowR, S.browR.v - .3 * wp[1]);
+  gl.uniform1f(U.uTilt, S.tilt.v + S.lean.v);
+  gl.uniform1f(U.uBreath, breath);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+  canvas.style.opacity = 1;
+  requestAnimationFrame(frame);
+}
+
+Promise.all([loadTex('foto.jpg', 0, true), loadTex('ojos.png', 1, false)]).then(() => {
+  setExpr('smile'); S.squint.t = .7;
+  scheduleBlink();
+  requestAnimationFrame(frame);
+}).catch(err => {
+  console.error(err);
+  canvas.remove();   // queda la imagen estatica del padre
+});
+
+})();
+</script>
+</body>
+</html>

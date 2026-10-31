@@ -1,0 +1,46 @@
+<div class="asistente" (document:keydown.escape)="alEscape()">
+  @if (abierto()) {
+    <section class="asistente__panel" aria-label="Chat con la asistente de RECOVR" data-lenis-prevent>
+      <header class="asistente__cabecera">
+        <span class="asistente__titulo">Asistente RECOVR</span>
+        @if (conVoz) {
+          <button type="button" class="asistente__altavoz" (click)="alternarAltavoz()"
+                  [attr.aria-pressed]="altavozActivo()"
+                  [attr.aria-label]="altavozActivo() ? 'Silenciar la voz de la asistente' : 'Activar la voz de la asistente'">
+            {{ altavozActivo() ? '🔊' : '🔇' }}
+          </button>
+        }
+        <button type="button" class="asistente__cerrar" (click)="alternar(false)" aria-label="Cerrar chat">✕</button>
+      </header>
+
+      <div #lista class="asistente__lista" aria-live="polite">
+        @for (m of mensajes(); track $index) {
+          <div class="asistente__msg asistente__msg--{{ m.rol }}" [class.asistente__msg--pendiente]="m.pendiente" [class.asistente__msg--error]="m.error">
+            {{ m.contenido }}
+            @if (m.enlace) {
+              <a [href]="m.enlace.url" target="_blank" rel="noopener">{{ m.enlace.etiqueta }}</a>
+            }
+          </div>
+        }
+      </div>
+
+      <form class="asistente__form" (ngSubmit)="enviar()">
+        @if (conMicrofono()) {
+          <button type="button" class="asistente__mic" [class.asistente__mic--escuchando]="escuchando()"
+                  (click)="alternarMicrofono()" aria-label="Hablar con la asistente">🎤</button>
+        }
+        <input #caja type="text" name="texto" [(ngModel)]="texto" [maxLength]="maxCaracteres"
+               placeholder="Escribe tu consulta…" autocomplete="off" aria-label="Tu mensaje" />
+        <button type="submit" [disabled]="enviando()">Enviar</button>
+      </form>
+    </section>
+  }
+
+  <button #boton type="button" class="asistente__boton" [class.asistente__boton--abierto]="abierto()"
+          (click)="alternar()" [attr.aria-expanded]="abierto()" aria-label="Abrir asistente de RECOVR" data-cursor="ASISTENTE">
+    <img src="/images/asistente.webp" alt="" width="120" height="120" />
+    @if (caraSrc(); as src) {
+      <iframe class="asistente__cara" [src]="src" title="" aria-hidden="true" tabindex="-1"></iframe>
+    }
+  </button>
+</div>

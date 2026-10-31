@@ -216,6 +216,22 @@ export class ApiService {
     );
   }
 
+  /**
+   * Chat con la asistente de IA (público, sin token). Solo se mandan los últimos mensajes user/assistant;
+   * la clave de la IA vive en el servidor. Los errores llegan como texto listo para mostrar.
+   */
+  chatIa(mensajes: Array<{ rol: 'user' | 'assistant'; contenido: string }>): Observable<string> {
+    return this.http.post<{ respuesta: string }>(`${this.base}/ia/chat`, { mensajes }).pipe(
+      map(r => r.respuesta),
+      catchError((err: unknown) => {
+        const texto = err instanceof HttpErrorResponse && typeof err.error?.mensaje === 'string'
+          ? err.error.mensaje
+          : 'No pude responder ahora. Intenta de nuevo o escríbenos por WhatsApp.';
+        return throwError(() => new ApiBusinessError(texto));
+      })
+    );
+  }
+
   private traducir(err: unknown): unknown {
     if (err instanceof HttpErrorResponse && err.status >= 400 && err.status < 500 && err.status !== 401 && err.status !== 403) {
       return new ApiBusinessError(err.error?.message ?? 'La reserva no pudo registrarse.');

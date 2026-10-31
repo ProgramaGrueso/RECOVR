@@ -50,11 +50,13 @@ RECOVR/
 ## ✨ Características Principales
 
 ### 1. Frontend: Inmersión Visual & Rendimiento Extremo
-- **Cursor Magnético Reactivo (*Spring Physics*):** Cursor elástico con interpolación lineal (*lerp* continuo) que proyecta un anillo exterior translúcido (*glassmorphic ring*), resplandor neón y etiquetas contextuales automáticas mediante delegación de eventos en atributos `[data-cursor]`.
+- **Cursor Gatito (traído de Wimbledon):** Maxwell the Cat girando y balanceándose sigue al mouse con un resorte corto, se inclina según la velocidad, deja una estela de burbujas rosa/lila/cian y muestra la etiqueta contextual de los elementos con `[data-cursor]`. Solo con mouse real (no en táctiles); con *reducir movimiento* queda quieto y sin estela.
 - **Efecto de Inclinación en Perspectiva 3D (`[appCardTilt]`):** Directiva Angular optimizada que calcula dinámicamente la posición del puntero y aplica transformaciones tridimensionales (`perspective`, `rotateX`, `rotateY`) en tiempo real ejecutadas 100% fuera de los ciclos de `NgZone`.
 - **Atmósfera Somatosensorial con Three.js:** Lienzo WebGL con generación procedural de volutas de humo suave, luces de color neón rosa/púrpura/cian y ascuas luminosas ascendentes (*stardust*), optimizado con carga diferida `@defer (on viewport)` e `IntersectionObserver` para consumo 0% de GPU cuando no está en pantalla.
 - **Reproducción de Video con Audio Inteligente en Hover:** Previsualizaciones de video en tarjetas de masajes y terapeutas con protocolo de evasión de restricciones de *Autoplay Policy* de los navegadores (fallback automático a silencioso sin arrojar excepciones).
-- **Filtrado Dinámico de la Carta de Masajes:** Barra interactiva de píldoras neón para filtrar instantáneamente por categorías (`TODOS`, `TÁNTRICO`, `NURU BODY SLIDE`, `DESCONTRACTURANTE`, `4 MANOS`, `VIP HIDROMASAJE`).
+- **Carrusel Interactivo de Tratamientos:** la carta se recorre como las habitaciones de Wimbledon: tarjetas llave sobre una pantalla CRT con el tratamiento central como foco (reproduce su video), filtros por categoría (`TODOS`, `TÁNTRICO`, `NURU BODY SLIDE`, `DESCONTRACTURANTE`, `4 MANOS`, `VIP HIDROMASAJE`), flechas del teclado, clic o deslizamiento, modo B&N y botones *Ver tratamiento* / *Reservar*.
+- **Ositos RECOVR:** sección antiestrés con ositos de gelatina 3D (Three.js) que se estiran, aplastan y lanzan (`public/gummy/`), dentro de la portada.
+- **Asistente con IA (carita animada):** abajo a la izquierda, una carita que sigue el cursor abre un chat. Responde con los datos reales del negocio (carta y precios de la base, terapeutas activas, turnos libres, horario, políticas de pago, cancelación y puntos) y también ejecuta órdenes en la página: "llévame a las cabinas", "muéstrame el nuru", "reservar 4 manos", "WhatsApp". Tiene micrófono y voz del navegador. No crea reservas: reservar exige cuenta de cliente y pago completo en `/reserva`.
 - **Marquesina Cinética (*Kinetic Ticker*):** Cinta animada continua tipográfica con separadores estrellados (`✦`) para marcar el ritmo visual editorial.
 - **Reloj en Vivo del Sanctum:** Indicador de atención activa con pulso luminoso (`SANCTUM OPEN • ATENCIÓN PRIVADA`) y reloj en tiempo real sincronizado con la zona horaria oficial de Lima, Perú (UTC-5).
 - **Laboratorio de 5 Experiencias Awwwards (`/PRUEBAS/`):** Galería interactiva integrada con 5 estilos galardonados: *Kinetic Brutalist*, *Cyberpunk Jelly Glow 3D*, *Zen Haute Parfumerie*, *Liquid Spatial Motion* y *Avant-Garde Noir Dossier*.
@@ -174,6 +176,13 @@ Con Docker, Java 21 y Maven instalados, en la carpeta `backend`:
 ```
 El script levanta MySQL (`docker compose up -d`), espera a que esté sano y arranca el backend con `SEED_DEMO_DATA=true`. Con `SEED_DEMO_DATA=true` se crean 11 cuentas de demostración (administración, recepción, las 4 terapeutas y 5 clientes), cada una con su propia contraseña: están listadas en `backend/CREDENCIALES_DEMO.md` (archivo local, no se sube a git). Solo para desarrollo.
 > Si Docker responde que el nombre `recovr-mysql` ya está en uso, es un contenedor de una ejecución anterior: `docker start recovr-mysql` (o `docker rm recovr-mysql` y repetir).
+
+#### Asistente con IA (opcional)
+El chat de la portada usa DeepSeek desde el backend (`POST /api/ia/chat`, público y con límites por IP). La clave solo vive en el servidor:
+```bash
+DEEPSEEK_API_KEY=sk-... SEED_DEMO_DATA=true mvn spring-boot:run
+```
+Sin `DEEPSEEK_API_KEY` el chat responde que no está disponible y ofrece WhatsApp; las órdenes de navegación de la carita siguen funcionando. `IA_REGISTRAR_CONVERSACIONES=true` deja en el log lo que se pregunta (solo para demos). Límites y datos del negocio en `application.properties` (`recovr.ia.*`, `recovr.negocio.*`).
 
 ### 4. Iniciar el Frontend (Angular Standalone)
 En una nueva terminal, instala las dependencias y corre el servidor de desarrollo:

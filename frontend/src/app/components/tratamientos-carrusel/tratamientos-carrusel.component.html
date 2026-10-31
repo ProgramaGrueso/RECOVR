@@ -1,0 +1,65 @@
+<div class="trc-crt" aria-hidden="true"></div>
+
+<div class="trc-hud trc-hud-top">
+  <span>RECOVR SANCTUM</span>
+  <span class="trc-reloj">{{ reloj() }}</span>
+  <span>TRATAMIENTOS {{ pad(lista().length) }}</span>
+</div>
+
+<div class="trc-titulo">
+  <span class="trc-tag">CARTA DE TRATAMIENTOS &bull; TARIFAS EN SOLES (S/)</span>
+  <h2>SESIONES SENSORIALES</h2>
+</div>
+
+<div class="trc-filtros">
+  @for (f of filtros; track f.key) {
+    <button type="button" class="trc-filtro" [class.active]="filtro() === f.key" (click)="filtrar(f.key)" [attr.data-cursor]="f.label">
+      {{ f.label }} ({{ contar(f.key) }})
+    </button>
+  }
+</div>
+
+<div class="trc-escenario" role="listbox" aria-label="Tratamientos de RECOVR"
+     (touchstart)="toqueInicio($event)" (touchend)="toqueFin($event)">
+  @for (s of lista(); track s.id; let i = $index) {
+    @let d = distancia(i);
+    @let a = d < 0 ? -d : d;
+    <article class="trc-card" role="option"
+             [class.activa]="d === 0" [class.oculta]="a > 2"
+             [style.--d]="d" [style.--a]="a > 3 ? 3 : a" [style.z-index]="10 - a"
+             [attr.tabindex]="d === 0 ? 0 : -1" [attr.aria-selected]="d === 0" [attr.aria-label]="s.name"
+             [attr.data-cursor]="d === 0 ? 'VER ' + s.code : s.code"
+             (click)="alClicTarjeta(i, s)">
+      <div class="trc-card-banda"><span>RECOVR KEY</span><span>{{ s.code }}</span></div>
+      <img [src]="s.posterUrl || s.imageUrl" [alt]="s.name" loading="lazy" decoding="async" draggable="false" />
+      @if (s.videoUrl) {
+        <video #vid class="trc-card-video" [attr.data-i]="i" [src]="d === 0 || a === 1 ? s.videoUrl : null"
+               muted loop playsinline preload="none" aria-hidden="true"></video>
+      }
+      <div class="trc-card-pie">
+        <h3>{{ s.name }}</h3>
+        <span class="trc-card-precio">S/ {{ s.price }} &bull; {{ s.durationMinutes }} MIN</span>
+      </div>
+    </article>
+  }
+</div>
+
+<button type="button" class="trc-flecha prev" (click)="ir(-1)" aria-label="Tratamiento anterior" data-cursor="ANTERIOR">❮</button>
+<button type="button" class="trc-flecha next" (click)="ir(1)" aria-label="Tratamiento siguiente" data-cursor="SIGUIENTE">❯</button>
+
+@if (activo(); as s) {
+  <div class="trc-info" aria-live="polite">
+    <span class="trc-info-num">TRAT. {{ pad(actual() + 1) }} / {{ pad(lista().length) }} &bull; {{ s.category }} &bull; S/ {{ s.price }}</span>
+    <strong class="trc-info-nombre">{{ s.name }}</strong>
+    <p class="trc-info-equipo">{{ (s.features || []).join(' • ') }}</p>
+    <div class="trc-acciones">
+      <button type="button" class="trc-abrir" (click)="abrir.emit(s)" data-cursor="VER VIDEO">VER TRATAMIENTO</button>
+      <button type="button" class="trc-reservar" (click)="reservar.emit(s)" data-cursor="RESERVAR">RESERVAR</button>
+    </div>
+  </div>
+}
+
+<div class="trc-hud trc-hud-pie">
+  <button type="button" class="trc-bn" (click)="alternarBn()" [attr.aria-pressed]="blancoYNegro()">B&amp;N [{{ blancoYNegro() ? 'ON' : 'OFF' }}]</button>
+  <span class="trc-ayuda">← → para moverte · Enter para abrir</span>
+</div>

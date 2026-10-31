@@ -6,95 +6,15 @@
   <!-- 1b. SCROLL NARRATIVO ANCLADO -->
   <app-scroll-showcase></app-scroll-showcase>
 
-  <!-- 2. CARTA DE TRATAMIENTOS (SESIONES SENSORIALES - GRILLA ASIMÉTRICA WARM & FUZZY) -->
-  <section class="work-section" id="masajes" aria-label="Carta de Masajes Exclusivos">
-    <div class="section-head">
-      <div class="section-title-group">
-        <span class="section-subtitle">CARTA DE TRATAMIENTOS &bull; TARIFAS EN SOLES (S/)</span>
-        <h2>SESIONES SENSORIALES</h2>
-      </div>
-
-      <!-- BARRA DE FILTROS INTERACTIVA -->
-      <div class="filter-bar">
-        <button
-          class="filter-btn"
-          [class.active]="activeCategory === 'ALL'"
-          (click)="filterCategory('ALL')"
-          data-cursor="TODOS">
-          TODOS
-        </button>
-        <button
-          class="filter-btn"
-          [class.active]="activeCategory === 'TÁNTRICO'"
-          (click)="filterCategory('TÁNTRICO')"
-          data-cursor="TÁNTRICO">
-          TÁNTRICO
-        </button>
-        <button
-          class="filter-btn"
-          [class.active]="activeCategory === 'NURU'"
-          (click)="filterCategory('NURU')"
-          data-cursor="NURU">
-          NURU BODY SLIDE
-        </button>
-        <button
-          class="filter-btn"
-          [class.active]="activeCategory === '4 MANOS'"
-          (click)="filterCategory('4 MANOS')"
-          data-cursor="4 MANOS">
-          4 MANOS
-        </button>
-        <button
-          class="filter-btn"
-          [class.active]="activeCategory === 'VIP'"
-          (click)="filterCategory('VIP')"
-          data-cursor="VIP">
-          VIP HIDROMASAJE
-        </button>
-      </div>
-    </div>
-
-    <!-- Asymmetric Editorial Portfolio Grid -->
-    <div class="projects-grid">
-      <article
-        *ngFor="let service of filteredServices; let idx = index"
-        class="project-card"
-        [ngClass]="getSpanClass(idx)"
-        appCardTilt
-        [attr.data-cursor]="'VER ' + service.code"
-        (mouseenter)="onCardVideoHover(cardVid)"
-        (mouseleave)="onCardVideoLeave(cardVid)"
-        (click)="openCinemaModal(service)">
-        <div class="card-media-wrapper">
-          <img [src]="service.posterUrl || service.imageUrl" [alt]="service.name" class="card-img" loading="lazy" />
-          <video
-            appInViewVideo
-            #cardVid
-            class="card-video"
-            [src]="service.videoUrl"
-            loop
-            [muted]="true"
-            playsinline
-            preload="none">
-          </video>
-          <div class="card-overlay-gradient"></div>
-          <span class="card-tag-pill">{{ service.tag }}</span>
-        </div>
-        <div class="card-info">
-          <div class="card-meta-row">
-            <span>{{ service.code }} &bull; {{ service.category }}</span>
-            <span class="card-price-badge">S/ {{ service.price }}</span>
-          </div>
-          <h3 class="card-title">{{ service.name }}</h3>
-          <p class="card-desc">{{ service.description }}</p>
-          <div class="card-specs">
-            <span class="spec-tag">⏱ {{ service.durationMinutes }} Min</span>
-            <span class="spec-tag" *ngFor="let feat of service.features">{{ feat }}</span>
-          </div>
-        </div>
-      </article>
-    </div>
-  </section>
+  <!-- 2. CARTA DE TRATAMIENTOS: CARRUSEL INTERACTIVO (como las habitaciones de Wimbledon) -->
+  <app-tratamientos-carrusel
+    id="masajes"
+    aria-label="Carta de tratamientos"
+    [servicios]="featuredServices"
+    [filtros]="filtrosTratamientos"
+    (abrir)="openCinemaModal($event)"
+    (reservar)="onReserve($event)">
+  </app-tratamientos-carrusel>
 
   <!-- 3. CABINAS CLIMATIZADAS SHOWCASE -->
   <section class="cabinas-section" id="cabinas" aria-label="Cabinas privadas climatizadas">
@@ -180,6 +100,19 @@
     </div>
   </section>
 
+  <!-- 4b. OSITOS RECOVR: detalle antiestrés interactivo (traído de Wimbledon) -->
+  <section class="ositos-section" id="ositos" aria-label="Ositos de gelatina interactivos de RECOVR">
+    <div class="section-header">
+      <span class="section-subtitle">UN DETALLE DULCE &bull; ANTIESTRÉS</span>
+      <h2 class="section-title">OSITOS RECOVR</h2>
+      <p class="section-description">
+        Mientras eliges tu sesión, relájate con nuestros ositos de gelatina: estíralos, aplástalos y lánzalos.
+      </p>
+    </div>
+    <iframe class="ositos-frame" src="/gummy/index.html" title="Ositos de gelatina interactivos de RECOVR"
+            loading="lazy" allowfullscreen></iframe>
+  </section>
+
   <!-- KINETIC TICKER MARQUEE -->
   <section class="ticker-section" aria-label="Marquesina Continua RECOVR Sanctum">
     <div class="ticker-track">
@@ -247,7 +180,7 @@
           <div class="info-icon">⏱</div>
           <div class="info-text">
             <h4>HORARIO DE ATENCIÓN</h4>
-            <p>Lunes a Sábado de 10:00 a 22:00 (Solo con cita confirmada).</p>
+            <p>Todos los días de 12:00 a 23:00 (Solo con cita confirmada).</p>
           </div>
         </div>
 

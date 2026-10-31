@@ -5,7 +5,8 @@ import { filter } from 'rxjs';
 import { SmoothScrollService } from './services/smooth-scroll.service';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
-import { CustomCursorComponent } from './components/custom-cursor/custom-cursor.component';
+import { CatCursorComponent } from './components/cat-cursor/cat-cursor.component';
+import { AsistenteComponent } from './components/asistente/asistente.component';
 import { SplashScreenComponent } from './components/splash-screen/splash-screen.component';
 import { FluidCanvasComponent } from './components/fluid-canvas/fluid-canvas.component';
 
@@ -18,7 +19,8 @@ import { FluidCanvasComponent } from './components/fluid-canvas/fluid-canvas.com
     RouterOutlet,
     NavbarComponent,
     FooterComponent,
-    CustomCursorComponent,
+    CatCursorComponent,
+    AsistenteComponent,
     SplashScreenComponent,
     FluidCanvasComponent
   ],

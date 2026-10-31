@@ -16,7 +16,14 @@ export class SmoothScrollService {
     });
   }
 
-  scrollTo(target: string | number | HTMLElement): void {
-    this.lenis?.scrollTo(target as any);
+  /** Desplaza hasta el destino; sin Lenis (movimiento reducido) salta directo. `offset` deja aire bajo la barra fija. */
+  scrollTo(target: string | number | HTMLElement, offset = 0): void {
+    if (this.lenis) {
+      this.lenis.scrollTo(target as any, { offset });
+      return;
+    }
+    const el = typeof target === 'string' ? document.querySelector<HTMLElement>(target) : target instanceof HTMLElement ? target : null;
+    const y = typeof target === 'number' ? target : el ? el.getBoundingClientRect().top + scrollY + offset : null;
+    if (y !== null) window.scrollTo({ top: y });
   }
 }
