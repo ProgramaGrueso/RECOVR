@@ -16,11 +16,11 @@ export class SplashScreenComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     const hasVisited = sessionStorage.getItem('recovr_visited');
-    const conn = (navigator as any).connection;
+    const conn = navigator.connection;
     const lite = !!conn?.saveData || /(^|-)2g$/.test(conn?.effectiveType || '') || matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!hasVisited && !lite) {
       this.showSplash = true;
-      (window as any).__recovrSplash = true;
+      window.__recovrSplash = true;
     }
     sessionStorage.setItem('recovr_visited', 'true');
   }
@@ -64,7 +64,7 @@ export class SplashScreenComponent implements OnInit, AfterViewInit {
     this.isFadingOut = true;
     setTimeout(() => {
       this.showSplash = false;
-      (window as any).__recovrSplash = false;
+      window.__recovrSplash = false;
       window.dispatchEvent(new Event('recovr:splash-done'));
     }, 600); // 600ms para coincidir con la transición de CSS
   }

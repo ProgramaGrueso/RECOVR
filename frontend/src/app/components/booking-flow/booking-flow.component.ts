@@ -411,6 +411,14 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     return `${m}:${String(s).padStart(2, '0')}`;
   }
 
+  get successTitle(): string {
+    return this.bookingSuccess?.status === 'PENDIENTE' ? 'TURNO APARTADO — FALTA EL PAGO' : 'CITA CONFIRMADA CON ÉXITO';
+  }
+
+  get payButtonText(): string {
+    return this.isPaying ? 'Registrando pago…' : `Pagar S/ ${this.bookingSuccess?.price ?? ''} y asegurar mi turno`;
+  }
+
   get hasAvailableSlots(): boolean {
     return this.slots.some(s => s.disponible);
   }

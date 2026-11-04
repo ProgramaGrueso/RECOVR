@@ -26,7 +26,7 @@ export class HeroComponent implements AfterViewInit {
     const tl = gsap.timeline({ paused: true, delay: 0.2, defaults: { ease: 'expo.out' } });
     // la entrada espera a que termine la intro (splash) si está activa
     const alTerminarIntro = () => tl.play();
-    if ((window as any).__recovrSplash) addEventListener('recovr:splash-done', alTerminarIntro, { once: true });
+    if (window.__recovrSplash) addEventListener('recovr:splash-done', alTerminarIntro, { once: true });
     else tl.play();
     tl.from(root.querySelector('.hero-top-info'), { y: 20, opacity: 0, duration: 1 })
       .from(root.querySelector('.hero-main-title'), { y: 120, opacity: 0, filter: 'blur(24px)', letterSpacing: '0.12em', duration: 1.8 }, '<0.1')
