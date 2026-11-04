@@ -144,13 +144,13 @@ cd RECOVR
 ```
 
 ### 2. Iniciar la Base de Datos (MySQL con Docker)
-En una terminal, inicia el contenedor de base de datos MySQL 8 preconfigurado para RECOVR:
+Toda la configuración sale de **variables de entorno**. Copia la plantilla y completa los valores (el archivo `.env` no se sube a git):
 ```bash
 cd backend
-docker compose up -d
-cd ..
+cp .env.example .env        # completa DB_ROOT_PASSWORD, DB_PASSWORD y JWT_SECRET (openssl rand -base64 48)
+docker compose up -d        # MySQL 8 en 127.0.0.1:3306, base recovr_db y usuario propio de la app (no root)
+set -a; . ./.env; set +a    # exporta las variables para mvn (PowerShell: run-demo.ps1 las carga solo)
 ```
-> **Nota:** La base de datos estará disponible en `127.0.0.1:3306` con la base `recovr_db`, usuario `root` y contraseña `root` (credenciales de demostración, ver `backend/docker-compose.yml`).
 
 ### 3. Iniciar el Backend (Spring Boot 3.3.5)
 Requiere Java 21 y Maven 3.9+ (el repositorio no incluye el wrapper `mvnw`). Con la base de datos ya levantada:
@@ -163,7 +163,7 @@ SPRING_PROFILES_ACTIVE=demo mvn spring-boot:run
 - La API inicia en: `http://localhost:8095` (se cambia con la variable `SERVER_PORT`).
 - Documentación Swagger UI interactiva: [http://localhost:8095/swagger-ui/index.html](http://localhost:8095/swagger-ui/index.html)
 - Especificación OpenAPI en formato JSON: `http://localhost:8095/v3/api-docs`
-- Variables opcionales: `JWT_SECRET` (clave Base64 de 32 bytes o más; si falta se genera una temporal al arrancar), `DB_USERNAME`, `DB_PASSWORD` y `SHOW_SQL=true`.
+- Variables: ver `backend/.env.example` y la tabla de *Despliegue y escalado* más abajo. En el perfil `dev`, si falta `JWT_SECRET` se genera una clave temporal; en `prod` es obligatoria.
 - CORS solo acepta orígenes conocidos: `localhost` / `127.0.0.1` (cualquier puerto) y dominios `https://*.vercel.app`. Un origen cualquiera no recibe la cabecera `Access-Control-Allow-Origin`.
 
 #### Datos de demostración (seeder con historial de 3 meses)
@@ -290,6 +290,45 @@ npm run build
 - **Carga diferida:** Módulos de administración, catálogo y Three.js divididos en chunks independientes (*lazy loading*).
 
 ---
+
+## 📈 Despliegue y escalado
+
+### Perfiles
+| Perfil | Para qué | Comportamiento |
+| :--- | :--- | :--- |
+| `dev` (por defecto) | Desarrollo local contra el MySQL de `docker compose` | Swagger activo; si falta `JWT_SECRET`, clave temporal. |
+| `demo` | `dev` + datos ficticios | Siembra 3 meses de historial y la agenda hasta el 31/12 (ver *Datos de demostración*). |
+| `prod` | Servidor real o contenedores | Sin valores por defecto: si falta `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` o `JWT_SECRET`, no arranca. Swagger apagado (`SWAGGER_ENABLED=true` lo enciende). |
+
+### Variables de entorno principales
+| Variable | Por defecto | Descripción |
+| :--- | :--- | :--- |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | MySQL local / `root` / vacía | Conexión a MySQL. |
+| `DB_POOL_MAX`, `DB_POOL_MIN`, `DB_POOL_TIMEOUT_MS` | 10 / 2 / 5000 | Pool HikariCP. Con N réplicas el total es N × `DB_POOL_MAX` (MySQL acepta 200 en el compose). |
+| `JWT_SECRET`, `JWT_EXPIRATION_MS` | — / 24 h | Firma de los tokens. **La misma en todas las réplicas.** |
+| `CACHE_TTL` | 60s | Vida de la caché del catálogo (servicios, cabinas, terapeutas activas). |
+| `LIFECYCLE_ENABLED` | true | Planificador de estados; con varias réplicas, solo en una. |
+| `DDL_AUTO` | update | Estrategia de esquema de Hibernate. |
+| `SERVER_PORT` | 8095 | Puerto HTTP. |
+
+### Todo en contenedores (con réplicas)
+```bash
+cd backend
+cp .env.example .env   # completa los valores
+docker compose --profile app up -d --build --scale api=2
+curl http://localhost:8095/actuator/health        # {"status":"UP"} a través de nginx
+```
+Servicios: `mysql`, `api` (réplicas sin planificador), `planificador` (una sola instancia: planificador de estados y, con `SEED_DEMO_DATA=true`, el seeder demo) y `lb` (nginx en round-robin; la cabecera `X-Upstream` muestra qué réplica respondió).
+
+### ¿Es stateless? (listo para varias instancias)
+- **Sesión:** no hay `HttpSession` (`SessionCreationPolicy.STATELESS`). Cada petición trae su JWT y la identidad se valida contra la base. Verificado: un token emitido por una réplica vale en la otra.
+- **Archivos:** las fotos de las terapeutas se guardan en MySQL, no en el disco del contenedor.
+- **Caché:** local por instancia, con TTL corto y solo para el catálogo (nunca para la agenda).
+- **Tareas programadas y seeder:** solo en la instancia `planificador` (`LIFECYCLE_ENABLED=false` en las réplicas), así no corren dos a la vez.
+- **Pendiente:** los límites del login (5 intentos) y del chat de IA se cuentan en memoria **por instancia**. Con N réplicas el límite efectivo es N veces mayor; para producción conviene llevarlos a Redis o a la base (ver `RESUMEN.md`).
+
+### Rendimiento
+Índices en las columnas de agenda (fecha, terapeuta, cabina, cliente, estado), sin consultas N+1 en los listados, paginación (`pagina`, `tamano`, `desde`, `hasta`; cabeceras `X-Total-Count` y `X-Total-Pages`), caché del catálogo y gzip. Mediciones antes/después en [`backend/perf/RESULTADOS.md`](backend/perf/RESULTADOS.md) (el listado de la agenda pasó de 7 a 72 req/s y de 3 s a 0,27 s de p50).
 
 ## ☁️ Despliegue e Integración Continua (CI/CD)
 
