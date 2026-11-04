@@ -1,5 +1,8 @@
 package com.recovr.backend.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.Authentication;
+
 import com.recovr.backend.dto.AuthResponse;
 import com.recovr.backend.dto.PerfilResponse;
 import com.recovr.backend.dto.UsuarioDtos.CambiarClaveRequest;
@@ -39,8 +42,8 @@ public class AuthController {
     @SecurityRequirements
     @PostMapping("/registro")
     @ResponseStatus(HttpStatus.CREATED)
-    public AuthResponse registroCliente(@Valid @RequestBody RegistroRequest request) {
-        return authService.registrarCliente(request);
+    public AuthResponse registroCliente(@Valid @RequestBody RegistroRequest request, HttpServletRequest http) {
+        return authService.registrarCliente(request, http.getRemoteAddr());
     }
 
     @Operation(
@@ -55,20 +58,21 @@ public class AuthController {
     })
     @SecurityRequirements
     @PostMapping("/login")
-    public AuthResponse login(@Valid @RequestBody LoginRequest request, jakarta.servlet.http.HttpServletRequest http) {
+    public AuthResponse login(@Valid @RequestBody LoginRequest request, HttpServletRequest http) {
         return authService.login(request, http.getRemoteAddr());
     }
 
     @Operation(summary = "Perfil de la sesión actual", description = "Devuelve correo, rol, nombre y vínculos (cliente o terapeuta) del token enviado. Sirve para validar la sesión.")
     @GetMapping("/me")
-    public PerfilResponse me(org.springframework.security.core.Authentication authentication) {
+    public PerfilResponse me(Authentication authentication) {
         return authService.perfil(authentication.getName());
     }
 
-    @Operation(summary = "Cambiar mi contraseña", description = "Exige la contraseña actual. Obligatorio en el primer ingreso con una clave temporal.")
+    @Operation(summary = "Cambiar mi contraseña", description = "Exige la contraseña actual. Obligatorio en el primer ingreso con una clave temporal. "
+            + "Invalida todos los tokens anteriores de la cuenta y devuelve uno nuevo para continuar la sesión.")
     @PostMapping("/cambiar-clave")
-    public void cambiarClave(@Valid @RequestBody CambiarClaveRequest request, org.springframework.security.core.Authentication authentication,
-                             jakarta.servlet.http.HttpServletRequest http) {
-        authService.cambiarClave(authentication.getName(), request, http.getRemoteAddr());
+    public AuthResponse cambiarClave(@Valid @RequestBody CambiarClaveRequest request, Authentication authentication,
+                                     HttpServletRequest http) {
+        return authService.cambiarClave(authentication.getName(), request, http.getRemoteAddr());
     }
 }

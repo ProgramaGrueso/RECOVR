@@ -6,7 +6,15 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "reservas")
+@Table(name = "reservas", indexes = {
+        // Consultas de agenda: por rango de fechas, por terapeuta o cabina en un rango, por estado y por cliente
+        @Index(name = "idx_reservas_fecha", columnList = "fecha_hora"),
+        @Index(name = "idx_reservas_empleado_fecha", columnList = "empleado_id, fecha_hora"),
+        @Index(name = "idx_reservas_sala_fecha", columnList = "sala_id, fecha_hora"),
+        @Index(name = "idx_reservas_cliente_fecha", columnList = "cliente_id, fecha_hora"),
+        @Index(name = "idx_reservas_estado_fecha", columnList = "estado, fecha_hora"),
+        @Index(name = "idx_reservas_estado_creada", columnList = "estado, creada_en")
+})
 @Schema(description = "Entidad de base de datos que representa una reserva agendada")
 public class Reserva {
 
@@ -16,22 +24,22 @@ public class Reserva {
     private Long id;
 
     @Schema(description = "Cliente que contrató la sesión")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id", nullable = false)
     private Cliente cliente;
 
     @Schema(description = "Especialista asignado al turno")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "empleado_id", nullable = false)
     private Empleado empleado;
 
     @Schema(description = "Tratamiento o terapia reservada")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "servicio_id", nullable = false)
     private Servicio servicio;
 
     @Schema(description = "Sala o cabina asignada")
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sala_id", nullable = false)
     private Sala sala;
 

@@ -144,7 +144,7 @@ class SeguridadRolesTest {
     }
 
     @Test
-    @DisplayName("CORS: solo se aceptan orígenes conocidos (localhost y Vercel), nunca uno cualquiera")
+    @DisplayName("CORS: solo se aceptan los orígenes de la lista blanca configurada, nunca uno cualquiera")
     void corsRestringido() throws Exception {
         mockMvc.perform(options("/api/servicios").header("Origin", "http://localhost:4200").header("Access-Control-Request-Method", "GET"))
                 .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"));
@@ -186,8 +186,8 @@ class SeguridadRolesTest {
         Empleado otra = empleado("Otra Seg", uOtra);
         Cliente suyo = cliente("Cliente de Ely", null);
         Cliente ajeno = cliente("Cliente Ajeno", null);
-        reserva(suyo, ely, LocalDateTime.now().plusDays(2), EstadoReserva.CONFIRMADA);
-        reserva(ajeno, otra, LocalDateTime.now().plusDays(3), EstadoReserva.CONFIRMADA);
+        reserva(suyo, ely, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(2), EstadoReserva.CONFIRMADA);
+        reserva(ajeno, otra, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(3), EstadoReserva.CONFIRMADA);
         String t = "Bearer " + token(uEly);
 
         mockMvc.perform(get("/api/fichas/mis-clientes").header("Authorization", t))
@@ -206,8 +206,8 @@ class SeguridadRolesTest {
 
         // otra terapeuta no puede borrar una nota ajena
         Cliente compartido = cliente("Cliente Compartido", null);
-        reserva(compartido, ely, LocalDateTime.now().plusDays(4), EstadoReserva.CONFIRMADA);
-        reserva(compartido, otra, LocalDateTime.now().plusDays(5), EstadoReserva.CONFIRMADA);
+        reserva(compartido, ely, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(4), EstadoReserva.CONFIRMADA);
+        reserva(compartido, otra, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(5), EstadoReserva.CONFIRMADA);
         String creada = mockMvc.perform(post("/api/fichas/cliente/" + compartido.getId() + "/notas").header("Authorization", t)
                 .contentType(MediaType.APPLICATION_JSON).content("{\"tratamiento\":\"Nota de Ely\"}")).andReturn().getResponse().getContentAsString();
         long notaId = Long.parseLong(creada.replaceAll(".*\"notasSesion\":\\[\\{\"id\":(\\d+).*", "$1"));
@@ -224,9 +224,9 @@ class SeguridadRolesTest {
         Cliente c = cliente("Cliente Puntos", u);
         Empleado e = empleado("Terapeuta Pts", null);
         for (int i = 0; i < 3; i++) {
-            reserva(c, e, LocalDateTime.now().minusDays(10 + i), EstadoReserva.COMPLETADA); // 3 × S/ 250
+            reserva(c, e, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusDays(10 + i), EstadoReserva.COMPLETADA); // 3 × S/ 250
         }
-        reserva(c, e, LocalDateTime.now().minusDays(20), EstadoReserva.CANCELADA);          // no suma
+        reserva(c, e, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusDays(20), EstadoReserva.CANCELADA);          // no suma
         mockMvc.perform(get("/api/mi-cuenta/resumen").header("Authorization", "Bearer " + token(u)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.puntos").value(750)).andExpect(jsonPath("$.nivel").value("Plata"))
@@ -242,18 +242,18 @@ class SeguridadRolesTest {
         Empleado e = empleado("Terapeuta Cancela", null);
         String tc = "Bearer " + token(u);
 
-        Reserva pronto = reserva(c, e, LocalDateTime.now().plusHours(2), EstadoReserva.CONFIRMADA);
+        Reserva pronto = reserva(c, e, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusHours(2), EstadoReserva.CONFIRMADA);
         mockMvc.perform(patch("/api/db/reservas/" + pronto.getId() + "/cancelar").header("Authorization", tc))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value(containsString("menos de 4 horas")));
         mockMvc.perform(patch("/api/db/reservas/" + pronto.getId() + "/cancelar")
                 .header("Authorization", "Bearer " + token(crearUsuario(Rol.RECEPCIONISTA)))).andExpect(status().isOk());
 
         for (int i = 0; i < 2; i++) {
-            Reserva r = reserva(c, e, LocalDateTime.now().plusDays(2 + i), EstadoReserva.PENDIENTE);
+            Reserva r = reserva(c, e, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(2 + i), EstadoReserva.PENDIENTE);
             mockMvc.perform(patch("/api/db/reservas/" + r.getId() + "/cancelar").header("Authorization", tc))
                     .andExpect(status().isOk()).andExpect(jsonPath("$.observacion").value("Cancelada por el cliente."));
         }
-        Reserva tercera = reserva(c, e, LocalDateTime.now().plusDays(6), EstadoReserva.PENDIENTE);
+        Reserva tercera = reserva(c, e, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(6), EstadoReserva.PENDIENTE);
         mockMvc.perform(patch("/api/db/reservas/" + tercera.getId() + "/cancelar").header("Authorization", tc))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value(containsString("límite")));
         mockMvc.perform(get("/api/mi-cuenta/resumen").header("Authorization", tc))

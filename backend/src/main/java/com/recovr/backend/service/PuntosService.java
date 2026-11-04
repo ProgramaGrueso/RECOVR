@@ -1,5 +1,8 @@
 package com.recovr.backend.service;
 
+import org.springframework.security.access.AccessDeniedException;
+
+import java.time.Clock;
 import com.recovr.backend.dto.PuntosDtos.*;
 import com.recovr.backend.entity.Canje;
 import com.recovr.backend.entity.Cliente;
@@ -9,7 +12,6 @@ import com.recovr.backend.exception.RecursoNoEncontradoException;
 import com.recovr.backend.repository.CanjeRepository;
 import com.recovr.backend.repository.ClienteRepository;
 import com.recovr.backend.repository.ReservaRepository;
-import com.recovr.backend.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,15 +57,19 @@ public class PuntosService {
 
     private static final String CODIGO_ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RANDOM = new SecureRandom();
-
-    private final UsuarioRepository usuarioRepository;
     private final ClienteRepository clienteRepository;
     private final ReservaRepository reservaRepository;
     private final CanjeRepository canjeRepository;
 
-    public PuntosService(UsuarioRepository usuarioRepository, ClienteRepository clienteRepository,
-                         ReservaRepository reservaRepository, CanjeRepository canjeRepository) {
-        this.usuarioRepository = usuarioRepository;
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
+    private final UsuarioActualService usuarioActual;
+
+    public PuntosService(ClienteRepository clienteRepository,
+                         ReservaRepository reservaRepository, CanjeRepository canjeRepository, Clock reloj, UsuarioActualService usuarioActual) {
+        this.usuarioActual = usuarioActual;
+        this.reloj = reloj;
         this.clienteRepository = clienteRepository;
         this.reservaRepository = reservaRepository;
         this.canjeRepository = canjeRepository;
@@ -101,7 +107,7 @@ public class PuntosService {
 
     @Transactional(readOnly = true)
     public PuntosResponse detalle(String correo) {
-        Cliente cliente = clienteDe(correo);
+        Cliente cliente = usuarioActual.cliente(correo);
         List<Reserva> completadas = reservaRepository.buscarPorCliente(cliente.getId()).stream()
                 .filter(r -> r.getEstado() == EstadoReserva.COMPLETADA).toList();
         List<Canje> canjes = canjeRepository.findByClienteIdOrderByCreadoEnDesc(cliente.getId());
@@ -134,7 +140,7 @@ public class PuntosService {
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public CanjeInfo canjear(String correo, String beneficioId) {
-        Cliente cliente = clienteRepository.buscarBloqueado(clienteDe(correo).getId()).orElseThrow();
+        Cliente cliente = clienteRepository.buscarBloqueado(usuarioActual.cliente(correo).getId()).orElseThrow();
         Beneficio b = BENEFICIOS.stream().filter(x -> x.id().equals(beneficioId)).findFirst()
                 .orElseThrow(() -> new RecursoNoEncontradoException("Beneficio no encontrado: " + beneficioId));
         int saldo = saldo(cliente.getId());
@@ -148,14 +154,14 @@ public class PuntosService {
         c.setPuntos(b.puntos());
         c.setDescuento(b.descuento());
         c.setCodigo(codigoUnico());
-        c.setCreadoEn(LocalDateTime.now());
+        c.setCreadoEn(LocalDateTime.now(reloj));
         c.setVenceEn(c.getCreadoEn().plusDays(ReglasReserva.VIGENCIA_CANJE_DIAS));
         c = canjeRepository.save(c);
         return info(c);
     }
 
     private CanjeInfo info(Canje c) {
-        boolean vencido = c.vencido(LocalDateTime.now());
+        boolean vencido = c.vencido(LocalDateTime.now(reloj));
         boolean anulable = c.getEstado() == Canje.Estado.DISPONIBLE && c.getPuntos() > 0;
         return new CanjeInfo(c.getCodigo(), c.getTitulo(), c.getDescuento(), vencido ? "VENCIDO" : c.getEstado().name(),
                 c.getCreadoEn(), c.getUsadoEn(), c.getVenceEn(), anulable);
@@ -167,11 +173,11 @@ public class PuntosService {
      */
     @Transactional
     public CanjeInfo anular(String correo, String codigo) {
-        Cliente cliente = clienteDe(correo);
+        Cliente cliente = usuarioActual.cliente(correo);
         Canje c = canjeRepository.buscarPorCodigoBloqueado(codigo.trim().toUpperCase())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Código de canje no encontrado: " + codigo));
         if (!c.getCliente().getId().equals(cliente.getId())) {
-            throw new org.springframework.security.access.AccessDeniedException("Ese código no es tuyo");
+            throw new AccessDeniedException("Ese código no es tuyo");
         }
         if (c.getEstado() != Canje.Estado.DISPONIBLE) {
             throw new IllegalStateException("Solo se puede anular un código que no se haya usado");
@@ -179,7 +185,7 @@ public class PuntosService {
         if (c.getPuntos() <= 0) {
             throw new IllegalStateException("Un crédito por cancelación no se anula: se aplica al pagar tu próxima sesión");
         }
-        if (c.vencido(LocalDateTime.now())) {
+        if (c.vencido(LocalDateTime.now(reloj))) {
             throw new IllegalStateException("El código ya venció: los puntos de un código vencido no se devuelven");
         }
         c.setEstado(Canje.Estado.ANULADO);
@@ -224,7 +230,7 @@ public class PuntosService {
         c.setPuntos(0);
         c.setDescuento(importe);
         c.setCodigo(codigoUnico());
-        c.setCreadoEn(LocalDateTime.now());
+        c.setCreadoEn(LocalDateTime.now(reloj));
         c.setVenceEn(c.getCreadoEn().plusDays(ReglasReserva.VIGENCIA_CREDITO_DIAS));
         return canjeRepository.save(c);
     }
@@ -242,14 +248,14 @@ public class PuntosService {
         }
     }
 
-    private static String motivoInvalido(Canje c, Cliente cliente) {
+    private String motivoInvalido(Canje c, Cliente cliente) {
         if (c.getEstado() == Canje.Estado.ANULADO) {
             return "El código fue anulado";
         }
         if (c.getEstado() != Canje.Estado.DISPONIBLE) {
             return "El código ya fue usado";
         }
-        if (c.vencido(LocalDateTime.now())) {
+        if (c.vencido(LocalDateTime.now(reloj))) {
             return "El código venció el " + c.getVenceEn().toLocalDate();
         }
         if (!c.getCliente().getId().equals(cliente.getId())) {
@@ -269,11 +275,5 @@ public class PuntosService {
             }
         }
         throw new IllegalStateException("No se pudo generar un código único; inténtalo de nuevo");
-    }
-
-    private Cliente clienteDe(String correo) {
-        var usuario = usuarioRepository.findByCorreo(correo).orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
-        return clienteRepository.findByUsuarioId(usuario.getId())
-                .orElseThrow(() -> new IllegalStateException("El usuario no tiene un cliente asociado"));
     }
 }

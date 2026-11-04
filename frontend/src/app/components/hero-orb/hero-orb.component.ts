@@ -189,11 +189,11 @@ export class HeroOrbComponent implements AfterViewInit, OnDestroy {
     this.io = new IntersectionObserver(([e]) => (this.visible = e.isIntersecting));
     this.io.observe(el);
 
-    const clock = new THREE.Clock();
+    const inicio = performance.now(); // THREE.Clock está obsoleto y avisa en consola
     const frame = () => {
       this.raf = requestAnimationFrame(frame);
       if (!this.visible && !reduced) return;
-      const t = clock.getElapsedTime();
+      const t = (performance.now() - inicio) / 1000;
       this.mouse.lerp(this.target, 0.05);
       const sp = Math.min(scrollY / Math.max(el.clientHeight, 1), 1.4); // 0 en tope -> 1 al salir del hero
 

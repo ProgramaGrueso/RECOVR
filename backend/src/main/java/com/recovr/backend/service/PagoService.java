@@ -1,5 +1,9 @@
 package com.recovr.backend.service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+
 import com.recovr.backend.dto.PagoRequest;
 import com.recovr.backend.entity.Pago;
 import com.recovr.backend.entity.EstadoReserva;
@@ -22,6 +26,12 @@ public class PagoService {
 
     public List<Pago> listarTodos() {
         return pagoRepository.findAll();
+    }
+
+    /** Página de pagos, del más reciente al más antiguo. */
+    public Page<Pago> listarPagina(int pagina, int tamano) {
+        int t = Math.max(1, Math.min(tamano, 1000));
+        return pagoRepository.findAll(PageRequest.of(Math.max(0, pagina), t, Sort.by(Sort.Direction.DESC, "fechaPago", "id")));
     }
 
     public Pago buscarPorId(Long id) {

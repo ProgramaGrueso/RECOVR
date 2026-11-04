@@ -237,7 +237,7 @@ class ReservaCicloVidaTest {
         assertThat(operacion.estadoEmpleados(inicio).get(0).activo()).isFalse();
 
         var futura = new ReservaRequest(cliente.getId(), ely.getId(), servicio.getId(), cabina.getId(),
-                LocalDateTime.now().plusDays(3), null);
+                LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(3), null);
         assertThatThrownBy(() -> reservaService.crearDesdeRequest(futura, "x", true))
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("de baja");
 

@@ -3,6 +3,9 @@ package com.recovr.backend.repository;
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Reserva;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -13,6 +16,21 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
+
+    // Las consultas de listados cargan con @EntityGraph las relaciones de la reserva en una sola consulta (JOIN).
+    // Sin esto, cada fila disparaba una consulta por cliente, terapeuta, servicio, cabina y pago (N+1).
+
+    @Override
+    @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
+    Page<Reserva> findAll(Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
+    Optional<Reserva> findById(Long id);
+
+    /** Página de reservas cuyo inicio cae en [desde, hasta). */
+    @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
+    Page<Reserva> findByFechaHoraGreaterThanEqualAndFechaHoraLessThan(LocalDateTime desde, LocalDateTime hasta, Pageable pageable);
 
     /**
      * Expresión JPQL reutilizable: una reserva ocupa el bloque
@@ -35,6 +53,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     Optional<Reserva> buscarParaActualizar(@Param("id") Long id);
 
     /** Reservas PENDIENTES cuyo plazo de pago (contado desde la creación) ya venció. */
+    @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
     @Query("SELECT r FROM Reserva r WHERE r.estado = com.recovr.backend.entity.EstadoReserva.PENDIENTE "
             + "AND r.creadaEn IS NOT NULL AND r.creadaEn <= :limite")
     List<Reserva> buscarPendientesCreadasHasta(@Param("limite") LocalDateTime limite);
@@ -50,11 +69,11 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
                                           @Param("inicio") LocalDateTime inicio,
                                           @Param("fin") LocalDateTime fin,
                                           @Param("excluirId") Long excluirId);
-    boolean existsByEmpleadoIdAndClienteId(Long empleadoId, Long clienteId);
     boolean existsByEmpleadoIdAndClienteIdAndEstadoIn(Long empleadoId, Long clienteId, java.util.Collection<EstadoReserva> estados);
     long countByEstado(EstadoReserva estado);
     long countByClienteIdAndObservacionAndCanceladaEnGreaterThanEqual(Long clienteId, String observacion, LocalDateTime desde);
 
+    @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
     @Query("SELECT r FROM Reserva r WHERE r.empleado.id = :empleadoId ORDER BY r.fechaHora DESC")
     List<Reserva> buscarPorEmpleado(@Param("empleadoId") Long empleadoId);
     boolean existsByServicioId(Long servicioId);
@@ -65,9 +84,11 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     boolean existsByEmpleadoIdAndEstadoIn(Long empleadoId, java.util.Collection<EstadoReserva> estados);
     boolean existsBySalaIdAndEstadoIn(Long salaId, java.util.Collection<EstadoReserva> estados);
 
+    @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
     @Query("SELECT r FROM Reserva r WHERE r.cliente.id = :clienteId ORDER BY r.fechaHora DESC")
     List<Reserva> buscarPorCliente(@Param("clienteId") Long clienteId);
 
+    @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
     @Query("SELECT r FROM Reserva r WHERE r.fechaHora BETWEEN :inicio AND :fin AND r.estado = :estado")
     List<Reserva> buscarPorRangoYEstado(@Param("inicio") LocalDateTime inicio,
                                          @Param("fin") LocalDateTime fin,
@@ -88,15 +109,18 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
                                    @Param("excluirId") Long excluirId);
 
     /** Agenda futura de un especialista, ordenada cronológicamente. */
+    @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
     @Query("SELECT r FROM Reserva r WHERE r.empleado.id = :empleadoId AND r.fechaHora >= :desde "
             + "ORDER BY r.fechaHora ASC")
     List<Reserva> buscarAgendaEmpleado(@Param("empleadoId") Long empleadoId, @Param("desde") LocalDateTime desde);
 
     /** Reservas activas (PENDIENTE o CONFIRMADA) cuyo inicio ya pasó: candidatas a expirar, completarse o marcarse como no asistidas. */
+    @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
     @Query("SELECT r FROM Reserva r WHERE " + ACTIVA + " AND r.fechaHora < :ahora")
     List<Reserva> buscarActivasIniciadasAntesDe(@Param("ahora") LocalDateTime ahora);
 
     /** Reservas cuyo inicio cae en [desde, hasta), en orden cronológico (base del estado en vivo y de los KPI). */
+    @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
     @Query("SELECT r FROM Reserva r WHERE r.fechaHora >= :desde AND r.fechaHora < :hasta ORDER BY r.fechaHora ASC")
     List<Reserva> buscarEntre(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
 }

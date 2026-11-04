@@ -1,5 +1,9 @@
 package com.recovr.backend.service;
 
+import java.awt.Color;
+import java.util.Iterator;
+
+import java.time.Clock;
 import com.recovr.backend.entity.FotoEmpleado;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
 import com.recovr.backend.repository.EmpleadoRepository;
@@ -37,7 +41,11 @@ public class FotoService {
     private final FotoEmpleadoRepository fotoRepository;
     private final EmpleadoRepository empleadoRepository;
 
-    public FotoService(FotoEmpleadoRepository fotoRepository, EmpleadoRepository empleadoRepository) {
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
+    public FotoService(FotoEmpleadoRepository fotoRepository, EmpleadoRepository empleadoRepository, Clock reloj) {
+        this.reloj = reloj;
         this.fotoRepository = fotoRepository;
         this.empleadoRepository = empleadoRepository;
     }
@@ -60,7 +68,7 @@ public class FotoService {
         foto.setEmpleadoId(empleadoId);
         foto.setTipo("image/jpeg");
         foto.setDatos(recodificar(original));
-        foto.setActualizadaEn(LocalDateTime.now());
+        foto.setActualizadaEn(LocalDateTime.now(reloj));
         fotoRepository.save(foto);
     }
 
@@ -81,7 +89,7 @@ public class FotoService {
      */
     static void validarDimensiones(byte[] original) throws IOException {
         try (javax.imageio.stream.ImageInputStream in = ImageIO.createImageInputStream(new ByteArrayInputStream(original))) {
-            java.util.Iterator<javax.imageio.ImageReader> lectores = ImageIO.getImageReaders(in);
+            Iterator<javax.imageio.ImageReader> lectores = ImageIO.getImageReaders(in);
             if (!lectores.hasNext()) {
                 throw new IllegalArgumentException("El archivo no es una imagen válida");
             }
@@ -121,7 +129,7 @@ public class FotoService {
             BufferedImage rgb = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = rgb.createGraphics();
             g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g.drawImage(src, 0, 0, w, h, java.awt.Color.WHITE, null);
+            g.drawImage(src, 0, 0, w, h, Color.WHITE, null);
             g.dispose();
 
             ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();

@@ -88,4 +88,21 @@ describe('AdminApiService', () => {
   it('sin conexión (status 0) pide encender el backend', () => {
     expect(fallo(0).message).toContain('Enciende el backend');
   });
+
+  it('pide al servidor solo la ventana de días de la vista (listado paginado)', () => {
+    iniciar('RECEPCIONISTA', 'jwt-r');
+    admin.reservas('2026-11-04', '2026-11-05').subscribe();
+    const req = http.expectOne(`${API}/db/reservas?desde=2026-11-04&hasta=2026-11-05&tamano=1000`);
+    expect(req.request.headers.get('Authorization')).toBe('Bearer jwt-r');
+    req.flush([]);
+  });
+
+  it('al cambiar la clave guarda el token nuevo que devuelve el servidor (el anterior queda invalidado)', () => {
+    iniciar('RECEPCIONISTA', 'jwt-viejo');
+    admin.cambiarClave('Temporal123', 'NuevaClave99').subscribe();
+    const req = http.expectOne(`${API}/auth/cambiar-clave`);
+    expect(req.request.headers.get('Authorization')).toBe('Bearer jwt-viejo');
+    req.flush({ token: 'jwt-nuevo', rol: 'RECEPCIONISTA', correo: 'u@u.com' });
+    expect(api.authHeaders().get('Authorization')).toBe('Bearer jwt-nuevo');
+  });
 });

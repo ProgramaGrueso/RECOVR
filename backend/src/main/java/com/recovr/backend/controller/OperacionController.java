@@ -1,5 +1,6 @@
 package com.recovr.backend.controller;
 
+import java.time.Clock;
 import com.recovr.backend.dto.EmpleadoEstadoResponse;
 import com.recovr.backend.dto.ResumenResponse;
 import com.recovr.backend.dto.SalaEstadoResponse;
@@ -20,7 +21,11 @@ public class OperacionController {
 
     private final OperacionService operacionService;
 
-    public OperacionController(OperacionService operacionService) {
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
+    public OperacionController(OperacionService operacionService, Clock reloj) {
+        this.reloj = reloj;
         this.operacionService = operacionService;
     }
 
@@ -28,19 +33,19 @@ public class OperacionController {
             description = "DISPONIBLE, OCUPADA, ESPERANDO_CLIENTE o EN_SANITIZACION, deducido de las reservas y la hora actual.")
     @GetMapping("/salas")
     public List<SalaEstadoResponse> salas() {
-        return operacionService.estadoSalas(LocalDateTime.now());
+        return operacionService.estadoSalas(LocalDateTime.now(reloj));
     }
 
     @Operation(summary = "Disponibilidad en vivo de las terapeutas", description = "LIBRE, EN_SESION o POR_INICIAR.")
     @GetMapping("/empleados")
     public List<EmpleadoEstadoResponse> empleados() {
-        return operacionService.estadoEmpleados(LocalDateTime.now());
+        return operacionService.estadoEmpleados(LocalDateTime.now(reloj));
     }
 
     @Operation(summary = "Indicadores del panel",
             description = "Ingresos del mes, ocupación de hoy, sesiones completadas y tasa de cancelación, calculados desde la base.")
     @GetMapping("/resumen")
     public ResumenResponse resumen() {
-        return operacionService.resumen(LocalDateTime.now());
+        return operacionService.resumen(LocalDateTime.now(reloj));
     }
 }

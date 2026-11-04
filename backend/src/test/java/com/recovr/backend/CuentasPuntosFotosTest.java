@@ -146,9 +146,12 @@ class CuentasPuntosFotosTest {
         }
         mockMvc.perform(post("/api/auth/cambiar-clave").header("Authorization", h).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"claveActual\":\"" + temporal + "\",\"claveNueva\":\"" + temporal + "\"}")).andExpect(status().isBadRequest());
-        mockMvc.perform(post("/api/auth/cambiar-clave").header("Authorization", h).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"claveActual\":\"" + temporal + "\",\"claveNueva\":\"MiClaveNueva9\"}")).andExpect(status().isOk());
-        mockMvc.perform(get("/api/auth/me").header("Authorization", h)).andExpect(jsonPath("$.debeCambiarClave").value(false));
+        String nuevo = mockMvc.perform(post("/api/auth/cambiar-clave").header("Authorization", h).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"claveActual\":\"" + temporal + "\",\"claveNueva\":\"MiClaveNueva9\"}")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString().replaceAll(".*\"token\":\"([^\"]+)\".*", "$1");
+        // el token anterior al cambio ya no vale; el que devuelve el cambio de clave sí
+        mockMvc.perform(get("/api/auth/me").header("Authorization", h)).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + nuevo)).andExpect(jsonPath("$.debeCambiarClave").value(false));
         mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"correo\":\"" + rec.getCorreo() + "\",\"password\":\"MiClaveNueva9\"}")).andExpect(status().isOk());
     }
@@ -171,7 +174,7 @@ class CuentasPuntosFotosTest {
         Empleado e = empleado("Terapeuta Puntos");
         completada(c, e, 200, 10);   // pagó 200
         completada(c, e, 120, 20);   // pagó 120 (tenía un descuento)
-        reserva(c, e, LocalDateTime.now().minusDays(3), EstadoReserva.CANCELADA);   // no suma
+        reserva(c, e, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusDays(3), EstadoReserva.CANCELADA);   // no suma
         String t = bearer(u);
 
         mockMvc.perform(get("/api/mi-cuenta/puntos").header("Authorization", t)).andExpect(status().isOk())
@@ -207,8 +210,8 @@ class CuentasPuntosFotosTest {
                 .content("{\"beneficioId\":\"descuento-30\"}")).andExpect(status().isCreated());
         String codigo = canjeRepository.findByClienteIdOrderByCreadoEnDesc(c.getId()).get(0).getCodigo();
 
-        Reserva r = reserva(c, e, LocalDateTime.now().plusDays(2), EstadoReserva.PENDIENTE);
-        Reserva deOtro = reserva(otro, e, LocalDateTime.now().plusDays(4), EstadoReserva.PENDIENTE);
+        Reserva r = reserva(c, e, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(2), EstadoReserva.PENDIENTE);
+        Reserva deOtro = reserva(otro, e, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(4), EstadoReserva.PENDIENTE);
         String tRec = bearer(usuario(Rol.RECEPCIONISTA, "Recepción Canje"));
 
         // vista previa para recepción: 250 − 30 = 220
@@ -231,7 +234,7 @@ class CuentasPuntosFotosTest {
                 .isEqualByComparingTo("220.00");
         assertThat(canjeRepository.findByCodigo(codigo).orElseThrow().getEstado()).isEqualTo(Canje.Estado.USADO);
         // ya usado
-        Reserva r2 = reserva(c, e, LocalDateTime.now().plusDays(6), EstadoReserva.PENDIENTE);
+        Reserva r2 = reserva(c, e, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(6), EstadoReserva.PENDIENTE);
         mockMvc.perform(post("/api/db/reservas/" + r2.getId() + "/confirmar-y-pagar").header("Authorization", tRec)
                 .contentType(MediaType.APPLICATION_JSON).content("{\"monto\":1,\"metodoPago\":\"Efectivo\",\"codigoCanje\":\"" + codigo + "\"}"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").value("El código ya fue usado"));
@@ -360,7 +363,7 @@ class CuentasPuntosFotosTest {
 
     /** Sesión completada hace {@code dias} días, pagada con {@code monto}. */
     private void completada(Cliente c, Empleado e, int monto, int dias) {
-        Reserva r = reserva(c, e, LocalDateTime.now().minusDays(dias), EstadoReserva.COMPLETADA);
+        Reserva r = reserva(c, e, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusDays(dias), EstadoReserva.COMPLETADA);
         Pago p = new Pago();
         p.setReserva(r);
         p.setMonto(new BigDecimal(monto));

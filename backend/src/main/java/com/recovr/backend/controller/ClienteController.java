@@ -1,5 +1,8 @@
 package com.recovr.backend.controller;
 
+import com.recovr.backend.entity.Cliente;
+import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
 import com.recovr.backend.dto.ClienteResponse;
 import com.recovr.backend.service.ClienteService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,8 +39,14 @@ public class ClienteController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @GetMapping
-    public List<ClienteResponse> listar() {
-        return clienteService.listarTodos().stream().map(ClienteResponse::de).toList();
+    public ResponseEntity<List<ClienteResponse>> listar(
+            @Parameter(description = "Número de página (desde 0)", example = "0") @RequestParam(defaultValue = "0") int pagina,
+            @Parameter(description = "Clientes por página (máximo 1000), por nombre", example = "100") @RequestParam(defaultValue = "1000") int tamano) {
+        Page<Cliente> resultado = clienteService.listarPagina(pagina, tamano);
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(resultado.getTotalElements()))
+                .header("X-Total-Pages", String.valueOf(resultado.getTotalPages()))
+                .body(resultado.getContent().stream().map(ClienteResponse::de).toList());
     }
 
     @Operation(summary = "Obtener cliente por ID", description = "Consulta la información detallada de un cliente específico. Requiere rol ADMIN.")

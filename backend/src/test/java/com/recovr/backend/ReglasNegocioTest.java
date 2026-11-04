@@ -88,7 +88,7 @@ class ReglasNegocioTest {
 
     @BeforeEach
     void setUp() {
-        dia18 = LocalDateTime.now().plusDays(2).withHour(18).withMinute(0).withSecond(0).withNano(0);
+        dia18 = LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(2).withHour(18).withMinute(0).withSecond(0).withNano(0);
         tokenAdmin = token("admin@rn.com", Rol.ADMIN);
         tokenRecepcion = token("recepcion@rn.com", Rol.RECEPCIONISTA);
         ana = cliente("ana@rn.com");
@@ -147,7 +147,7 @@ class ReglasNegocioTest {
     @DisplayName("Una pendiente sin pagar pierde el cupo a los 15 min de creada: otro cliente puede tomarlo")
     void pendienteVencidaLiberaElCupo() throws Exception {
         Reserva vieja = reserva(ana, maria, cabina1, dia18, servicio, EstadoReserva.PENDIENTE);
-        vieja.setCreadaEn(LocalDateTime.now().minusMinutes(ReglasReserva.HOLD_PAGO_MIN + 1));
+        vieja.setCreadaEn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusMinutes(ReglasReserva.HOLD_PAGO_MIN + 1));
         reservaRepository.save(vieja);
 
         crear(tokenBeto, maria, cabina1, dia18, servicio).andExpect(status().isCreated());
@@ -161,7 +161,7 @@ class ReglasNegocioTest {
     @DisplayName("Pagar una reserva cuyo plazo venció se rechaza")
     void noSePuedePagarFueraDePlazo() throws Exception {
         Reserva vieja = reserva(ana, maria, cabina1, dia18, servicio, EstadoReserva.PENDIENTE);
-        vieja.setCreadaEn(LocalDateTime.now().minusMinutes(ReglasReserva.HOLD_PAGO_MIN + 1));
+        vieja.setCreadaEn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusMinutes(ReglasReserva.HOLD_PAGO_MIN + 1));
         reservaRepository.save(vieja);
 
         pagarTotal(vieja, tokenAna)
@@ -174,7 +174,7 @@ class ReglasNegocioTest {
     void bloqueoPorExpiracionesRepetidas() throws Exception {
         for (int i = 0; i < ReglasReserva.MAX_EXPIRADAS_VENTANA; i++) {
             Reserva r = reserva(ana, maria, cabina1, dia18.plusDays(10 + i), servicio, EstadoReserva.CANCELADA);
-            r.setCanceladaEn(LocalDateTime.now().minusHours(2));
+            r.setCanceladaEn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusHours(2));
             r.setObservacion(ReglasReserva.EXPIRADA_SIN_PAGO);
             reservaRepository.save(r);
         }
@@ -315,7 +315,7 @@ class ReglasNegocioTest {
         c.setPuntos(300);
         c.setDescuento(new BigDecimal("30"));
         c.setCodigo("CJ-TEST01");
-        c.setCreadoEn(LocalDateTime.now());
+        c.setCreadoEn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO));
         canjeRepository.save(c);
         Reserva r = reserva(ana, maria, cabina1, dia18, servicio, EstadoReserva.PENDIENTE);
         mockMvc.perform(auth(post("/api/db/reservas/" + r.getId() + "/confirmar-y-pagar"), tokenRecepcion)
@@ -372,7 +372,7 @@ class ReglasNegocioTest {
                 .andExpect(jsonPath("$.message").value(containsString("ya está pagada")));
 
         Reserva conCheckIn = reservaRepository.findById(r.getId()).orElseThrow();
-        conCheckIn.setCheckIn(LocalDateTime.now());
+        conCheckIn.setCheckIn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO));
         reservaRepository.save(conCheckIn);
         actualizar(r, tokenAdmin, maria, cabina1, dia18.plusHours(1), null).andExpect(status().isBadRequest());
     }
@@ -381,7 +381,7 @@ class ReglasNegocioTest {
     @DisplayName("Reprogramar a una fecha pasada se rechaza")
     void reprogramarAlPasado() throws Exception {
         Reserva r = reserva(ana, maria, cabina1, dia18, servicio, EstadoReserva.PENDIENTE);
-        actualizar(r, tokenAdmin, maria, cabina1, LocalDateTime.now().minusDays(1).withHour(15), null).andExpect(status().isBadRequest());
+        actualizar(r, tokenAdmin, maria, cabina1, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusDays(1).withHour(15), null).andExpect(status().isBadRequest());
     }
 
     // ------------------------------------------------------------ cabinas en mantenimiento y ausencias
@@ -464,7 +464,7 @@ class ReglasNegocioTest {
     @DisplayName("La disponibilidad exige sesión iniciada y descarta lo que ya pasó")
     void disponibilidadRequiereSesion() throws Exception {
         String url = "/api/db/reservas/disponibilidad?empleadoId=" + maria.getId() + "&servicioId=" + servicio.getId()
-                + "&fecha=" + LocalDateTime.now().minusDays(1).toLocalDate();
+                + "&fecha=" + LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusDays(1).toLocalDate();
         mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(url)).andExpect(status().isUnauthorized());
         mockMvc.perform(auth(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get(url), tokenAna))
                 .andExpect(status().isOk()).andExpect(jsonPath("$[0].disponible").value(false))
@@ -541,7 +541,7 @@ class ReglasNegocioTest {
         foto.setEmpleadoId(sola.getId());
         foto.setTipo("image/jpeg");
         foto.setDatos(new byte[]{1, 2, 3});
-        foto.setActualizadaEn(LocalDateTime.now());
+        foto.setActualizadaEn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO));
         fotoRepository.save(foto);
 
         mockMvc.perform(auth(delete("/api/empleados/" + sola.getId()), tokenAdmin)).andExpect(status().isNoContent());
@@ -570,7 +570,7 @@ class ReglasNegocioTest {
     @DisplayName("Un código vencido no se puede aplicar al cobrar")
     void codigoVencidoSeRechaza() throws Exception {
         Canje c = canje(ana, "CJ-VENCE1", 300, "30");
-        c.setVenceEn(LocalDateTime.now().minusDays(1));
+        c.setVenceEn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusDays(1));
         canjeRepository.save(c);
         Reserva r = reserva(ana, maria, cabina1, dia18, servicio, EstadoReserva.PENDIENTE);
         mockMvc.perform(auth(post("/api/db/reservas/" + r.getId() + "/confirmar-y-pagar"), tokenRecepcion)
@@ -587,7 +587,7 @@ class ReglasNegocioTest {
         pago.setReserva(ganada);
         pago.setMonto(new BigDecimal("400"));
         pago.setMetodoPago("EFECTIVO");
-        pago.setFechaPago(LocalDateTime.now().minusDays(30));
+        pago.setFechaPago(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusDays(30));
         ganada.setPago(pagoRepository.save(pago));
         canje(ana, "CJ-ANULA1", 300, "30");
 
@@ -616,10 +616,10 @@ class ReglasNegocioTest {
     @Test
     @DisplayName("Si el cliente llegó tarde, recepción reabre la sesión pagada dada por no asistida mientras siga en curso")
     void reabrirNoShow() throws Exception {
-        LocalDateTime inicio = LocalDateTime.now().minusMinutes(40);
+        LocalDateTime inicio = LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusMinutes(40);
         Reserva r = reserva(ana, maria, cabina1, inicio, servicio, EstadoReserva.CANCELADA);
         r.setObservacion(ReglasReserva.NO_ASISTIO);
-        r.setCanceladaEn(LocalDateTime.now().minusMinutes(5));
+        r.setCanceladaEn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusMinutes(5));
         Pago pago = new Pago();
         pago.setReserva(r);
         pago.setMonto(new BigDecimal("120"));
@@ -670,7 +670,7 @@ class ReglasNegocioTest {
         r.setServicio(srv);
         r.setFechaHora(inicio);
         r.setEstado(estado);
-        r.setCreadaEn(LocalDateTime.now());
+        r.setCreadaEn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO));
         return reservaRepository.save(r);
     }
 
@@ -690,8 +690,8 @@ class ReglasNegocioTest {
         k.setPuntos(puntos);
         k.setDescuento(new BigDecimal(descuento));
         k.setCodigo(codigo);
-        k.setCreadoEn(LocalDateTime.now());
-        k.setVenceEn(LocalDateTime.now().plusDays(30));
+        k.setCreadoEn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO));
+        k.setVenceEn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(30));
         return canjeRepository.save(k);
     }
 

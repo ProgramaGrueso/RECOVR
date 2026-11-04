@@ -1,5 +1,8 @@
 package com.recovr.backend.security;
 
+import org.springframework.security.config.Customizer;
+
+import com.recovr.backend.exception.CuerpoError;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -10,6 +13,10 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
@@ -27,18 +34,23 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .cors(org.springframework.security.config.Customizer.withDefaults())
+                .cors(Customizer.withDefaults())
+                // Sin cookies de sesión: el token viaja en la cabecera Authorization, así que CSRF no aplica
                 .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.deny())
+                        .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                        .httpStrictTransportSecurity(hsts -> hsts.includeSubDomains(true).maxAgeInSeconds(31_536_000))
+                        .addHeaderWriter(new StaticHeadersWriter("Permissions-Policy", "camera=(), microphone=(), geolocation=()"))
+                        // La API solo devuelve JSON e imágenes: nada se ejecuta ni se incrusta. Swagger UI queda fuera.
+                        .addHeaderWriter(new DelegatingRequestMatcherHeaderWriter(new AntPathRequestMatcher("/api/**"),
+                                new StaticHeadersWriter("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"))))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                         // Autenticado pero sin el rol requerido: 403 (antes terminaba en 401 vía /error)
-                        .accessDeniedHandler((request, response, ex) -> {
-                            response.setStatus(HttpStatus.FORBIDDEN.value());
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"status\":403,\"error\":\"Acceso denegado\","
-                                    + "\"message\":\"No tiene permisos para acceder a este recurso\"}");
-                        }))
+                        .accessDeniedHandler((request, response, ex) -> CuerpoError.escribir(response,
+                                HttpStatus.FORBIDDEN, "Acceso denegado", "No tiene permisos para acceder a este recurso")))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/swagger-ui/**",
@@ -47,6 +59,8 @@ public class SecurityConfig {
                         ).permitAll()
                         // /error debe ser público para que los errores 400/404/409 no se conviertan en 401
                         .requestMatchers("/error").permitAll()
+                        // Salud para el balanceador / Docker (sin detalles)
+                        .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers("/api/auth/registro", "/api/auth/login").permitAll()
                         .requestMatchers("/api/publico/**").permitAll()
                         // Asistente de IA: público (con límites por IP en IaLimitador); solo consulta datos públicos
@@ -85,7 +99,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/servicios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/servicios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/servicios/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
+                        // Sesión propia: cualquier rol autenticado
+                        .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/cambiar-clave").authenticated()
+                        // Todo lo que no tiene una regla explícita arriba se deniega (antes quedaba abierto a cualquier rol)
+                        .anyRequest().denyAll())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(auditoriaFilter, JwtAuthenticationFilter.class)
                 .build();

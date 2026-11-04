@@ -1,5 +1,10 @@
 package com.recovr.backend.service;
 
+import com.recovr.backend.repository.ReservaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import com.recovr.backend.repository.UsuarioRepository;
 import com.recovr.backend.entity.Cliente;
 import com.recovr.backend.repository.ClienteRepository;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
@@ -11,21 +16,27 @@ import java.util.List;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
-    private final com.recovr.backend.repository.ReservaRepository reservaRepository;
-    private com.recovr.backend.repository.UsuarioRepository usuarioRepository;
+    private final ReservaRepository reservaRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    void setUsuarioRepository(com.recovr.backend.repository.UsuarioRepository usuarioRepository) {
+    public ClienteService(ClienteRepository clienteRepository, ReservaRepository reservaRepository,
+                          UsuarioRepository usuarioRepository) {
+        this.clienteRepository = clienteRepository;
+        this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
     }
 
-    public ClienteService(ClienteRepository clienteRepository, com.recovr.backend.repository.ReservaRepository reservaRepository) {
-        this.clienteRepository = clienteRepository;
-        this.reservaRepository = reservaRepository;
-    }
+    /** Tamaño máximo de página: el listado nunca devuelve la tabla completa de una vez. */
+    public static final int TAMANO_MAX = 1000;
 
     public List<Cliente> listarTodos() {
         return clienteRepository.findAll();
+    }
+
+    /** Página de clientes ordenados por nombre. */
+    public Page<Cliente> listarPagina(int pagina, int tamano) {
+        int t = Math.max(1, Math.min(tamano, TAMANO_MAX));
+        return clienteRepository.findAll(PageRequest.of(Math.max(0, pagina), t, Sort.by("nombre", "id")));
     }
 
     public Cliente buscarPorId(Long id) {
