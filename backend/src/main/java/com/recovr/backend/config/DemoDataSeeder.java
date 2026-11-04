@@ -16,8 +16,6 @@ import com.recovr.backend.repository.EmpleadoRepository;
 import com.recovr.backend.repository.FichaClienteRepository;
 import com.recovr.backend.repository.NotaSesionRepository;
 import com.recovr.backend.repository.ReservaRepository;
-import com.recovr.backend.repository.SalaRepository;
-import com.recovr.backend.repository.ServicioRepository;
 import com.recovr.backend.repository.UsuarioRepository;
 import com.recovr.backend.service.ReglasReserva;
 import org.slf4j.Logger;
@@ -25,10 +23,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -40,11 +38,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Datos iniciales. SIEMPRE (con o sin demo) y de forma idempotente crea el catálogo oficial: los 6 servicios RC-xx,
- * las 4 cabinas y las 4 terapeutas (Ely, Miranda, Pamela y Maria), para que la base nunca arranque sin personal
- * (se apaga con recovr.seed.catalogo=false, p. ej. en las pruebas que necesitan una base vacía).
- *
- * <p><b>Datos de demostración</b> (perfil {@code demo} o {@code recovr.seed.demo-data=true}): deja la base como si el
+ * <b>Datos de demostración</b> (perfil {@code demo} o {@code recovr.seed.demo-data=true}): deja la base como si el
  * sistema llevara {@code recovr.seed.dias-historial} días en uso (90 por defecto) y con citas ya agendadas hasta el
  * 31 de diciembre (o {@code recovr.seed.fin}). La agenda la arma {@link GeneradorAgendaDemo}; los pacientes,
  * {@link PacientesDemo}. Todo es ficticio y queda marcado con el dominio {@value PacientesDemo#DOMINIO}.
@@ -56,6 +50,7 @@ import java.util.Set;
  * documentadas en backend/CREDENCIALES_DEMO.md. SOLO para desarrollo local.
  */
 @Component
+@Order(2)
 public class DemoDataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DemoDataSeeder.class);
@@ -65,7 +60,7 @@ public class DemoDataSeeder implements CommandLineRunner {
     static final int PACIENTES = 140;
     private static final String[] METODOS_PAGO = {"Yape", "Plin", "Efectivo", "Tarjeta"};
 
-    private final boolean catalogoInicial;
+    private final CatalogoSeeder catalogo;
     private final boolean activo;
     private final int diasHistorial;
     private final String finConfigurado;
@@ -73,8 +68,6 @@ public class DemoDataSeeder implements CommandLineRunner {
     private LocalDate inicio;
     private LocalDate fin;
 
-    private final ServicioRepository servicioRepository;
-    private final SalaRepository salaRepository;
     private final EmpleadoRepository empleadoRepository;
     private final ClienteRepository clienteRepository;
     private final UsuarioRepository usuarioRepository;
@@ -84,24 +77,21 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final FichaClienteRepository fichaRepository;
     private final NotaSesionRepository notaRepository;
 
-    public DemoDataSeeder(@Value("${recovr.seed.catalogo:true}") boolean catalogoInicial,
+    public DemoDataSeeder(CatalogoSeeder catalogo,
                           @Value("${recovr.seed.demo-data:false}") boolean activo,
                           @Value("${recovr.seed.dias-historial:90}") int diasHistorial,
                           @Value("${recovr.seed.fin:}") String finConfigurado,
                           Clock reloj,
-                          ServicioRepository servicioRepository, SalaRepository salaRepository,
                           EmpleadoRepository empleadoRepository, ClienteRepository clienteRepository,
                           UsuarioRepository usuarioRepository, ReservaRepository reservaRepository,
                           PasswordEncoder passwordEncoder,
                           TransactionTemplate transaccion, FichaClienteRepository fichaRepository,
                           NotaSesionRepository notaRepository) {
-        this.catalogoInicial = catalogoInicial;
+        this.catalogo = catalogo;
         this.activo = activo;
         this.diasHistorial = diasHistorial;
         this.finConfigurado = finConfigurado == null ? "" : finConfigurado.trim();
         this.reloj = reloj;
-        this.servicioRepository = servicioRepository;
-        this.salaRepository = salaRepository;
         this.empleadoRepository = empleadoRepository;
         this.clienteRepository = clienteRepository;
         this.usuarioRepository = usuarioRepository;
@@ -114,13 +104,6 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (catalogoInicial) {
-            transaccion.executeWithoutResult(status -> {
-                catalogo();
-                cabinas();
-                terapeutas();
-            });
-        }
         if (!activo) {
             return;
         }
@@ -146,7 +129,7 @@ public class DemoDataSeeder implements CommandLineRunner {
      */
     private int sembrarAgenda(LocalDateTime ahora) {
         GeneradorAgendaDemo.Recursos recursos = new GeneradorAgendaDemo.Recursos(
-                catalogo(), cabinas(), terapeutas(), asegurarPacientes());
+                catalogo.servicios(), catalogo.cabinas(), catalogo.terapeutas(), asegurarPacientes());
         List<Reserva> existentes = reservaRepository.buscarEntre(inicio.atStartOfDay(), fin.plusDays(1).atStartOfDay());
         Set<LocalDate> diasSembrados = new HashSet<>();
         List<Reserva> activasExistentes = new ArrayList<>();
@@ -208,95 +191,6 @@ public class DemoDataSeeder implements CommandLineRunner {
         return pacientes;
     }
 
-    /** Crea el catálogo oficial que falte y devuelve los servicios RC-xx indexados por código. */
-    private Map<String, Servicio> catalogo() {
-        asegurarServicio("RC-01 Masaje Tántrico Sensitivo", 60, 15, "200");
-        asegurarServicio("RC-02 Masaje Nuru Body Slide", 75, 15, "280");
-        asegurarServicio("RC-03 Masaje Relajante & Descontracturante", 60, 15, "180");
-        asegurarServicio("RC-04 Masaje Tántrico Completo", 75, 15, "250");
-        asegurarServicio("RC-05 Masaje a Cuatro Manos", 60, 15, "380");
-        asegurarServicio("RC-06 RECOVR VIP Hidromasaje", 90, 20, "450");
-        Map<String, Servicio> porCodigo = new HashMap<>();
-        for (Servicio s : servicioRepository.findAll()) {
-            if (s.getNombre().startsWith("RC-")) {
-                porCodigo.put(s.getNombre().substring(0, 5), s);
-            }
-        }
-        return porCodigo;
-    }
-
-    private void asegurarServicio(String nombre, int duracion, int limpieza, String precio) {
-        String codigo = nombre.substring(0, 5);
-        if (servicioRepository.findAll().stream().anyMatch(s -> s.getNombre().startsWith(codigo))) {
-            return;
-        }
-        Servicio s = new Servicio();
-        s.setNombre(nombre);
-        s.setDuracionMinutos(duracion);
-        s.setTiempoLimpiezaMinutos(limpieza);
-        s.setPrecio(new BigDecimal(precio));
-        servicioRepository.save(s);
-    }
-
-    /** Crea las 4 cabinas oficiales que falten y las devuelve indexadas por "Cabina 0X ". */
-    private Map<String, Sala> cabinas() {
-        asegurarSala("Cabina 01 (Néon Rose)", 2);
-        asegurarSala("Cabina 02 (Nuru Suite)", 2);
-        asegurarSala("Cabina 03 (Dúo / 4 Manos)", 3);
-        asegurarSala("Cabina 04 (VIP Hidromasaje)", 2);
-        Map<String, Sala> porNumero = new HashMap<>();
-        for (Sala s : salaRepository.findAll()) {
-            if (s.getNombre().matches("Cabina 0\\d .*")) {
-                porNumero.put(s.getNombre().substring(0, 10), s);
-            }
-        }
-        return porNumero;
-    }
-
-    private void asegurarSala(String nombre, int capacidad) {
-        String prefijo = nombre.substring(0, 10);
-        if (salaRepository.findAll().stream().anyMatch(s -> s.getNombre().startsWith(prefijo))) {
-            return;
-        }
-        Sala s = new Sala();
-        s.setNombre(nombre);
-        s.setCapacidad(capacidad);
-        salaRepository.save(s);
-    }
-
-    private Map<String, Empleado> terapeutas() {
-        asegurarEmpleado("Ely", "Masaje Tántrico Sensitivo", "900000001",
-                "Especialista en toques lentos, continuos y suaves por todo el cuerpo con aceites tibios neutros.");
-        asegurarEmpleado("Miranda", "Masaje Nuru Body Slide", "900000002",
-                "Especialista en técnicas cuerpo a cuerpo sobre camilla especial con gel nuru tibio hiperdeslizante.");
-        asegurarEmpleado("Pamela", "Descontracturante y Cuatro Manos", "900000003",
-                "Experta en presión media y profunda para liberar sobrecargas musculares y en maniobras sincronizadas a cuatro manos.");
-        asegurarEmpleado("Maria", "Suite Presencial e Hidromasaje", "900000004",
-                "Atención exclusiva en la sesión más completa: masaje tántrico, técnica Nuru cuerpo a cuerpo e hidromasaje.");
-        Map<String, Empleado> porNombre = new HashMap<>();
-        for (Empleado e : empleadoRepository.findAll()) {
-            porNombre.put(e.getNombre(), e);
-        }
-        return porNombre;
-    }
-
-    private void asegurarEmpleado(String nombre, String especialidad, String telefono, String bio) {
-        Empleado existente = empleadoRepository.findAll().stream().filter(e -> e.getNombre().equals(nombre)).findFirst().orElse(null);
-        if (existente != null) {
-            if (existente.getBio() == null || existente.getBio().isBlank()) {
-                existente.setBio(bio);
-                empleadoRepository.save(existente);
-            }
-            return;
-        }
-        Empleado e = new Empleado();
-        e.setNombre(nombre);
-        e.setEspecialidad(especialidad);
-        e.setTelefono(telefono);
-        e.setBio(bio);
-        empleadoRepository.save(e);
-    }
-
     /** Cuenta de acceso de demostración. La contraseña es propia de cada cuenta (ver CREDENCIALES_DEMO.md). */
     record CuentaDemo(String usuario, String nombre, Rol rol, String password, String terapeuta, String telefono) {
         String correo() {
@@ -356,9 +250,9 @@ public class DemoDataSeeder implements CommandLineRunner {
      */
     private void asegurarHistorialDeClientesDemo() {
         String[] codigos = {"RC-01", "RC-03", "RC-02", "RC-04", "RC-05"};
-        Map<String, Servicio> servicios = catalogo();
-        Map<String, Sala> salas = cabinas();
-        Map<String, Empleado> terapeutas = terapeutas();
+        Map<String, Servicio> servicios = catalogo.servicios();
+        Map<String, Sala> salas = catalogo.cabinas();
+        Map<String, Empleado> terapeutas = catalogo.terapeutas();
         int n = 0;
         for (CuentaDemo c : CUENTAS) {
             if (c.rol() != Rol.CLIENTE) {
