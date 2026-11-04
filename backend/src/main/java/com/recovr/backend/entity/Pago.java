@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "pagos")
+@Table(name = "pagos", indexes = @Index(name = "idx_pagos_fecha", columnList = "fecha_pago"))
 @Schema(description = "Entidad que registra la transacción de cobro de una reserva")
 public class Pago {
 
@@ -18,7 +18,7 @@ public class Pago {
 
     @Schema(description = "Reserva asociada al pago")
     @JsonIgnoreProperties({"pago"})
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reserva_id", nullable = false, unique = true)
     private Reserva reserva;
 
