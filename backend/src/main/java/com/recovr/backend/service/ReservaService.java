@@ -504,11 +504,20 @@ public class ReservaService {
         if (request.salaId() != null) {
             reserva.setSala(salaRepository.buscarBloqueada(request.salaId())
                     .orElseThrow(() -> new RecursoNoEncontradoException("Sala", request.salaId())));
-        } else if (reserva.getSala() == null) {
+        } else if (reserva.getSala() == null || !salaActualSigueLibre(reserva)) {
+            // Sin cabina indicada: se conserva la actual si sigue libre en el nuevo horario; si no, la primera libre.
             reserva.setSala(asignarSalaLibre(reserva));
-        } else {
-            salaRepository.buscarBloqueada(reserva.getSala().getId());
         }
+    }
+
+    /** Bloquea la cabina actual y comprueba que siga libre y en servicio en el horario (ya actualizado) de la reserva. */
+    private boolean salaActualSigueLibre(Reserva reserva) {
+        Sala actual = salaRepository.buscarBloqueada(reserva.getSala().getId()).orElse(null);
+        if (actual == null || !actual.isActiva()) {
+            return false;
+        }
+        LocalDateTime fin = ReservaResponse.finBloque(reserva.getFechaHora(), reserva.getServicio());
+        return reservaRepository.buscarConflictos(actual.getId(), -1L, reserva.getFechaHora(), fin, reserva.getId()).isEmpty();
     }
 
     /**
