@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { isoLima } from '../utils/hora-lima';
 
 @Injectable({
   providedIn: 'root'
@@ -21,13 +22,8 @@ export class ServerTimeService {
     return this.currentServerTime;
   }
 
-  /**
-   * Fecha y hora LOCAL en formato ISO sin zona (yyyy-MM-ddTHH:mm:ss.SSS). Antes devolvía UTC, y de noche en Lima
-   * el reloj del panel iba 5 horas adelantado y "hoy" caía en el día siguiente.
-   */
+  /** Fecha y hora de Lima en ISO sin zona (yyyy-MM-ddTHH:mm:ss.SSS), sea cual sea la zona del navegador. */
   getNowISOString(): string {
-    const d = this.currentServerTime;
-    const p = (n: number, l = 2) => String(n).padStart(l, '0');
-    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}.${p(d.getMilliseconds(), 3)}`;
+    return isoLima(this.currentServerTime);
   }
 }

@@ -33,7 +33,7 @@ public class IaLimitador {
     private final Map<String, ConcurrentLinkedQueue<Long>> porMinuto = new ConcurrentHashMap<>();
     private final Map<String, AtomicInteger> porDia = new ConcurrentHashMap<>();
     private final AtomicInteger globalHoy = new AtomicInteger();
-    private volatile LocalDate dia = LocalDate.now();
+    private volatile LocalDate dia = LocalDate.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO);
 
     public Veredicto intentar(String ip) {
         reiniciarSiCambioElDia();
@@ -57,7 +57,7 @@ public class IaLimitador {
     }
 
     private synchronized void reiniciarSiCambioElDia() {
-        LocalDate hoy = LocalDate.now();
+        LocalDate hoy = LocalDate.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO);
         if (!hoy.equals(dia)) {
             dia = hoy;
             porDia.clear();

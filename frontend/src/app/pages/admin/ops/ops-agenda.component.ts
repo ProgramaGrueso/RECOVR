@@ -1,3 +1,4 @@
+import { ahoraLima } from '../../../utils/hora-lima';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -210,7 +211,7 @@ export class OpsAgendaComponent implements OnInit, OnDestroy {
   soloLectura = computed(() => this.auth.user()?.rol === 'ESPECIALISTA');
 
   visibles = computed(() => {
-    const ahora = new Date();
+    const ahora = ahoraLima();
     const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
     const dia = 86_400_000;
     const q = this.texto().trim().toLowerCase();

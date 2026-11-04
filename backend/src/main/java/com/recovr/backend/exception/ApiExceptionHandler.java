@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -25,6 +24,8 @@ import java.util.Map;
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApiExceptionHandler {
+
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidacion(MethodArgumentNotValidException ex) {
@@ -93,13 +94,42 @@ public class ApiExceptionHandler {
                 "La operación viola una restricción de la base de datos (registro duplicado o en uso)");
     }
 
+    /**
+     * Dos operaciones compitieron por la misma fila (p. ej. MySQL "Lock wait timeout"): no es un fallo del servidor
+     * sino un conflicto momentáneo, y el cliente puede reintentar.
+     */
+    @ExceptionHandler({org.springframework.dao.PessimisticLockingFailureException.class,
+            org.springframework.dao.ConcurrencyFailureException.class})
+    public ResponseEntity<Map<String, Object>> handleBloqueo(Exception ex) {
+        log.warn("Conflicto de concurrencia: {}", ex.getClass().getSimpleName());
+        return respuesta(HttpStatus.CONFLICT, "Recurso ocupado",
+                "Otra operación está usando el mismo horario en este momento. Intente de nuevo.");
+    }
+
+    /**
+     * Último recurso: los errores propios de Spring MVC (404 de ruta, 405, 415…) conservan su código; cualquier otra
+     * excepción se registra en el log y responde 500 con un mensaje genérico, sin clases ni mensajes internos.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleInesperado(Exception ex) {
+        if (ex instanceof org.springframework.web.ErrorResponse er) {
+            HttpStatus status = HttpStatus.resolve(er.getStatusCode().value());
+            if (status != null && status.is4xxClientError()) {
+                return respuesta(status, status.getReasonPhrase(), "La solicitud no se puede atender: " + status.getReasonPhrase());
+            }
+        }
+        log.error("Error no controlado", ex);
+        return respuesta(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno",
+                "Ocurrió un error inesperado. Si persiste, comuníquese con el administrador.");
+    }
+
     private ResponseEntity<Map<String, Object>> respuesta(HttpStatus status, String error, String mensaje) {
         return ResponseEntity.status(status).body(cuerpo(status, error, mensaje));
     }
 
     static Map<String, Object> cuerpo(HttpStatus status, String error, String mensaje) {
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("timestamp", java.time.OffsetDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).toString());
         body.put("status", status.value());
         body.put("error", error);
         body.put("message", mensaje);

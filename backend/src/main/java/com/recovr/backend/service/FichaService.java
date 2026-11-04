@@ -1,5 +1,6 @@
 package com.recovr.backend.service;
 
+import java.time.Clock;
 import com.recovr.backend.dto.FichaDtos.*;
 import com.recovr.backend.entity.*;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
@@ -28,9 +29,13 @@ public class FichaService {
     private final FichaClienteRepository fichaRepository;
     private final NotaSesionRepository notaRepository;
 
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
     public FichaService(UsuarioRepository usuarioRepository, EmpleadoRepository empleadoRepository,
                         ClienteRepository clienteRepository, ReservaRepository reservaRepository,
-                        FichaClienteRepository fichaRepository, NotaSesionRepository notaRepository) {
+                        FichaClienteRepository fichaRepository, NotaSesionRepository notaRepository, Clock reloj) {
+        this.reloj = reloj;
         this.usuarioRepository = usuarioRepository;
         this.empleadoRepository = empleadoRepository;
         this.clienteRepository = clienteRepository;
@@ -42,7 +47,7 @@ public class FichaService {
     @Transactional(readOnly = true)
     public List<MiClienteResponse> misClientes(String correo) {
         Empleado yo = empleadoActual(correo);
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = LocalDateTime.now(reloj);
         Map<Long, List<Reserva>> porCliente = reservaRepository.buscarPorEmpleado(yo.getId()).stream()
                 .collect(Collectors.groupingBy(r -> r.getCliente().getId()));
         return porCliente.values().stream().map(lista -> {
@@ -78,7 +83,7 @@ public class FichaService {
         ficha.setZonasRestringidas(req.zonasRestringidas());
         ficha.setNotas(req.notas());
         ficha.setActualizadoPor(yo.getNombre());
-        ficha.setActualizadoEn(LocalDateTime.now());
+        ficha.setActualizadoEn(LocalDateTime.now(reloj));
         fichaRepository.save(ficha);
         return respuesta(cliente, yo);
     }
@@ -90,7 +95,7 @@ public class FichaService {
         NotaSesion nota = new NotaSesion();
         nota.setCliente(cliente);
         nota.setEmpleado(yo);
-        nota.setFecha(LocalDateTime.now());
+        nota.setFecha(LocalDateTime.now(reloj));
         nota.setTratamiento(req.tratamiento().trim());
         nota.setObservaciones(req.observaciones());
         nota.setRecomendaciones(req.recomendaciones());

@@ -9,10 +9,10 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "Datos para crear o actualizar un cliente desde administración")
 public record ClienteRequest(
         @Schema(description = "Nombre completo", example = "Maria Lopez", requiredMode = Schema.RequiredMode.REQUIRED)
-        @NotBlank String nombre,
+        @NotBlank @Size(max = 120) String nombre,
 
         @Schema(description = "Correo electrónico", example = "maria@example.com", requiredMode = Schema.RequiredMode.REQUIRED)
-        @NotBlank @Email String correo,
+        @NotBlank @Email @Size(max = 254) String correo,
 
         @Schema(description = "Teléfono de contacto", example = "999888777")
         @Size(max = 20) String telefono

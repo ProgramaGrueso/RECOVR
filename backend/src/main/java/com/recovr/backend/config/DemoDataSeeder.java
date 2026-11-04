@@ -15,7 +15,6 @@ import com.recovr.backend.repository.ClienteRepository;
 import com.recovr.backend.repository.EmpleadoRepository;
 import com.recovr.backend.repository.FichaClienteRepository;
 import com.recovr.backend.repository.NotaSesionRepository;
-import com.recovr.backend.repository.PagoRepository;
 import com.recovr.backend.repository.ReservaRepository;
 import com.recovr.backend.repository.SalaRepository;
 import com.recovr.backend.repository.ServicioRepository;
@@ -30,47 +29,49 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.Set;
 
 /**
  * Datos iniciales. SIEMPRE (con o sin demo) y de forma idempotente crea el catálogo oficial: los 6 servicios RC-xx,
  * las 4 cabinas y las 4 terapeutas (Ely, Miranda, Pamela y Maria), para que la base nunca arranque sin personal
  * (se apaga con recovr.seed.catalogo=false, p. ej. en las pruebas que necesitan una base vacía).
  *
- * Datos de demostración (solo con recovr.seed.demo-data=true): clientes y reservas
- * repartidas entre {@code recovr.seed.inicio} y {@code recovr.seed.fin} (por defecto octubre a diciembre).
+ * <p><b>Datos de demostración</b> (perfil {@code demo} o {@code recovr.seed.demo-data=true}): deja la base como si el
+ * sistema llevara {@code recovr.seed.dias-historial} días en uso (90 por defecto) y con citas ya agendadas hasta el
+ * 31 de diciembre (o {@code recovr.seed.fin}). La agenda la arma {@link GeneradorAgendaDemo}; los pacientes,
+ * {@link PacientesDemo}. Todo es ficticio y queda marcado con el dominio {@value PacientesDemo#DOMINIO}.
  *
- * Solo corre con recovr.seed.demo-data=true (variable SEED_DEMO_DATA). Todo lo que crea queda marcado con
- * el dominio {@value #DOMINIO} en el correo, y si ya existe un cliente demo se omite (es idempotente).
- * Además crea las cuentas de acceso de demostración (administración, recepción, las 4 terapeutas y 5 clientes),
- * cada una con su propia contraseña, documentadas en backend/CREDENCIALES_DEMO.md. SOLO para desarrollo local.
+ * <p><b>Re-ejecutable sin duplicar:</b> los pacientes se buscan por correo y un día que ya tiene citas de pacientes
+ * demo no se vuelve a sembrar. Las citas nuevas tampoco pisan reservas reales que ya existan (misma cabina o terapeuta).
  *
- * Respeta la regla de negocio del motor de reservas: ni una cabina ni un terapeuta tienen dos reservas
- * activas cuyos bloques [inicio, inicio + duración + limpieza) se crucen. Las sesiones pasadas quedan
- * COMPLETADAS (o CANCELADAS) y las futuras CONFIRMADAS (con pago) o PENDIENTES.
+ * <p>Además crea las cuentas de acceso de demostración (administración, recepción, las 4 terapeutas y 5 clientes),
+ * documentadas en backend/CREDENCIALES_DEMO.md. SOLO para desarrollo local.
  */
 @Component
 public class DemoDataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DemoDataSeeder.class);
-    static final String DOMINIO = "@recovr.test";
+    static final String DOMINIO = PacientesDemo.DOMINIO;
+    /** Dominio de los datos demo de versiones anteriores (se reconoce para no volver a sembrar esos días). */
+    static final String DOMINIO_ANTERIOR = "@recovr.test";
+    static final int PACIENTES = 140;
     private static final String[] METODOS_PAGO = {"Yape", "Plin", "Efectivo", "Tarjeta"};
-    private static final String[] NOMBRES = {"Carlos", "Luis", "Jorge", "Miguel", "José", "Diego", "Renato", "Mateo",
-            "Rodrigo", "Álvaro", "Hugo", "Sebastián", "Ricardo", "Fernando", "Andrés", "Gonzalo"};
-    private static final String[] APELLIDOS = {"Quispe", "Mendoza", "Flores", "Rojas", "Torres", "Huamán", "Castillo",
-            "Vargas", "Chávez", "Ramírez", "Salazar", "Paredes", "Cárdenas", "Medina", "Gutiérrez", "Rivera"};
 
     private final boolean catalogoInicial;
     private final boolean activo;
-    private final LocalDate inicio;
-    private final LocalDate fin;
+    private final int diasHistorial;
+    private final String finConfigurado;
+    private final Clock reloj;
+    private LocalDate inicio;
+    private LocalDate fin;
 
     private final ServicioRepository servicioRepository;
     private final SalaRepository salaRepository;
@@ -78,7 +79,6 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final ClienteRepository clienteRepository;
     private final UsuarioRepository usuarioRepository;
     private final ReservaRepository reservaRepository;
-    private final PagoRepository pagoRepository;
     private final PasswordEncoder passwordEncoder;
     private final TransactionTemplate transaccion;
     private final FichaClienteRepository fichaRepository;
@@ -86,25 +86,26 @@ public class DemoDataSeeder implements CommandLineRunner {
 
     public DemoDataSeeder(@Value("${recovr.seed.catalogo:true}") boolean catalogoInicial,
                           @Value("${recovr.seed.demo-data:false}") boolean activo,
-                          @Value("${recovr.seed.inicio:2026-10-01}") LocalDate inicio,
-                          @Value("${recovr.seed.fin:2026-12-31}") LocalDate fin,
+                          @Value("${recovr.seed.dias-historial:90}") int diasHistorial,
+                          @Value("${recovr.seed.fin:}") String finConfigurado,
+                          Clock reloj,
                           ServicioRepository servicioRepository, SalaRepository salaRepository,
                           EmpleadoRepository empleadoRepository, ClienteRepository clienteRepository,
                           UsuarioRepository usuarioRepository, ReservaRepository reservaRepository,
-                          PagoRepository pagoRepository, PasswordEncoder passwordEncoder,
+                          PasswordEncoder passwordEncoder,
                           TransactionTemplate transaccion, FichaClienteRepository fichaRepository,
                           NotaSesionRepository notaRepository) {
         this.catalogoInicial = catalogoInicial;
         this.activo = activo;
-        this.inicio = inicio;
-        this.fin = fin;
+        this.diasHistorial = diasHistorial;
+        this.finConfigurado = finConfigurado == null ? "" : finConfigurado.trim();
+        this.reloj = reloj;
         this.servicioRepository = servicioRepository;
         this.salaRepository = salaRepository;
         this.empleadoRepository = empleadoRepository;
         this.clienteRepository = clienteRepository;
         this.usuarioRepository = usuarioRepository;
         this.reservaRepository = reservaRepository;
-        this.pagoRepository = pagoRepository;
         this.passwordEncoder = passwordEncoder;
         this.transaccion = transaccion;
         this.fichaRepository = fichaRepository;
@@ -123,12 +124,15 @@ public class DemoDataSeeder implements CommandLineRunner {
         if (!activo) {
             return;
         }
-        if (clienteRepository.existsByCorreoEndingWith(DOMINIO)) {
-            log.info("DemoDataSeeder — ya hay datos demo, se omite.");
-        } else {
-            int total = transaccion.execute(status -> sembrar());
-            log.info("DemoDataSeeder — {} reservas demo creadas ({} → {}).", total, inicio, fin);
+        LocalDateTime ahora = LocalDateTime.now(reloj);
+        LocalDate hoy = ahora.toLocalDate();
+        inicio = hoy.minusDays(diasHistorial);
+        fin = finConfigurado.isEmpty() ? hoy.withMonth(12).withDayOfMonth(31) : LocalDate.parse(finConfigurado);
+        if (fin.isBefore(hoy)) {
+            fin = hoy;
         }
+        int total = transaccion.execute(status -> sembrarAgenda(ahora));
+        log.info("DemoDataSeeder — {} citas demo nuevas ({} → {}).", total, inicio, fin);
         // Las cuentas de acceso se aseguran siempre (idempotente): así quedan con las contraseñas documentadas.
         transaccion.executeWithoutResult(status -> {
             asegurarCuentasDemo();
@@ -136,12 +140,72 @@ public class DemoDataSeeder implements CommandLineRunner {
         });
     }
 
-    private int sembrar() {
-        Map<String, Servicio> servicios = catalogo();
-        Map<String, Sala> salas = cabinas();
-        Map<String, Empleado> terapeutas = terapeutas();
-        List<Cliente> clientes = clientes();
-        return sembrarReservas(servicios, salas, terapeutas, clientes);
+    /**
+     * Siembra la agenda de los días del rango que aún no tienen citas demo. Devuelve cuántas citas creó
+     * (0 si se vuelve a ejecutar el mismo día: no duplica).
+     */
+    private int sembrarAgenda(LocalDateTime ahora) {
+        GeneradorAgendaDemo.Recursos recursos = new GeneradorAgendaDemo.Recursos(
+                catalogo(), cabinas(), terapeutas(), asegurarPacientes());
+        List<Reserva> existentes = reservaRepository.buscarEntre(inicio.atStartOfDay(), fin.plusDays(1).atStartOfDay());
+        Set<LocalDate> diasSembrados = new HashSet<>();
+        List<Reserva> activasExistentes = new ArrayList<>();
+        for (Reserva r : existentes) {
+            if (esDemo(r.getCliente())) {
+                diasSembrados.add(r.getFechaHora().toLocalDate());
+            }
+            if (r.getEstado() != EstadoReserva.CANCELADA) {
+                activasExistentes.add(r);
+            }
+        }
+        GeneradorAgendaDemo generador = new GeneradorAgendaDemo(recursos, ahora);
+        List<Reserva> nuevas = new ArrayList<>();
+        for (LocalDate dia = inicio; !dia.isAfter(fin); dia = dia.plusDays(1)) {
+            if (diasSembrados.contains(dia)) {
+                continue;
+            }
+            for (Reserva r : generador.generarDia(dia)) {
+                if (activasExistentes.stream().noneMatch(e -> seCruzan(e, r))) {
+                    nuevas.add(r);
+                }
+            }
+        }
+        reservaRepository.saveAll(nuevas); // el pago se guarda en cascada con su reserva
+        return nuevas.size();
+    }
+
+    private static boolean esDemo(Cliente c) {
+        return c != null && c.getCorreo() != null
+                && (c.getCorreo().endsWith(DOMINIO) || c.getCorreo().endsWith(DOMINIO_ANTERIOR));
+    }
+
+    /** Misma cabina o misma terapeuta con bloques (sesión + limpieza) que se solapan. */
+    private static boolean seCruzan(Reserva a, Reserva b) {
+        boolean mismoRecurso = a.getSala().getId().equals(b.getSala().getId())
+                || a.getEmpleado().getId().equals(b.getEmpleado().getId());
+        return mismoRecurso && a.getFechaHora().isBefore(ReglasReserva.finBloque(b))
+                && b.getFechaHora().isBefore(ReglasReserva.finBloque(a));
+    }
+
+    /** Crea los pacientes demo que falten (se buscan por correo) y los devuelve en orden fijo. */
+    private List<Cliente> asegurarPacientes() {
+        Map<String, Cliente> existentes = new HashMap<>();
+        for (Cliente c : clienteRepository.findAll()) {
+            existentes.put(c.getCorreo(), c);
+        }
+        List<Cliente> pacientes = new ArrayList<>();
+        for (PacientesDemo.Paciente p : PacientesDemo.generar(PACIENTES)) {
+            Cliente c = existentes.get(p.correo());
+            if (c == null) {
+                c = new Cliente();
+                c.setNombre(p.nombre());
+                c.setCorreo(p.correo());
+                c.setTelefono(p.telefono());
+                c = clienteRepository.save(c);
+            }
+            pacientes.add(c);
+        }
+        return pacientes;
     }
 
     /** Crea el catálogo oficial que falte y devuelve los servicios RC-xx indexados por código. */
@@ -233,22 +297,6 @@ public class DemoDataSeeder implements CommandLineRunner {
         empleadoRepository.save(e);
     }
 
-    private List<Cliente> clientes() {
-        Random rnd = new Random(2026);
-        List<Cliente> clientes = new ArrayList<>();
-        for (int i = 0; i < 45; i++) {
-            Cliente c = new Cliente();
-            c.setNombre(NOMBRES[rnd.nextInt(NOMBRES.length)] + " " + APELLIDOS[rnd.nextInt(APELLIDOS.length)]);
-            c.setCorreo("cliente" + i + DOMINIO);
-            c.setTelefono("9" + (10000000 + rnd.nextInt(89999999)));
-            if (i == 0) {
-                c.setCorreo("cliente.demo" + DOMINIO); // su cuenta de acceso se crea en asegurarCuentasDemo()
-            }
-            clientes.add(clienteRepository.save(c));
-        }
-        return clientes;
-    }
-
     /** Cuenta de acceso de demostración. La contraseña es propia de cada cuenta (ver CREDENCIALES_DEMO.md). */
     record CuentaDemo(String usuario, String nombre, Rol rol, String password, String terapeuta, String telefono) {
         String correo() {
@@ -320,14 +368,14 @@ public class DemoDataSeeder implements CommandLineRunner {
             if (cliente == null || reservaRepository.existsByClienteId(cliente.getId())) {
                 continue;
             }
-            LocalDate hoy = LocalDate.now();
+            LocalDate hoy = LocalDate.now(reloj);
             int[] dias = {-35, -21, -9, 3, 6};
             EstadoReserva[] estados = {EstadoReserva.COMPLETADA, EstadoReserva.COMPLETADA, EstadoReserva.COMPLETADA,
                     EstadoReserva.CONFIRMADA, EstadoReserva.PENDIENTE};
             for (int i = 0; i < dias.length; i++) {
                 String codigo = codigos[(n + i) % codigos.length];
-                crearReservaSinCruces(cliente, servicios.get(codigo), salas.get(cabinaDe(codigo)),
-                        terapeutas.get(terapeutaDe(codigo)), dentroDelRango(hoy.plusDays(dias[i]), i).atTime(15 + (n % 4), 0), estados[i]);
+                crearReservaSinCruces(cliente, servicios.get(codigo), salas.get(GeneradorAgendaDemo.cabinasDe(codigo).get(0)),
+                        terapeutas.get(GeneradorAgendaDemo.terapeutasDe(codigo).get(0)), dentroDelRango(hoy.plusDays(dias[i]), i).atTime(15 + (n % 4), 0), estados[i]);
             }
             n++;
         }
@@ -355,9 +403,10 @@ public class DemoDataSeeder implements CommandLineRunner {
             return;
         }
         LocalDateTime inicio = deseada;
-        for (int intento = 0; intento < 40; intento++) {
+        for (int intento = 0; intento < 200; intento++) {
             LocalDateTime fin = inicio.plusMinutes(servicio.getDuracionMinutos() + servicio.getTiempoLimpiezaMinutos());
             if (!hayCruce(sala, terapeuta, inicio, fin)) {
+                LocalDateTime ahora = LocalDateTime.now(reloj);
                 Reserva r = new Reserva();
                 r.setCliente(cliente);
                 r.setEmpleado(terapeuta);
@@ -365,19 +414,27 @@ public class DemoDataSeeder implements CommandLineRunner {
                 r.setSala(sala);
                 r.setFechaHora(inicio);
                 r.setEstado(estado);
-                reservaRepository.save(r);
+                if (estado != EstadoReserva.PENDIENTE) {
+                    LocalDateTime creada = inicio.minusDays(2);
+                    r.setCreadaEn(creada.isAfter(ahora) ? ahora.minusHours(3) : creada);
+                }
+                if (estado == EstadoReserva.COMPLETADA) {
+                    r.setCheckIn(inicio.minusMinutes(5));
+                }
                 if (estado == EstadoReserva.CONFIRMADA || estado == EstadoReserva.COMPLETADA) {
                     Pago p = new Pago();
                     p.setReserva(r);
                     p.setMonto(servicio.getPrecio());
-                    p.setMetodoPago(METODOS_PAGO[(int) (r.getId() % METODOS_PAGO.length)]);
-                    p.setFechaPago(inicio.isBefore(LocalDateTime.now()) ? inicio.minusHours(1) : LocalDateTime.now().minusHours(2));
-                    pagoRepository.save(p);
+                    p.setMetodoPago(METODOS_PAGO[Math.floorMod(cliente.getId().intValue() + intento, METODOS_PAGO.length)]);
+                    p.setFechaPago(r.getCreadaEn().plusMinutes(5));
+                    r.setPago(p);
                 }
+                reservaRepository.save(r);
                 return;
             }
             inicio = inicio.plusMinutes(30);
-            if (inicio.getHour() >= 21) { // fuera del horario de atención: pasa al día siguiente
+            if (!ReglasReserva.dentroDeHorario(inicio, inicio.plusMinutes(servicio.getDuracionMinutos()))) {
+                // fuera del horario de atención: pasa al día siguiente
                 inicio = inicio.toLocalDate().plusDays(1).atTime(12, 0);
             }
         }
@@ -403,113 +460,15 @@ public class DemoDataSeeder implements CommandLineRunner {
         ficha.setZonasRestringidas("Cervical alta");
         ficha.setNotas("Prefiere música suave y temperatura templada.");
         ficha.setActualizadoPor(atendiente.getNombre());
-        ficha.setActualizadoEn(LocalDateTime.now().minusDays(9));
+        ficha.setActualizadoEn(LocalDateTime.now(reloj).minusDays(9));
         fichaRepository.save(ficha);
         NotaSesion nota = new NotaSesion();
         nota.setCliente(carlos);
         nota.setEmpleado(atendiente);
-        nota.setFecha(LocalDateTime.now().minusDays(9));
+        nota.setFecha(LocalDateTime.now(reloj).minusDays(9));
         nota.setTratamiento("Masaje relajante con foco lumbar");
         nota.setObservaciones("Buena tolerancia a presión media. Contractura leve en el cuadrado lumbar derecho.");
         nota.setRecomendaciones("Estiramientos suaves en casa y agendar mantención en 10 días.");
         notaRepository.save(nota);
-    }
-
-    /** Qué terapeuta y qué cabina atienden cada servicio (según la carta oficial de RECOVR). */
-    private static String terapeutaDe(String codigo) {
-        return switch (codigo) {
-            case "RC-01", "RC-04" -> "Ely";
-            case "RC-02" -> "Miranda";
-            case "RC-03", "RC-05" -> "Pamela";
-            default -> "Maria";
-        };
-    }
-
-    private static String cabinaDe(String codigo) {
-        return switch (codigo) {
-            case "RC-02" -> "Cabina 02 ";
-            case "RC-05" -> "Cabina 03 ";
-            case "RC-06" -> "Cabina 04 ";
-            default -> "Cabina 01 ";
-        };
-    }
-
-    private int sembrarReservas(Map<String, Servicio> servicios, Map<String, Sala> salas,
-                                Map<String, Empleado> terapeutas, List<Cliente> clientes) {
-        Random rnd = new Random(7);
-        LocalDateTime ahora = LocalDateTime.now();
-        List<String> codigos = new ArrayList<>(servicios.keySet());
-        codigos.sort(String::compareTo);
-        Map<Long, List<LocalDateTime[]>> ocupadoPorSala = new HashMap<>();
-        Map<Long, List<LocalDateTime[]>> ocupadoPorTerapeuta = new HashMap<>();
-        List<Reserva> reservas = new ArrayList<>();
-        List<Pago> pagos = new ArrayList<>();
-
-        for (LocalDate dia = inicio; !dia.isAfter(fin); dia = dia.plusDays(1)) {
-            boolean finDeSemana = dia.getDayOfWeek().getValue() >= 5;
-            int intentos = (finDeSemana ? 9 : 6) + rnd.nextInt(4);
-            for (int n = 0; n < intentos; n++) {
-                String codigo = codigos.get(rnd.nextInt(codigos.size()));
-                Servicio servicio = servicios.get(codigo);
-                Sala sala = salas.get(cabinaDe(codigo));
-                Empleado terapeuta = terapeutas.get(terapeutaDe(codigo));
-                if (sala == null || terapeuta == null) {
-                    continue;
-                }
-                LocalDateTime desde = dia.atTime(LocalTime.of(12 + rnd.nextInt(10), rnd.nextBoolean() ? 0 : 30));
-                LocalDateTime hasta = desde.plusMinutes(servicio.getDuracionMinutos() + servicio.getTiempoLimpiezaMinutos());
-                if (hayCruce(ocupadoPorSala, sala.getId(), desde, hasta)
-                        || hayCruce(ocupadoPorTerapeuta, terapeuta.getId(), desde, hasta)) {
-                    continue;
-                }
-                EstadoReserva estado = elegirEstado(desde, ahora, rnd);
-                if (estado == EstadoReserva.PENDIENTE || estado == EstadoReserva.CONFIRMADA
-                        || estado == EstadoReserva.COMPLETADA) {
-                    // Solo las reservas que ocupan agenda bloquean horarios; las canceladas liberan el turno.
-                    ocupadoPorSala.computeIfAbsent(sala.getId(), k -> new ArrayList<>()).add(new LocalDateTime[]{desde, hasta});
-                    ocupadoPorTerapeuta.computeIfAbsent(terapeuta.getId(), k -> new ArrayList<>()).add(new LocalDateTime[]{desde, hasta});
-                }
-                Reserva r = new Reserva();
-                r.setCliente(clientes.get(rnd.nextInt(clientes.size())));
-                r.setEmpleado(terapeuta);
-                r.setServicio(servicio);
-                r.setSala(sala);
-                r.setFechaHora(desde);
-                r.setEstado(estado);
-                reservas.add(r);
-            }
-        }
-        reservaRepository.saveAll(reservas);
-        for (Reserva r : reservas) {
-            if (r.getEstado() == EstadoReserva.CONFIRMADA || r.getEstado() == EstadoReserva.COMPLETADA) {
-                Pago p = new Pago();
-                p.setReserva(r);
-                p.setMonto(r.getServicio().getPrecio());
-                p.setMetodoPago(METODOS_PAGO[rnd.nextInt(METODOS_PAGO.length)]);
-                p.setFechaPago(r.getFechaHora().isBefore(ahora)
-                        ? r.getFechaHora().minusHours(1)
-                        : ahora.minusMinutes(rnd.nextInt(60 * 24 * 3)));
-                pagos.add(p);
-            }
-        }
-        pagoRepository.saveAll(pagos);
-        return reservas.size();
-    }
-
-    private static EstadoReserva elegirEstado(LocalDateTime inicioSesion, LocalDateTime ahora, Random rnd) {
-        double x = rnd.nextDouble();
-        if (inicioSesion.isBefore(ahora)) {
-            return x < 0.88 ? EstadoReserva.COMPLETADA : EstadoReserva.CANCELADA;
-        }
-        if (x < 0.07) {
-            return EstadoReserva.CANCELADA;
-        }
-        boolean proxima = inicioSesion.isBefore(ahora.plusDays(7));
-        return x < (proxima ? 0.85 : 0.55) ? EstadoReserva.CONFIRMADA : EstadoReserva.PENDIENTE;
-    }
-
-    private static boolean hayCruce(Map<Long, List<LocalDateTime[]>> ocupado, Long id, LocalDateTime desde, LocalDateTime hasta) {
-        return ocupado.getOrDefault(id, List.of()).stream()
-                .anyMatch(b -> desde.isBefore(b[1]) && b[0].isBefore(hasta));
     }
 }

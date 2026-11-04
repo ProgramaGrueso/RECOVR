@@ -1,5 +1,6 @@
 package com.recovr.backend.service;
 
+import java.time.Clock;
 import com.recovr.backend.dto.SistemaDtos.*;
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Rol;
@@ -33,10 +34,14 @@ public class SistemaService {
     private final ReservaCicloVidaService cicloVida;
     private final AuditoriaService auditoriaService;
 
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
     public SistemaService(DataSource dataSource, ClienteRepository clienteRepository, EmpleadoRepository empleadoRepository,
                           ServicioRepository servicioRepository, SalaRepository salaRepository, ReservaRepository reservaRepository,
                           PagoRepository pagoRepository, UsuarioRepository usuarioRepository, AuditoriaRepository auditoriaRepository,
-                          ReservaCicloVidaService cicloVida, AuditoriaService auditoriaService) {
+                          ReservaCicloVidaService cicloVida, AuditoriaService auditoriaService, Clock reloj) {
+        this.reloj = reloj;
         this.dataSource = dataSource;
         this.clienteRepository = clienteRepository;
         this.empleadoRepository = empleadoRepository;
@@ -86,7 +91,7 @@ public class SistemaService {
             porRol.put(r.name(), usuarioRepository.countByRol(r));
         }
         long denegados = auditoriaService.ultimos(500).stream()
-                .filter(a -> a.getFecha().isAfter(LocalDateTime.now().minusHours(24)))
+                .filter(a -> a.getFecha().isAfter(LocalDateTime.now(reloj).minusHours(24)))
                 .filter(a -> (a.getEstado() != null && (a.getEstado() == 401 || a.getEstado() == 403 || a.getEstado() == 429))
                         || "LOGIN_FALLIDO".equals(a.getAccion()) || "LOGIN_BLOQUEADO".equals(a.getAccion()))
                 .count();

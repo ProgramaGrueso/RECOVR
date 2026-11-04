@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, Output, AfterViewInit, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, EventEmitter, Output, AfterViewInit, ViewChild, inject } from '@angular/core';
 import gsap from 'gsap';
 import { HeroOrbComponent } from '../hero-orb/hero-orb.component';
 import { CommonModule } from '@angular/common';
@@ -16,6 +16,7 @@ export class HeroComponent implements AfterViewInit {
   @ViewChild('heroEl', { static: true }) private heroEl!: ElementRef<HTMLElement>;
   private bookingService = inject(BookingService);
   private cursorService = inject(CursorService);
+  private destroyRef = inject(DestroyRef);
 
   @Output() reserveClick = new EventEmitter<void>();
 
@@ -24,7 +25,8 @@ export class HeroComponent implements AfterViewInit {
     const root = this.heroEl.nativeElement;
     const tl = gsap.timeline({ paused: true, delay: 0.2, defaults: { ease: 'expo.out' } });
     // la entrada espera a que termine la intro (splash) si está activa
-    if ((window as any).__recovrSplash) addEventListener('recovr:splash-done', () => tl.play(), { once: true });
+    const alTerminarIntro = () => tl.play();
+    if ((window as any).__recovrSplash) addEventListener('recovr:splash-done', alTerminarIntro, { once: true });
     else tl.play();
     tl.from(root.querySelector('.hero-top-info'), { y: 20, opacity: 0, duration: 1 })
       .from(root.querySelector('.hero-main-title'), { y: 120, opacity: 0, filter: 'blur(24px)', letterSpacing: '0.12em', duration: 1.8 }, '<0.1')
@@ -36,6 +38,12 @@ export class HeroComponent implements AfterViewInit {
       if (t) t.style.transform = `translate3d(0, ${p * -60}px, 0) scale(${1 - p * 0.06})`;
     };
     addEventListener('scroll', onScroll, { passive: true });
+    // Al salir de la portada se quitan los listeners globales y se detiene la animación (antes quedaban vivos).
+    this.destroyRef.onDestroy(() => {
+      removeEventListener('scroll', onScroll);
+      removeEventListener('recovr:splash-done', alTerminarIntro);
+      tl.kill();
+    });
   }
 
   onReserve(): void {

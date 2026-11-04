@@ -1,5 +1,6 @@
 package com.recovr.backend.dto;
 
+import jakarta.validation.constraints.Size;
 import com.recovr.backend.entity.Servicio;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
@@ -13,7 +14,7 @@ import java.math.BigDecimal;
 @Schema(description = "Datos para crear o actualizar un servicio del catálogo")
 public record ServicioRequest(
         @Schema(description = "Nombre de la terapia", example = "Crioterapia de cuerpo entero", requiredMode = Schema.RequiredMode.REQUIRED)
-        @NotBlank String nombre,
+        @NotBlank @Size(max = 255) String nombre,
 
         @Schema(description = "Duración de la sesión en minutos", example = "60", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull @Positive @Max(480) Integer duracionMinutos,

@@ -68,6 +68,8 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
 
   bookingForm!: FormGroup;
   private subs = new Subscription();
+  /** Consulta de turnos en curso: al pedir otra fecha se cancela, así una respuesta vieja no pisa la nueva. */
+  private consultaTurnos?: Subscription;
 
   /** Turnos del día con su disponibilidad real (el servidor explica por qué un turno no se puede tomar). */
   slots: TurnoDisponible[] = [];
@@ -111,7 +113,7 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
 
 
   private initForm(): void {
-    const todayStr = this.serverTimeService.getNowISOString().split('T')[0];
+    const todayStr = this.hoy();
     this.bookingForm = this.fb.group({
       serviceId: ['', Validators.required],
       professionalId: ['', Validators.required],
@@ -140,7 +142,8 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     }
     this.isLoadingSlots = true;
     this.slotsError = '';
-    this.subs.add(this.bookingService.availability(srv.code, pro.name, date).subscribe({
+    this.consultaTurnos?.unsubscribe();
+    this.consultaTurnos = this.bookingService.availability(srv.code, pro.name, date).subscribe({
       next: slots => {
         this.slots = slots;
         const elegido = this.bookingForm.get('timeSlot')?.value;
@@ -156,7 +159,7 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
         this.slotsError = err instanceof ApiBusinessError ? err.message : 'No se pudo consultar la disponibilidad. Intenta de nuevo.';
         this.cdr.markForCheck();
       }
-    }));
+    });
   }
 
   loadInitialData(): void {
@@ -443,11 +446,17 @@ export class BookingFlowComponent implements OnInit, OnDestroy {
     this.stopCountdown();
     this.bookingSuccess = null;
     this.currentStep = 1;
-    this.bookingForm.reset();
+    this.bookingForm.reset({ date: this.hoy() });
+  }
+
+  /** Día de hoy en Lima (yyyy-mm-dd). */
+  private hoy(): string {
+    return this.serverTimeService.getNowISOString().split('T')[0];
   }
 
   ngOnDestroy(): void {
     this.stopCountdown();
+    this.consultaTurnos?.unsubscribe();
     this.subs.unsubscribe();
   }
 }
