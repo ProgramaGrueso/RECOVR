@@ -10,7 +10,6 @@ import com.recovr.backend.exception.RecursoNoEncontradoException;
 import com.recovr.backend.repository.CanjeRepository;
 import com.recovr.backend.repository.ClienteRepository;
 import com.recovr.backend.repository.ReservaRepository;
-import com.recovr.backend.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,8 +55,6 @@ public class PuntosService {
 
     private static final String CODIGO_ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     private static final SecureRandom RANDOM = new SecureRandom();
-
-    private final UsuarioRepository usuarioRepository;
     private final ClienteRepository clienteRepository;
     private final ReservaRepository reservaRepository;
     private final CanjeRepository canjeRepository;
@@ -65,10 +62,12 @@ public class PuntosService {
     /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
     private final Clock reloj;
 
-    public PuntosService(UsuarioRepository usuarioRepository, ClienteRepository clienteRepository,
-                         ReservaRepository reservaRepository, CanjeRepository canjeRepository, Clock reloj) {
+    private final UsuarioActualService usuarioActual;
+
+    public PuntosService(ClienteRepository clienteRepository,
+                         ReservaRepository reservaRepository, CanjeRepository canjeRepository, Clock reloj, UsuarioActualService usuarioActual) {
+        this.usuarioActual = usuarioActual;
         this.reloj = reloj;
-        this.usuarioRepository = usuarioRepository;
         this.clienteRepository = clienteRepository;
         this.reservaRepository = reservaRepository;
         this.canjeRepository = canjeRepository;
@@ -106,7 +105,7 @@ public class PuntosService {
 
     @Transactional(readOnly = true)
     public PuntosResponse detalle(String correo) {
-        Cliente cliente = clienteDe(correo);
+        Cliente cliente = usuarioActual.cliente(correo);
         List<Reserva> completadas = reservaRepository.buscarPorCliente(cliente.getId()).stream()
                 .filter(r -> r.getEstado() == EstadoReserva.COMPLETADA).toList();
         List<Canje> canjes = canjeRepository.findByClienteIdOrderByCreadoEnDesc(cliente.getId());
@@ -139,7 +138,7 @@ public class PuntosService {
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public CanjeInfo canjear(String correo, String beneficioId) {
-        Cliente cliente = clienteRepository.buscarBloqueado(clienteDe(correo).getId()).orElseThrow();
+        Cliente cliente = clienteRepository.buscarBloqueado(usuarioActual.cliente(correo).getId()).orElseThrow();
         Beneficio b = BENEFICIOS.stream().filter(x -> x.id().equals(beneficioId)).findFirst()
                 .orElseThrow(() -> new RecursoNoEncontradoException("Beneficio no encontrado: " + beneficioId));
         int saldo = saldo(cliente.getId());
@@ -172,7 +171,7 @@ public class PuntosService {
      */
     @Transactional
     public CanjeInfo anular(String correo, String codigo) {
-        Cliente cliente = clienteDe(correo);
+        Cliente cliente = usuarioActual.cliente(correo);
         Canje c = canjeRepository.buscarPorCodigoBloqueado(codigo.trim().toUpperCase())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Código de canje no encontrado: " + codigo));
         if (!c.getCliente().getId().equals(cliente.getId())) {
@@ -274,11 +273,5 @@ public class PuntosService {
             }
         }
         throw new IllegalStateException("No se pudo generar un código único; inténtalo de nuevo");
-    }
-
-    private Cliente clienteDe(String correo) {
-        var usuario = usuarioRepository.findByCorreo(correo).orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
-        return clienteRepository.findByUsuarioId(usuario.getId())
-                .orElseThrow(() -> new IllegalStateException("El usuario no tiene un cliente asociado"));
     }
 }

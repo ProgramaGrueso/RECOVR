@@ -21,9 +21,6 @@ import java.util.stream.Collectors;
  */
 @Service
 public class FichaService {
-
-    private final UsuarioRepository usuarioRepository;
-    private final EmpleadoRepository empleadoRepository;
     private final ClienteRepository clienteRepository;
     private final ReservaRepository reservaRepository;
     private final FichaClienteRepository fichaRepository;
@@ -32,12 +29,12 @@ public class FichaService {
     /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
     private final Clock reloj;
 
-    public FichaService(UsuarioRepository usuarioRepository, EmpleadoRepository empleadoRepository,
-                        ClienteRepository clienteRepository, ReservaRepository reservaRepository,
-                        FichaClienteRepository fichaRepository, NotaSesionRepository notaRepository, Clock reloj) {
+    private final UsuarioActualService usuarioActual;
+
+    public FichaService(ClienteRepository clienteRepository, ReservaRepository reservaRepository,
+                        FichaClienteRepository fichaRepository, NotaSesionRepository notaRepository, Clock reloj, UsuarioActualService usuarioActual) {
+        this.usuarioActual = usuarioActual;
         this.reloj = reloj;
-        this.usuarioRepository = usuarioRepository;
-        this.empleadoRepository = empleadoRepository;
         this.clienteRepository = clienteRepository;
         this.reservaRepository = reservaRepository;
         this.fichaRepository = fichaRepository;
@@ -46,7 +43,7 @@ public class FichaService {
 
     @Transactional(readOnly = true)
     public List<MiClienteResponse> misClientes(String correo) {
-        Empleado yo = empleadoActual(correo);
+        Empleado yo = usuarioActual.empleado(correo);
         LocalDateTime ahora = LocalDateTime.now(reloj);
         Map<Long, List<Reserva>> porCliente = reservaRepository.buscarPorEmpleado(yo.getId()).stream()
                 .collect(Collectors.groupingBy(r -> r.getCliente().getId()));
@@ -113,7 +110,7 @@ public class FichaService {
 
     @Transactional
     public void eliminarNota(String correo, Long notaId) {
-        Empleado yo = empleadoActual(correo);
+        Empleado yo = usuarioActual.empleado(correo);
         NotaSesion nota = notaRepository.findById(notaId).orElseThrow(() -> new RecursoNoEncontradoException("Nota", notaId));
         if (!nota.getEmpleado().getId().equals(yo.getId())) {
             throw new AccessDeniedException("Solo puedes eliminar tus propias notas");
@@ -136,7 +133,7 @@ public class FichaService {
     }
 
     private Empleado autorizar(String correo, Long clienteId) {
-        Empleado yo = empleadoActual(correo);
+        Empleado yo = usuarioActual.empleado(correo);
         if (!clienteRepository.existsById(clienteId)) {
             throw new RecursoNoEncontradoException("Cliente", clienteId);
         }
@@ -146,12 +143,5 @@ public class FichaService {
             throw new AccessDeniedException("Solo puedes ver las fichas de clientes que atiendes");
         }
         return yo;
-    }
-
-    private Empleado empleadoActual(String correo) {
-        Usuario usuario = usuarioRepository.findByCorreo(correo)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
-        return empleadoRepository.findByUsuarioId(usuario.getId())
-                .orElseThrow(() -> new IllegalStateException("Tu usuario no está vinculado a ninguna terapeuta"));
     }
 }
