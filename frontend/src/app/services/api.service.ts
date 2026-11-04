@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, map, of, switchMap, throwError } from 'rxjs';
+import { Observable, catchError, forkJoin, map, of, switchMap, throwError } from 'rxjs';
 import { BookingRequest, BookingResponse, TurnoDisponible } from '../models/booking.model';
 
 const TOKEN_KEY = 'recovr-api-token';
@@ -148,25 +148,34 @@ export class ApiService {
    * y la cabina la asigna el servidor. Un conflicto de agenda llega como ApiBusinessError.
    */
   reservar(request: BookingRequest, servicioCodigo: string, terapeuta: string): Observable<BookingResponse> {
+    return this.resolverCatalogo(servicioCodigo, terapeuta).pipe(
+      switchMap(({ servicio, empleado }) => this.http.post<ReservaApi>(`${this.base}/db/reservas`, {
+        servicioId: servicio.id,
+        empleadoId: empleado.id,
+        fechaHora: `${request.date}T${request.timeSlot}:00`
+      }, { headers: this.headers() })),
+      map(r => this.aBooking(r)),
+      catchError((err: unknown) => throwError(() => this.traducir(err)))
+    );
+  }
+
+  /**
+   * Traduce los ids del front (código "RC-01" y nombre de la terapeuta) a los registros del backend.
+   * Si alguno no existe responde con un ApiBusinessError listo para mostrar.
+   */
+  private resolverCatalogo(servicioCodigo: string, terapeuta: string): Observable<{ servicio: ServicioApi; empleado: EmpleadoApi }> {
     const opts = { headers: this.headers() };
-    return this.http.get<ServicioApi[]>(`${this.base}/servicios`, opts).pipe(
-      switchMap(servicios => this.http.get<EmpleadoApi[]>(`${this.base}/empleados/catalogo`, opts).pipe(
-        map(empleados => ({ servicios, empleados }))
-      )),
+    return forkJoin({
+      servicios: this.http.get<ServicioApi[]>(`${this.base}/servicios`, opts),
+      empleados: this.http.get<EmpleadoApi[]>(`${this.base}/empleados/catalogo`, opts)
+    }).pipe(
       switchMap(({ servicios, empleados }) => {
         const servicio = servicios.find(s => s.nombre.toUpperCase().startsWith(servicioCodigo.toUpperCase()));
         const empleado = empleados.find(e => e.nombre.toLowerCase() === terapeuta.toLowerCase());
-        if (!servicio || !empleado) {
-          return throwError(() => new ApiBusinessError('El servicio o la terapeuta elegida no existe en el sistema.'));
-        }
-        return this.http.post<ReservaApi>(`${this.base}/db/reservas`, {
-          servicioId: servicio.id,
-          empleadoId: empleado.id,
-          fechaHora: `${request.date}T${request.timeSlot}:00`
-        }, opts);
-      }),
-      map(r => this.aBooking(r)),
-      catchError((err: unknown) => throwError(() => this.traducir(err)))
+        return servicio && empleado
+          ? of({ servicio, empleado })
+          : throwError(() => new ApiBusinessError('El servicio o la terapeuta elegida no existe en el sistema.'));
+      })
     );
   }
 
@@ -186,20 +195,11 @@ export class ApiService {
 
   /** Turnos del día con su disponibilidad real para esa terapeuta y servicio (el servidor explica los que no se pueden). */
   disponibilidad(servicioCodigo: string, terapeuta: string, fecha: string): Observable<TurnoDisponible[]> {
-    const opts = { headers: this.headers() };
-    return this.http.get<ServicioApi[]>(`${this.base}/servicios`, opts).pipe(
-      switchMap(servicios => this.http.get<EmpleadoApi[]>(`${this.base}/empleados/catalogo`, opts).pipe(
-        map(empleados => ({ servicios, empleados }))
-      )),
-      switchMap(({ servicios, empleados }) => {
-        const servicio = servicios.find(s => s.nombre.toUpperCase().startsWith(servicioCodigo.toUpperCase()));
-        const empleado = empleados.find(e => e.nombre.toLowerCase() === terapeuta.toLowerCase());
-        if (!servicio || !empleado) {
-          return throwError(() => new ApiBusinessError('El servicio o la terapeuta elegida no existe en el sistema.'));
-        }
-        return this.http.get<TurnoDisponible[]>(
-          `${this.base}/db/reservas/disponibilidad?empleadoId=${empleado.id}&servicioId=${servicio.id}&fecha=${fecha}`, opts);
-      }),
+    return this.resolverCatalogo(servicioCodigo, terapeuta).pipe(
+      switchMap(({ servicio, empleado }) => this.http.get<TurnoDisponible[]>(`${this.base}/db/reservas/disponibilidad`, {
+        headers: this.headers(),
+        params: { empleadoId: empleado.id, servicioId: servicio.id, fecha }
+      })),
       catchError((err: unknown) => throwError(() => this.traducir(err)))
     );
   }

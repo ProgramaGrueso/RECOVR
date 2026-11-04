@@ -100,6 +100,16 @@ describe('ApiService', () => {
     expect(turnos.map(t => t.disponible)).toEqual([false, true]);
   });
 
+  it('si la terapeuta no existe en el catálogo responde con un error de negocio sin consultar turnos', () => {
+    localStorage.setItem('recovr-api-token', 'jwt-123');
+    let error: unknown;
+    api.disponibilidad('RC-01', 'Nadie', '2026-11-18').subscribe({ error: e => (error = e) });
+    http.expectOne(`${API}/servicios`).flush([{ id: 3, nombre: 'RC-01 Masaje', precio: 200 }]);
+    http.expectOne(`${API}/empleados/catalogo`).flush([{ id: 2, nombre: 'Ely' }]);
+    http.expectNone(r => r.url.includes('/disponibilidad'));
+    expect(error).toBeInstanceOf(ApiBusinessError);
+  });
+
   it('paga la reserva por el importe completo y devuelve CONFIRMADA', () => {
     localStorage.setItem('recovr-api-token', 'jwt-123');
     let estado = '';
