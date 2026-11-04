@@ -144,7 +144,7 @@ class SeguridadRolesTest {
     }
 
     @Test
-    @DisplayName("CORS: solo se aceptan orígenes conocidos (localhost y Vercel), nunca uno cualquiera")
+    @DisplayName("CORS: solo se aceptan los orígenes de la lista blanca configurada, nunca uno cualquiera")
     void corsRestringido() throws Exception {
         mockMvc.perform(options("/api/servicios").header("Origin", "http://localhost:4200").header("Access-Control-Request-Method", "GET"))
                 .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"));

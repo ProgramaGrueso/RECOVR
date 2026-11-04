@@ -57,6 +57,14 @@ class DemoDataSeederTest {
         }
     }
 
+    /** Contraseña demo aleatoria en cada ejecución: ninguna clave queda escrita en el repositorio. */
+    static final String CLAVE_DEMO = "Demo" + java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 12) + "7";
+
+    @org.springframework.test.context.DynamicPropertySource
+    static void claveDemo(org.springframework.test.context.DynamicPropertyRegistry registro) {
+        registro.add("recovr.seed.demo-password", () -> CLAVE_DEMO);
+    }
+
     @Autowired private DemoDataSeeder seeder;
     @Autowired private ReservaRepository reservaRepository;
     @Autowired private PagoRepository pagoRepository;
@@ -186,15 +194,16 @@ class DemoDataSeederTest {
     }
 
     @Test
-    @DisplayName("Las 11 cuentas demo existen con su rol, nombre y contraseña propia (guardada cifrada) y vinculadas a su ficha")
+    @DisplayName("Las 11 cuentas demo existen con su rol y nombre, usan DEMO_PASSWORD (guardada cifrada) y están vinculadas a su ficha")
     void cuentasDemoDocumentadas() {
         assertThat(DemoDataSeeder.CUENTAS).hasSize(11);
         for (DemoDataSeeder.CuentaDemo c : DemoDataSeeder.CUENTAS) {
             var u = usuarioRepository.findByCorreo(c.correo()).orElseThrow();
             assertThat(u.getRol()).isEqualTo(c.rol());
             assertThat(u.getNombre()).isEqualTo(c.nombre());
-            assertThat(u.getPassword()).startsWith("$2").isNotEqualTo(c.password());
-            assertThat(passwordEncoder.matches(c.password(), u.getPassword())).as(c.usuario()).isTrue();
+            assertThat(u.getPassword()).startsWith("$2").isNotEqualTo(CLAVE_DEMO);
+            assertThat(passwordEncoder.matches(CLAVE_DEMO, u.getPassword())).as(c.usuario()).isTrue();
+            assertThat(u.isActivo()).isTrue();
             if (c.terapeuta() != null) {
                 assertThat(empleadoRepository.findByUsuarioId(u.getId())).as(c.usuario()).isPresent()
                         .get().extracting(e -> e.getNombre()).isEqualTo(c.terapeuta());
@@ -205,7 +214,6 @@ class DemoDataSeederTest {
                 assertThat(reservaRepository.buscarPorCliente(cli.getId())).hasSizeGreaterThanOrEqualTo(5);
             }
         }
-        assertThat(DemoDataSeeder.CUENTAS.stream().map(DemoDataSeeder.CuentaDemo::password).distinct().count()).isEqualTo(11);
         var carlos = clienteRepository.findByCorreo("cliente.demo@example.com").orElseThrow();
         assertThat(fichaRepository.findByClienteId(carlos.getId())).isPresent();
     }

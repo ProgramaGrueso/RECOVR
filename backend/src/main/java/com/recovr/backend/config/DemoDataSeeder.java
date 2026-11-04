@@ -47,7 +47,7 @@ import java.util.Set;
  * demo no se vuelve a sembrar. Las citas nuevas tampoco pisan reservas reales que ya existan (misma cabina o terapeuta).
  *
  * <p>Además crea las cuentas de acceso de demostración (administración, recepción, las 4 terapeutas y 5 clientes),
- * documentadas en backend/CREDENCIALES_DEMO.md. SOLO para desarrollo local.
+ * todas con la contraseña de DEMO_PASSWORD (variable de entorno; sin ella no se crean). SOLO para desarrollo local.
  */
 @Component
 @Order(2)
@@ -64,6 +64,7 @@ public class DemoDataSeeder implements CommandLineRunner {
     private final boolean activo;
     private final int diasHistorial;
     private final String finConfigurado;
+    private final String demoPassword;
     private final Clock reloj;
     private LocalDate inicio;
     private LocalDate fin;
@@ -81,6 +82,7 @@ public class DemoDataSeeder implements CommandLineRunner {
                           @Value("${recovr.seed.demo-data:false}") boolean activo,
                           @Value("${recovr.seed.dias-historial:90}") int diasHistorial,
                           @Value("${recovr.seed.fin:}") String finConfigurado,
+                          @Value("${recovr.seed.demo-password:}") String demoPassword,
                           Clock reloj,
                           EmpleadoRepository empleadoRepository, ClienteRepository clienteRepository,
                           UsuarioRepository usuarioRepository, ReservaRepository reservaRepository,
@@ -91,6 +93,11 @@ public class DemoDataSeeder implements CommandLineRunner {
         this.activo = activo;
         this.diasHistorial = diasHistorial;
         this.finConfigurado = finConfigurado == null ? "" : finConfigurado.trim();
+        this.demoPassword = demoPassword == null ? "" : demoPassword;
+        if (!this.demoPassword.isEmpty() && (this.demoPassword.length() < 10
+                || !this.demoPassword.matches("^(?=.*[A-Za-z])(?=.*\\d).+$"))) {
+            throw new IllegalStateException("DEMO_PASSWORD debe tener al menos 10 caracteres, con letras y números.");
+        }
         this.reloj = reloj;
         this.empleadoRepository = empleadoRepository;
         this.clienteRepository = clienteRepository;
@@ -116,9 +123,15 @@ public class DemoDataSeeder implements CommandLineRunner {
         }
         int total = transaccion.execute(status -> sembrarAgenda(ahora));
         log.info("DemoDataSeeder — {} citas demo nuevas ({} → {}).", total, inicio, fin);
-        // Las cuentas de acceso se aseguran siempre (idempotente): así quedan con las contraseñas documentadas.
+        // Cuentas de acceso: solo con DEMO_PASSWORD (idempotente; si cambia, se actualiza en todas).
         transaccion.executeWithoutResult(status -> {
-            asegurarCuentasDemo();
+            if (demoPassword.isEmpty()) {
+                log.warn("DemoDataSeeder — DEMO_PASSWORD no está definida: no se crean cuentas de acceso demo.");
+                desactivarCuentasDemo(true);
+            } else {
+                desactivarCuentasDemo(false);
+                asegurarCuentasDemo();
+            }
             asegurarHistorialDeClientesDemo();
         });
     }
@@ -191,25 +204,28 @@ public class DemoDataSeeder implements CommandLineRunner {
         return pacientes;
     }
 
-    /** Cuenta de acceso de demostración. La contraseña es propia de cada cuenta (ver CREDENCIALES_DEMO.md). */
-    record CuentaDemo(String usuario, String nombre, Rol rol, String password, String terapeuta, String telefono) {
+    /**
+     * Cuenta de acceso de demostración. No lleva contraseña en el código (el repositorio es público): todas usan la de
+     * {@code DEMO_PASSWORD}, que se define en backend/.env. Sin esa variable no se crea ninguna cuenta demo.
+     */
+    record CuentaDemo(String usuario, String nombre, Rol rol, String terapeuta, String telefono) {
         String correo() {
             return usuario + DOMINIO;
         }
     }
 
     static final List<CuentaDemo> CUENTAS = List.of(
-            new CuentaDemo("admin.demo", "Mateo Salazar", Rol.ADMIN, "Admin#Recovr2026", null, null),
-            new CuentaDemo("recepcion.demo", "Camila Morales", Rol.RECEPCIONISTA, "Recep#Recovr2026", null, null),
-            new CuentaDemo("ely.demo", "Ely", Rol.ESPECIALISTA, "Ely#Recovr2026", "Ely", null),
-            new CuentaDemo("miranda.demo", "Miranda", Rol.ESPECIALISTA, "Miranda#Recovr2026", "Miranda", null),
-            new CuentaDemo("pamela.demo", "Pamela", Rol.ESPECIALISTA, "Pamela#Recovr2026", "Pamela", null),
-            new CuentaDemo("maria.demo", "Maria", Rol.ESPECIALISTA, "Maria#Recovr2026", "Maria", null),
-            new CuentaDemo("cliente.demo", "Carlos Mendoza", Rol.CLIENTE, "Carlos#Recovr2026", null, "987654321"),
-            new CuentaDemo("lucia.demo", "Lucía Paredes", Rol.CLIENTE, "Lucia#Recovr2026", null, "987000002"),
-            new CuentaDemo("andrea.demo", "Andrea Vargas", Rol.CLIENTE, "Andrea#Recovr2026", null, "987000003"),
-            new CuentaDemo("diego.demo", "Diego Rojas", Rol.CLIENTE, "Diego#Recovr2026", null, "987000004"),
-            new CuentaDemo("sofia.demo", "Sofía Medina", Rol.CLIENTE, "Sofia#Recovr2026", null, "987000005"));
+            new CuentaDemo("admin.demo", "Mateo Salazar", Rol.ADMIN, null, null),
+            new CuentaDemo("recepcion.demo", "Camila Morales", Rol.RECEPCIONISTA, null, null),
+            new CuentaDemo("ely.demo", "Ely", Rol.ESPECIALISTA, "Ely", null),
+            new CuentaDemo("miranda.demo", "Miranda", Rol.ESPECIALISTA, "Miranda", null),
+            new CuentaDemo("pamela.demo", "Pamela", Rol.ESPECIALISTA, "Pamela", null),
+            new CuentaDemo("maria.demo", "Maria", Rol.ESPECIALISTA, "Maria", null),
+            new CuentaDemo("cliente.demo", "Carlos Mendoza", Rol.CLIENTE, null, "900200001"),
+            new CuentaDemo("lucia.demo", "Lucía Paredes", Rol.CLIENTE, null, "900200002"),
+            new CuentaDemo("andrea.demo", "Andrea Vargas", Rol.CLIENTE, null, "900200003"),
+            new CuentaDemo("diego.demo", "Diego Rojas", Rol.CLIENTE, null, "900200004"),
+            new CuentaDemo("sofia.demo", "Sofía Medina", Rol.CLIENTE, null, "900200005"));
 
     /** Crea o actualiza las cuentas de demostración y las vincula a su terapeuta o ficha de cliente. */
     private void asegurarCuentasDemo() {
@@ -218,7 +234,7 @@ public class DemoDataSeeder implements CommandLineRunner {
             u.setCorreo(c.correo());
             u.setNombre(c.nombre());
             u.setRol(c.rol());
-            u.setPassword(passwordEncoder.encode(c.password()));
+            u.setPassword(passwordEncoder.encode(demoPassword));
             u.setActivo(true);
             u.setDebeCambiarClave(false);
             u = usuarioRepository.save(u);
@@ -240,7 +256,28 @@ public class DemoDataSeeder implements CommandLineRunner {
                 clienteRepository.save(cliente);
             }
         }
-        log.info("DemoDataSeeder — {} cuentas de acceso de demostración listas (ver backend/CREDENCIALES_DEMO.md).", CUENTAS.size());
+        log.info("DemoDataSeeder — {} cuentas de acceso de demostración listas (contraseña: DEMO_PASSWORD).", CUENTAS.size());
+    }
+
+    /**
+     * Sin DEMO_PASSWORD no hay cuentas demo utilizables: las que existan (de una ejecución anterior) quedan
+     * desactivadas. Las del dominio antiguo (@recovr.test) se desactivan siempre: sus contraseñas fijas estuvieron
+     * publicadas en el código y en el historial de git.
+     */
+    private void desactivarCuentasDemo(boolean tambienLasActuales) {
+        int n = 0;
+        for (Usuario u : usuarioRepository.findAll()) {
+            boolean antigua = u.getCorreo().endsWith(DOMINIO_ANTERIOR);
+            boolean actual = CUENTAS.stream().anyMatch(c -> c.correo().equalsIgnoreCase(u.getCorreo()));
+            if (u.isActivo() && (antigua || (tambienLasActuales && actual))) {
+                u.setActivo(false);
+                usuarioRepository.save(u);
+                n++;
+            }
+        }
+        if (n > 0) {
+            log.warn("DemoDataSeeder — {} cuenta(s) demo desactivadas (sin DEMO_PASSWORD o del dominio antiguo).", n);
+        }
     }
 
     /**

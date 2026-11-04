@@ -192,7 +192,7 @@ SPRING_PROFILES_ACTIVE=demo mvn spring-boot:run
 - **Borrar la demo:** `bdd/limpiar-demo.sql` elimina todo lo marcado con `@example.com` (y el antiguo `@recovr.test`).
 - **Pruebas:** `DemoDataSeederTest` (rango, estados, distribución, huecos en el futuro, datos ficticios, idempotencia y **sin citas solapadas**) y `GeneradorAgendaDemoTest` (determinismo y sin solapes, sin base de datos).
 
-Con el perfil demo se crean además las cuentas `admin.demo@example.com`, `recepcion.demo@example.com`, `ely.demo@example.com` (ESPECIALISTA), `cliente.demo@example.com`, etc.
+Con el perfil demo y `DEMO_PASSWORD` definida se crean además las cuentas `admin.demo@example.com`, `recepcion.demo@example.com`, `ely.demo@example.com` (ESPECIALISTA), `cliente.demo@example.com`, etc.
 
 #### Atajo para el equipo: base de datos + backend con datos de 3 meses
 Con Docker, Java 21 y Maven instalados, en la carpeta `backend`:
@@ -200,7 +200,7 @@ Con Docker, Java 21 y Maven instalados, en la carpeta `backend`:
 ./run-demo.sh          # Linux / macOS
 .\run-demo.ps1         # Windows PowerShell
 ```
-El script levanta MySQL (`docker compose up -d`), espera a que esté sano y arranca el backend con el perfil `demo`. Con el perfil `demo` se crean 11 cuentas de demostración (administración, recepción, las 4 terapeutas y 5 clientes), cada una con su propia contraseña: están listadas en `backend/CREDENCIALES_DEMO.md` (archivo local, no se sube a git). Solo para desarrollo.
+El script levanta MySQL (`docker compose up -d`), espera a que esté sano y arranca el backend con el perfil `demo`. Con el perfil `demo` y la variable **`DEMO_PASSWORD`** (en `backend/.env`, mínimo 10 caracteres con letras y números) se crean 11 cuentas de demostración (administración, recepción, las 4 terapeutas y 5 clientes), todas con esa contraseña. Sin `DEMO_PASSWORD` no se crea ninguna y las que existieran quedan desactivadas. Ninguna contraseña vive en el código ni en el repositorio. Solo para desarrollo.
 > Si Docker responde que el nombre `recovr-mysql` ya está en uso, es un contenedor de una ejecución anterior: `docker start recovr-mysql` (o `docker rm recovr-mysql` y repetir).
 
 #### Asistente con IA (opcional)
