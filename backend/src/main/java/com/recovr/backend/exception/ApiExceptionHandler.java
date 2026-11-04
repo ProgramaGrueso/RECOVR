@@ -25,6 +25,8 @@ import java.util.Map;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApiExceptionHandler {
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ApiExceptionHandler.class);
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidacion(MethodArgumentNotValidException ex) {
         Map<String, String> campos = new LinkedHashMap<>();
@@ -90,6 +92,35 @@ public class ApiExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleIntegridad(DataIntegrityViolationException ex) {
         return respuesta(HttpStatus.CONFLICT, "Conflicto de datos",
                 "La operación viola una restricción de la base de datos (registro duplicado o en uso)");
+    }
+
+    /**
+     * Dos operaciones compitieron por la misma fila (p. ej. MySQL "Lock wait timeout"): no es un fallo del servidor
+     * sino un conflicto momentáneo, y el cliente puede reintentar.
+     */
+    @ExceptionHandler({org.springframework.dao.PessimisticLockingFailureException.class,
+            org.springframework.dao.ConcurrencyFailureException.class})
+    public ResponseEntity<Map<String, Object>> handleBloqueo(Exception ex) {
+        log.warn("Conflicto de concurrencia: {}", ex.getClass().getSimpleName());
+        return respuesta(HttpStatus.CONFLICT, "Recurso ocupado",
+                "Otra operación está usando el mismo horario en este momento. Intente de nuevo.");
+    }
+
+    /**
+     * Último recurso: los errores propios de Spring MVC (404 de ruta, 405, 415…) conservan su código; cualquier otra
+     * excepción se registra en el log y responde 500 con un mensaje genérico, sin clases ni mensajes internos.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Map<String, Object>> handleInesperado(Exception ex) {
+        if (ex instanceof org.springframework.web.ErrorResponse er) {
+            HttpStatus status = HttpStatus.resolve(er.getStatusCode().value());
+            if (status != null && status.is4xxClientError()) {
+                return respuesta(status, status.getReasonPhrase(), "La solicitud no se puede atender: " + status.getReasonPhrase());
+            }
+        }
+        log.error("Error no controlado", ex);
+        return respuesta(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno",
+                "Ocurrió un error inesperado. Si persiste, comuníquese con el administrador.");
     }
 
     private ResponseEntity<Map<String, Object>> respuesta(HttpStatus status, String error, String mensaje) {
