@@ -80,4 +80,22 @@ class ErroresApiTest {
                 .andExpect(content().string(not(containsString("secreto"))))
                 .andExpect(content().string(not(containsString("NullPointer"))));
     }
+
+    @Test
+    @DisplayName("Un rol sin permiso recibe el mismo formato de error que el resto de la API (403 con timestamp y mensaje)")
+    void prohibidoConFormatoComun() throws Exception {
+        Usuario cliente = new Usuario();
+        cliente.setCorreo("cliente.errores@example.com");
+        cliente.setPassword(passwordEncoder.encode("Clave1234"));
+        cliente.setRol(Rol.CLIENTE);
+        usuarioRepository.save(cliente);
+        String tokenCliente = jwtService.generarToken(userDetailsService.loadUserByUsername(cliente.getCorreo()));
+
+        mockMvc.perform(get("/api/db/reservas").header("Authorization", "Bearer " + tokenCliente))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.error").value("Acceso denegado"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
 }

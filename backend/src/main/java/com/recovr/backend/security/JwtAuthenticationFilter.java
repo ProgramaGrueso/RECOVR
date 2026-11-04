@@ -1,9 +1,11 @@
 package com.recovr.backend.security;
 
+import com.recovr.backend.exception.CuerpoError;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -44,10 +46,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 if (jwtService.esValido(token, user)) {
                     String ruta = request.getRequestURI();
                     if (!user.isCredentialsNonExpired() && !ruta.equals("/api/auth/me") && !ruta.equals("/api/auth/cambiar-clave")) {
-                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                        response.setContentType("application/json;charset=UTF-8");
-                        response.getWriter().write("{\"status\":403,\"error\":\"Cambio de contraseña obligatorio\","
-                                + "\"message\":\"Debes cambiar tu contraseña temporal antes de continuar\"}");
+                        CuerpoError.escribir(response, HttpStatus.FORBIDDEN, "Cambio de contraseña obligatorio",
+                                "Debes cambiar tu contraseña temporal antes de continuar");
                         return;
                     }
                     UsernamePasswordAuthenticationToken authentication =

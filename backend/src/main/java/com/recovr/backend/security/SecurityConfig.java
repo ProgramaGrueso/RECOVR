@@ -1,5 +1,6 @@
 package com.recovr.backend.security;
 
+import com.recovr.backend.exception.CuerpoError;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -33,12 +34,8 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                         // Autenticado pero sin el rol requerido: 403 (antes terminaba en 401 vía /error)
-                        .accessDeniedHandler((request, response, ex) -> {
-                            response.setStatus(HttpStatus.FORBIDDEN.value());
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"status\":403,\"error\":\"Acceso denegado\","
-                                    + "\"message\":\"No tiene permisos para acceder a este recurso\"}");
-                        }))
+                        .accessDeniedHandler((request, response, ex) -> CuerpoError.escribir(response,
+                                HttpStatus.FORBIDDEN, "Acceso denegado", "No tiene permisos para acceder a este recurso")))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/swagger-ui/**",
