@@ -68,10 +68,11 @@ public class AuthController {
         return authService.perfil(authentication.getName());
     }
 
-    @Operation(summary = "Cambiar mi contraseña", description = "Exige la contraseña actual. Obligatorio en el primer ingreso con una clave temporal.")
+    @Operation(summary = "Cambiar mi contraseña", description = "Exige la contraseña actual. Obligatorio en el primer ingreso con una clave temporal. "
+            + "Invalida todos los tokens anteriores de la cuenta y devuelve uno nuevo para continuar la sesión.")
     @PostMapping("/cambiar-clave")
-    public void cambiarClave(@Valid @RequestBody CambiarClaveRequest request, Authentication authentication,
-                             HttpServletRequest http) {
-        authService.cambiarClave(authentication.getName(), request, http.getRemoteAddr());
+    public AuthResponse cambiarClave(@Valid @RequestBody CambiarClaveRequest request, Authentication authentication,
+                                     HttpServletRequest http) {
+        return authService.cambiarClave(authentication.getName(), request, http.getRemoteAddr());
     }
 }

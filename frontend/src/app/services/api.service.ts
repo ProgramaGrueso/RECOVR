@@ -87,6 +87,11 @@ export class ApiService {
     this.sessionState.set(null);
   }
 
+  /** Reemplaza el token de la sesión actual (p. ej. tras cambiar la contraseña, que invalida el anterior). */
+  renovarToken(token: string, role = this.sessionState()?.role ?? '', correo = this.sessionState()?.correo ?? ''): void {
+    this.saveToken(token, role, correo);
+  }
+
   private saveToken(token: string, role = '', correo = ''): void {
     try {
       localStorage.setItem(TOKEN_KEY, token);

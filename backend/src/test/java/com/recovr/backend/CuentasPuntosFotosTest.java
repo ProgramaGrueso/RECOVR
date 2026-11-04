@@ -146,9 +146,12 @@ class CuentasPuntosFotosTest {
         }
         mockMvc.perform(post("/api/auth/cambiar-clave").header("Authorization", h).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"claveActual\":\"" + temporal + "\",\"claveNueva\":\"" + temporal + "\"}")).andExpect(status().isBadRequest());
-        mockMvc.perform(post("/api/auth/cambiar-clave").header("Authorization", h).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"claveActual\":\"" + temporal + "\",\"claveNueva\":\"MiClaveNueva9\"}")).andExpect(status().isOk());
-        mockMvc.perform(get("/api/auth/me").header("Authorization", h)).andExpect(jsonPath("$.debeCambiarClave").value(false));
+        String nuevo = mockMvc.perform(post("/api/auth/cambiar-clave").header("Authorization", h).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"claveActual\":\"" + temporal + "\",\"claveNueva\":\"MiClaveNueva9\"}")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString().replaceAll(".*\"token\":\"([^\"]+)\".*", "$1");
+        // el token anterior al cambio ya no vale; el que devuelve el cambio de clave sí
+        mockMvc.perform(get("/api/auth/me").header("Authorization", h)).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + nuevo)).andExpect(jsonPath("$.debeCambiarClave").value(false));
         mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"correo\":\"" + rec.getCorreo() + "\",\"password\":\"MiClaveNueva9\"}")).andExpect(status().isOk());
     }

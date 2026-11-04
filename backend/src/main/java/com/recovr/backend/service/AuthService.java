@@ -144,7 +144,7 @@ public class AuthService {
      * una nueva distinta que cumpla la política, y apaga la marca de "clave temporal".
      */
     @Transactional
-    public void cambiarClave(String correo, CambiarClaveRequest request, String ip) {
+    public AuthResponse cambiarClave(String correo, CambiarClaveRequest request, String ip) {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
         Instant ahora = Instant.now();
@@ -164,6 +164,8 @@ public class AuthService {
         usuarioRepository.save(usuario);
         loginAttemptService.registrarExito(correo, ip);
         auditoriaService.registrar(correo, usuario.getRol().name(), "CAMBIO_CLAVE", "/api/auth/cambiar-clave", 200, ip, null);
+        // Los tokens anteriores quedaron invalidados por el cambio de clave: se entrega uno nuevo para seguir en sesión
+        return respuesta(usuario);
     }
 
     private Usuario crearUsuario(RegistroRequest request, Rol rol) {

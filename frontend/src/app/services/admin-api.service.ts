@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, throwError } from 'rxjs';
+import { Observable, catchError, map, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from './auth.service';
 import { ApiService } from './api.service';
@@ -96,7 +96,12 @@ export class AdminApiService {
   crearUsuario(b: { nombre: string; correo: string; rol: string; empleadoId: number | null }): Observable<UsuarioNuevoOps> { return this.req('POST', '/usuarios', b); }
   activarUsuario(id: number, valor: boolean): Observable<UsuarioOps> { return this.req('PATCH', `/usuarios/${id}/activo?valor=${valor}`); }
   restablecerClave(id: number): Observable<UsuarioNuevoOps> { return this.req('POST', `/usuarios/${id}/restablecer-clave`); }
-  cambiarClave(claveActual: string, claveNueva: string): Observable<void> { return this.req('POST', '/auth/cambiar-clave', { claveActual, claveNueva }); }
+  /** Cambia la clave. El servidor invalida los tokens anteriores y devuelve uno nuevo, que se guarda para seguir en sesión. */
+  cambiarClave(claveActual: string, claveNueva: string): Observable<void> {
+    return this.req<{ token: string; rol?: string; correo?: string }>('POST', '/auth/cambiar-clave', { claveActual, claveNueva }).pipe(
+      map(r => this.api.renovarToken(r.token, r.rol, r.correo))
+    );
+  }
 
   // ---- Perfil de la terapeuta ----
   miPerfil(): Observable<MiPerfilOps> { return this.req('GET', '/mi-perfil'); }

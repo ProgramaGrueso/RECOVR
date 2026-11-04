@@ -96,4 +96,13 @@ describe('AdminApiService', () => {
     expect(req.request.headers.get('Authorization')).toBe('Bearer jwt-r');
     req.flush([]);
   });
+
+  it('al cambiar la clave guarda el token nuevo que devuelve el servidor (el anterior queda invalidado)', () => {
+    iniciar('RECEPCIONISTA', 'jwt-viejo');
+    admin.cambiarClave('Temporal123', 'NuevaClave99').subscribe();
+    const req = http.expectOne(`${API}/auth/cambiar-clave`);
+    expect(req.request.headers.get('Authorization')).toBe('Bearer jwt-viejo');
+    req.flush({ token: 'jwt-nuevo', rol: 'RECEPCIONISTA', correo: 'u@u.com' });
+    expect(api.authHeaders().get('Authorization')).toBe('Bearer jwt-nuevo');
+  });
 });

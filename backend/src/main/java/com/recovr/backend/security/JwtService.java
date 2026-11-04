@@ -11,6 +11,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.Date;
 
 @Service
@@ -42,11 +46,19 @@ public class JwtService {
         }
     }
 
+    /** Emisor que se firma y se exige en cada token. */
+    static final String EMISOR = "recovr-api";
+    /** Claim con una huella de la contraseña vigente: si la clave cambia, los tokens anteriores dejan de valer. */
+    static final String CLAIM_HUELLA = "hc";
+
     public String generarToken(UserDetails userDetails) {
+        Date ahora = new Date();
         return Jwts.builder()
+                .issuer(EMISOR)
                 .subject(userDetails.getUsername())
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expirationMs))
+                .claim(CLAIM_HUELLA, huella(userDetails.getPassword()))
+                .issuedAt(ahora)
+                .expiration(new Date(ahora.getTime() + expirationMs))
                 .signWith(clave())
                 .compact();
     }
@@ -55,13 +67,29 @@ public class JwtService {
         return claims(token).getSubject();
     }
 
+    /**
+     * Firma válida (HS256 con la clave del servidor), emisor correcto, no vencido, del mismo usuario y emitido con la
+     * contraseña que tiene ahora (cambiarla o restablecerla invalida todos sus tokens anteriores).
+     */
     public boolean esValido(String token, UserDetails userDetails) {
-        return userDetails.getUsername().equals(extraerCorreo(token))
-                && claims(token).getExpiration().after(new Date());
+        Claims c = claims(token);
+        return userDetails.getUsername().equals(c.getSubject())
+                && c.getExpiration().after(new Date())
+                && huella(userDetails.getPassword()).equals(c.get(CLAIM_HUELLA, String.class));
     }
 
     private Claims claims(String token) {
-        return Jwts.parser().verifyWith(clave()).build().parseSignedClaims(token).getPayload();
+        return Jwts.parser().verifyWith(clave()).requireIssuer(EMISOR).build().parseSignedClaims(token).getPayload();
+    }
+
+    /** Resumen corto (SHA-256) del hash BCrypt: no permite recuperar nada, pero cambia si la contraseña cambia. */
+    static String huella(String hashClave) {
+        try {
+            byte[] digest = MessageDigest.getInstance("SHA-256").digest(String.valueOf(hashClave).getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(digest).substring(0, 16);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private SecretKey clave() {
