@@ -1,5 +1,7 @@
 package com.recovr.backend.service;
 
+import org.springframework.security.access.AccessDeniedException;
+
 import java.time.Clock;
 import com.recovr.backend.dto.PuntosDtos.*;
 import com.recovr.backend.entity.Canje;
@@ -175,7 +177,7 @@ public class PuntosService {
         Canje c = canjeRepository.buscarPorCodigoBloqueado(codigo.trim().toUpperCase())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Código de canje no encontrado: " + codigo));
         if (!c.getCliente().getId().equals(cliente.getId())) {
-            throw new org.springframework.security.access.AccessDeniedException("Ese código no es tuyo");
+            throw new AccessDeniedException("Ese código no es tuyo");
         }
         if (c.getEstado() != Canje.Estado.DISPONIBLE) {
             throw new IllegalStateException("Solo se puede anular un código que no se haya usado");

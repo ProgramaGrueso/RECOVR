@@ -6,6 +6,7 @@ import com.recovr.backend.dto.ReservaResponse;
 import com.recovr.backend.dto.TurnoDisponibleResponse;
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Reserva;
+import com.recovr.backend.security.Roles;
 import com.recovr.backend.service.DisponibilidadService;
 import com.recovr.backend.service.ReservaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -67,7 +68,7 @@ public class ReservaController {
             @Parameter(description = "Fecha (ISO-8601)", example = "2026-10-20")
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
             Authentication authentication) {
-        String correoCliente = esGestionDeReservas(authentication) ? null : authentication.getName();
+        String correoCliente = Roles.gestionaReservas(authentication) ? null : authentication.getName();
         return disponibilidadService.disponibilidad(empleadoId, servicioId, fecha, correoCliente);
     }
 
@@ -102,7 +103,7 @@ public class ReservaController {
     @ResponseStatus(HttpStatus.CREATED)
     public ReservaResponse crear(@Valid @RequestBody ReservaRequest request, Authentication authentication) {
         return ReservaResponse.de(reservaService.crearDesdeRequest(
-                request, authentication.getName(), esGestionDeReservas(authentication)));
+                request, authentication.getName(), Roles.gestionaReservas(authentication)));
     }
 
     @Operation(summary = "Actualizar reserva", description = "Modifica una reserva existente (incluido su estado). Requiere rol ADMIN o RECEPCIONISTA.")
@@ -140,7 +141,7 @@ public class ReservaController {
             @Parameter(description = "ID de la reserva a cancelar", example = "1") @PathVariable Long id,
             Authentication authentication) {
         return ReservaResponse.de(reservaService.cancelar(
-                id, authentication.getName(), esGestionDeReservas(authentication)));
+                id, authentication.getName(), Roles.gestionaReservas(authentication)));
     }
 
     @Operation(summary = "Registrar check-in",
@@ -191,7 +192,7 @@ public class ReservaController {
     public List<ReservaResponse> porCliente(
             @Parameter(description = "ID del cliente", example = "1") @PathVariable Long clienteId,
             Authentication authentication) {
-        return aRespuesta(reservaService.buscarPorClienteParaUsuario(clienteId, authentication.getName(), esGestionDeReservas(authentication)));
+        return aRespuesta(reservaService.buscarPorClienteParaUsuario(clienteId, authentication.getName(), Roles.gestionaReservas(authentication)));
     }
 
     @Operation(summary = "Obtener mis reservas (Cliente autenticado)", description = "Devuelve el historial de reservas pertenecientes al CLIENTE en sesión.")
@@ -256,15 +257,10 @@ public class ReservaController {
             @Valid @RequestBody PagoRequest pago,
             Authentication authentication) {
         return ReservaResponse.de(reservaService.confirmarYPagarParaUsuario(
-                id, pago, authentication.getName(), esGestionDeReservas(authentication)));
+                id, pago, authentication.getName(), Roles.gestionaReservas(authentication)));
     }
 
     private List<ReservaResponse> aRespuesta(List<Reserva> reservas) {
         return reservas.stream().map(ReservaResponse::de).toList();
-    }
-
-    private boolean esGestionDeReservas(Authentication authentication) {
-        return authentication.getAuthorities().stream().anyMatch(authority ->
-                authority.getAuthority().equals("ROLE_ADMIN") || authority.getAuthority().equals("ROLE_RECEPCIONISTA"));
     }
 }

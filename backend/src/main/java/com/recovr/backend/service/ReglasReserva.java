@@ -1,5 +1,7 @@
 package com.recovr.backend.service;
 
+import java.util.List;
+
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Reserva;
 import com.recovr.backend.entity.Servicio;
@@ -44,7 +46,7 @@ public final class ReglasReserva {
     public static final LocalTime CIERRE = LocalTime.of(23, 0);
 
     /** Turnos que ofrece la reserva en línea, cada 90 min dentro del horario de atención (recepción puede usar otras horas). */
-    public static final java.util.List<LocalTime> TURNOS = java.util.List.of(
+    public static final List<LocalTime> TURNOS = List.of(
             LocalTime.of(12, 0), LocalTime.of(13, 30), LocalTime.of(15, 0), LocalTime.of(16, 30),
             LocalTime.of(18, 0), LocalTime.of(19, 30), LocalTime.of(21, 0));
 

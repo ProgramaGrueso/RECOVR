@@ -1,5 +1,8 @@
 package com.recovr.backend.service;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
+
 import com.recovr.backend.dto.PerfilTerapeutaDtos.*;
 import com.recovr.backend.entity.Empleado;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
@@ -61,10 +64,10 @@ public class PerfilTerapeutaService {
     public List<TerapeutaPublica> publicas() {
         Map<Long, Long> versiones = new HashMap<>();
         for (Object[] fila : fotoRepository.fechasDeFotos()) {
-            versiones.put((Long) fila[0], ((java.time.LocalDateTime) fila[1]).atZone(ZoneId.systemDefault()).toEpochSecond());
+            versiones.put((Long) fila[0], ((LocalDateTime) fila[1]).atZone(ZoneId.systemDefault()).toEpochSecond());
         }
         return empleadoRepository.findAll().stream().filter(Empleado::isActivo)
-                .sorted(java.util.Comparator.comparing(Empleado::getId))
+                .sorted(Comparator.comparing(Empleado::getId))
                 .map(e -> new TerapeutaPublica(e.getId(), e.getNombre(), e.getEspecialidad(), e.getBio(),
                         versiones.containsKey(e.getId()) ? "/api/publico/terapeutas/" + e.getId() + "/foto?v=" + versiones.get(e.getId()) : null))
                 .toList();

@@ -1,5 +1,7 @@
 package com.recovr.backend.service;
 
+import com.recovr.backend.entity.EstadoReserva;
+
 import java.time.Clock;
 import com.recovr.backend.dto.FichaDtos.*;
 import com.recovr.backend.entity.*;
@@ -139,7 +141,7 @@ public class FichaService {
         }
         // Solo quien atiende (o va a atender) al cliente: una reserva cancelada, vencida o sin pagar no da acceso a su ficha
         if (!reservaRepository.existsByEmpleadoIdAndClienteIdAndEstadoIn(yo.getId(), clienteId,
-                java.util.List.of(com.recovr.backend.entity.EstadoReserva.CONFIRMADA, com.recovr.backend.entity.EstadoReserva.COMPLETADA))) {
+                List.of(EstadoReserva.CONFIRMADA, EstadoReserva.COMPLETADA))) {
             throw new AccessDeniedException("Solo puedes ver las fichas de clientes que atiendes");
         }
         return yo;
