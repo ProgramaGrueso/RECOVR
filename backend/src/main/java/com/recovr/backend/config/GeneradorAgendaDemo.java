@@ -200,9 +200,11 @@ final class GeneradorAgendaDemo {
     private void asignarEstado(Reserva r, Random rnd) {
         LocalDateTime inicio = r.getFechaHora();
         double x = rnd.nextDouble();
-        LocalDateTime creada = inicio.minusMinutes(360 + rnd.nextInt(60 * 24 * 12));
+        // Se reserva entre 6 horas y 4 semanas antes; una cita futura se reservó en algún momento de las últimas
+        // semanas (no todas ayer), así los ingresos del mes no se concentran en los últimos días.
+        LocalDateTime creada = inicio.minusMinutes(360 + rnd.nextInt(60 * 24 * 28));
         if (creada.isAfter(ahora)) {
-            creada = ahora.minusMinutes(10 + rnd.nextInt(60 * 24 * 3));
+            creada = ahora.minusMinutes(10 + rnd.nextInt(60 * 24 * 28));
         }
         r.setCreadaEn(creada);
         LocalDateTime pagada = minimo(creada.plusMinutes(1 + rnd.nextInt(ReglasReserva.HOLD_PAGO_MIN - 1)), ahora);
