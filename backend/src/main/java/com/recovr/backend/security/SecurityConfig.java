@@ -86,7 +86,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/servicios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/servicios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/servicios/**").hasRole("ADMIN")
-                        .anyRequest().authenticated())
+                        // Sesión propia: cualquier rol autenticado
+                        .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/cambiar-clave").authenticated()
+                        // Todo lo que no tiene una regla explícita arriba se deniega (antes quedaba abierto a cualquier rol)
+                        .anyRequest().denyAll())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAfter(auditoriaFilter, JwtAuthenticationFilter.class)
                 .build();
