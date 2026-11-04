@@ -1,6 +1,9 @@
 package com.recovr.backend.service;
 
 import com.recovr.backend.repository.ReservaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import com.recovr.backend.repository.UsuarioRepository;
 import com.recovr.backend.entity.Cliente;
 import com.recovr.backend.repository.ClienteRepository;
@@ -23,8 +26,17 @@ public class ClienteService {
         this.usuarioRepository = usuarioRepository;
     }
 
+    /** Tamaño máximo de página: el listado nunca devuelve la tabla completa de una vez. */
+    public static final int TAMANO_MAX = 1000;
+
     public List<Cliente> listarTodos() {
         return clienteRepository.findAll();
+    }
+
+    /** Página de clientes ordenados por nombre. */
+    public Page<Cliente> listarPagina(int pagina, int tamano) {
+        int t = Math.max(1, Math.min(tamano, TAMANO_MAX));
+        return clienteRepository.findAll(PageRequest.of(Math.max(0, pagina), t, Sort.by("nombre", "id")));
     }
 
     public Cliente buscarPorId(Long id) {

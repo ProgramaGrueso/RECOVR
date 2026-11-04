@@ -41,20 +41,28 @@ public class ReservaController {
         this.disponibilidadService = disponibilidadService;
     }
 
-    @Operation(summary = "Listar todas las reservas (DB)", description = "Retorna las reservas persistidas por páginas (la más reciente primero; la cabecera X-Total-Count trae el total). Requiere rol ADMIN o RECEPCIONISTA.")
+    @Operation(summary = "Listar reservas por páginas",
+            description = "Reservas de la más reciente a la más antigua, por páginas (cabeceras X-Total-Count y X-Total-Pages). "
+                    + "Con desde/hasta (fechas ISO) se limita a ese rango de días [desde, hasta). Requiere rol ADMIN o RECEPCIONISTA.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado de reservas",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponse.class)))),
+            @ApiResponse(responseCode = "400", description = "Rango de fechas inválido", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere ADMIN o RECEPCIONISTA)", content = @Content)
     })
     @GetMapping
     public ResponseEntity<List<ReservaResponse>> listar(
             @Parameter(description = "Número de página (desde 0)", example = "0") @RequestParam(defaultValue = "0") int pagina,
-            @Parameter(description = "Reservas por página (máximo 1000)", example = "1000") @RequestParam(defaultValue = "1000") int tamano) {
-        var resultado = reservaService.listarPagina(pagina, tamano);
+            @Parameter(description = "Reservas por página (máximo 1000)", example = "200") @RequestParam(defaultValue = "1000") int tamano,
+            @Parameter(description = "Primer día incluido (opcional)", example = "2026-11-01")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @Parameter(description = "Día siguiente al último incluido (opcional)", example = "2026-12-01")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        var resultado = reservaService.listarPagina(pagina, tamano, desde, hasta);
         return ResponseEntity.ok()
                 .header("X-Total-Count", String.valueOf(resultado.getTotalElements()))
+                .header("X-Total-Pages", String.valueOf(resultado.getTotalPages()))
                 .body(aRespuesta(resultado.getContent()));
     }
 

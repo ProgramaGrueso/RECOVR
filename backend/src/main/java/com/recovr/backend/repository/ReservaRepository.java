@@ -28,6 +28,10 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
     Optional<Reserva> findById(Long id);
 
+    /** Página de reservas cuyo inicio cae en [desde, hasta). */
+    @EntityGraph(attributePaths = {"cliente", "empleado", "servicio", "sala", "pago"})
+    Page<Reserva> findByFechaHoraGreaterThanEqualAndFechaHoraLessThan(LocalDateTime desde, LocalDateTime hasta, Pageable pageable);
+
     /**
      * Expresión JPQL reutilizable: una reserva ocupa el bloque
      * [fechaHora, fechaHora + duración del servicio + tiempo de limpieza).

@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -69,10 +70,25 @@ public class ReservaService {
     /** Tamaño máximo de página del listado: el listado nunca devuelve la tabla completa. */
     public static final int TAMANO_MAX_LISTADO = 1000;
 
-    /** Página del listado, de la más reciente a la más antigua. */
-    public Page<Reserva> listarPagina(int pagina, int tamano) {
+    /**
+     * Página del listado, de la más reciente a la más antigua. Con {@code desde}/{@code hasta} se limita a los días
+     * [desde, hasta); cualquiera de los dos puede faltar.
+     */
+    @Transactional(readOnly = true)
+    public Page<Reserva> listarPagina(int pagina, int tamano, LocalDate desde, LocalDate hasta) {
         int t = Math.max(1, Math.min(tamano, TAMANO_MAX_LISTADO));
-        return reservaRepository.findAll(PageRequest.of(Math.max(0, pagina), t, Sort.by(Sort.Direction.DESC, "fechaHora")));
+        PageRequest pageable = PageRequest.of(Math.max(0, pagina), t, Sort.by(Sort.Direction.DESC, "fechaHora"));
+        if (desde == null && hasta == null) {
+            return reservaRepository.findAll(pageable);
+        }
+        LocalDateTime inicio = desde != null ? desde.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
+        LocalDateTime fin = hasta != null ? hasta.atStartOfDay() : LocalDateTime.of(9999, 1, 1, 0, 0);
+        validarRango(inicio, fin);
+        return reservaRepository.findByFechaHoraGreaterThanEqualAndFechaHoraLessThan(inicio, fin, pageable);
+    }
+
+    public Page<Reserva> listarPagina(int pagina, int tamano) {
+        return listarPagina(pagina, tamano, null, null);
     }
 
     public Reserva buscarPorId(Long id) {
