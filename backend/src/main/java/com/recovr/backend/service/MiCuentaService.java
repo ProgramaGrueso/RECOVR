@@ -1,5 +1,6 @@
 package com.recovr.backend.service;
 
+import java.time.Clock;
 import com.recovr.backend.dto.MiCuentaDtos.*;
 import com.recovr.backend.dto.ReservaResponse;
 import com.recovr.backend.entity.Cliente;
@@ -29,8 +30,15 @@ public class MiCuentaService {
     private final ReservaRepository reservaRepository;
     private final PuntosService puntosService;
 
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
+    private final UsuarioActualService usuarioActual;
+
     public MiCuentaService(UsuarioRepository usuarioRepository, ClienteRepository clienteRepository,
-                           ReservaRepository reservaRepository, PuntosService puntosService) {
+                           ReservaRepository reservaRepository, PuntosService puntosService, Clock reloj, UsuarioActualService usuarioActual) {
+        this.usuarioActual = usuarioActual;
+        this.reloj = reloj;
         this.usuarioRepository = usuarioRepository;
         this.clienteRepository = clienteRepository;
         this.reservaRepository = reservaRepository;
@@ -39,12 +47,12 @@ public class MiCuentaService {
 
     @Transactional(readOnly = true)
     public MiCuentaResponse resumen(String correo) {
-        return resumen(correo, LocalDateTime.now());
+        return resumen(correo, LocalDateTime.now(reloj));
     }
 
     @Transactional(readOnly = true)
     public MiCuentaResponse resumen(String correo, LocalDateTime ahora) {
-        Cliente cliente = clienteDe(correo);
+        Cliente cliente = usuarioActual.cliente(correo);
         List<Reserva> reservas = reservaRepository.buscarPorCliente(cliente.getId());
         List<Reserva> completadas = reservas.stream().filter(r -> r.getEstado() == EstadoReserva.COMPLETADA).toList();
         int ganados = puntosService.ganados(cliente.getId());
@@ -65,7 +73,7 @@ public class MiCuentaService {
 
     @Transactional
     public MiCuentaResponse actualizar(String correo, ActualizarPerfilRequest request) {
-        Cliente cliente = clienteDe(correo);
+        Cliente cliente = usuarioActual.cliente(correo);
         cliente.setNombre(request.nombre().trim());
         cliente.setTelefono(request.telefono());
         clienteRepository.save(cliente);
@@ -73,12 +81,5 @@ public class MiCuentaService {
         usuario.setNombre(cliente.getNombre());
         usuarioRepository.save(usuario);
         return resumen(correo);
-    }
-
-    private Cliente clienteDe(String correo) {
-        Usuario usuario = usuarioRepository.findByCorreo(correo)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
-        return clienteRepository.findByUsuarioId(usuario.getId())
-                .orElseThrow(() -> new IllegalStateException("El usuario no tiene un cliente asociado"));
     }
 }

@@ -1,5 +1,8 @@
 package com.recovr.backend.controller;
 
+import com.recovr.backend.entity.Pago;
+import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
 import com.recovr.backend.dto.PagoResponse;
 import com.recovr.backend.service.PagoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,8 +39,14 @@ public class PagoController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere rol ADMIN)", content = @Content)
     })
     @GetMapping
-    public List<PagoResponse> listar() {
-        return pagoService.listarTodos().stream().map(PagoResponse::de).toList();
+    public ResponseEntity<List<PagoResponse>> listar(
+            @Parameter(description = "Número de página (desde 0)", example = "0") @RequestParam(defaultValue = "0") int pagina,
+            @Parameter(description = "Pagos por página (máximo 1000), del más reciente al más antiguo", example = "100") @RequestParam(defaultValue = "1000") int tamano) {
+        Page<Pago> resultado = pagoService.listarPagina(pagina, tamano);
+        return ResponseEntity.ok()
+                .header("X-Total-Count", String.valueOf(resultado.getTotalElements()))
+                .header("X-Total-Pages", String.valueOf(resultado.getTotalPages()))
+                .body(resultado.getContent().stream().map(PagoResponse::de).toList());
     }
 
     @Operation(summary = "Obtener pago por ID", description = "Consulta una transacción de pago específica. Requiere rol ADMIN.")

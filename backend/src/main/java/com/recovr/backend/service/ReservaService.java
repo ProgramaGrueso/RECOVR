@@ -2,79 +2,93 @@ package com.recovr.backend.service;
 
 import com.recovr.backend.dto.PagoRequest;
 import com.recovr.backend.dto.ReservaRequest;
-import com.recovr.backend.dto.ReservaResponse;
 import com.recovr.backend.entity.Canje;
-import com.recovr.backend.entity.Cliente;
 import com.recovr.backend.entity.Empleado;
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Pago;
 import com.recovr.backend.entity.Reserva;
-import com.recovr.backend.entity.Sala;
-import com.recovr.backend.entity.Usuario;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
-import com.recovr.backend.dto.TurnoDisponibleResponse;
-import com.recovr.backend.repository.AusenciaEmpleadoRepository;
 import com.recovr.backend.repository.CanjeRepository;
 import com.recovr.backend.repository.ClienteRepository;
 import com.recovr.backend.repository.EmpleadoRepository;
 import com.recovr.backend.repository.PagoRepository;
 import com.recovr.backend.repository.ReservaRepository;
 import com.recovr.backend.repository.SalaRepository;
-import com.recovr.backend.repository.ServicioRepository;
-import com.recovr.backend.repository.UsuarioRepository;
-import com.recovr.backend.exception.ReservaBloqueadaException;
-import com.recovr.backend.exception.ReservaConflictException;
-import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Ciclo de vida de una reserva hecho por personas: crear, reprogramar, cancelar, cobrar, check-in, finalizar y
+ * consultas. Las reglas de agenda están en {@link ValidadorAgenda}; los turnos libres, en {@link DisponibilidadService};
+ * y los cambios automáticos (expiración, no-show), en {@link ReservaCicloVidaService}.
+ */
 @Service
 public class ReservaService {
 
     private final ReservaRepository reservaRepository;
     private final PagoRepository pagoRepository;
-    private final UsuarioRepository usuarioRepository;
     private final ClienteRepository clienteRepository;
     private final EmpleadoRepository empleadoRepository;
-    private final ServicioRepository servicioRepository;
     private final SalaRepository salaRepository;
-    private final PuntosService puntosService;
     private final CanjeRepository canjeRepository;
-    private final AusenciaEmpleadoRepository ausenciaRepository;
+    private final PuntosService puntosService;
+    private final ValidadorAgenda validador;
+    private final ReservaCicloVidaService cicloVida;
+    private final UsuarioActualService usuarioActual;
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
 
-    public ReservaService(ReservaRepository reservaRepository, PagoRepository pagoRepository, UsuarioRepository usuarioRepository, ClienteRepository clienteRepository, EmpleadoRepository empleadoRepository, ServicioRepository servicioRepository, SalaRepository salaRepository, PuntosService puntosService, CanjeRepository canjeRepository, AusenciaEmpleadoRepository ausenciaRepository) {
-        this.ausenciaRepository = ausenciaRepository;
+    public ReservaService(ReservaRepository reservaRepository, PagoRepository pagoRepository,
+                          ClienteRepository clienteRepository, EmpleadoRepository empleadoRepository,
+                          SalaRepository salaRepository, CanjeRepository canjeRepository, PuntosService puntosService,
+                          ValidadorAgenda validador, ReservaCicloVidaService cicloVida,
+                          UsuarioActualService usuarioActual, Clock reloj) {
         this.reservaRepository = reservaRepository;
         this.pagoRepository = pagoRepository;
-        this.usuarioRepository = usuarioRepository;
         this.clienteRepository = clienteRepository;
         this.empleadoRepository = empleadoRepository;
-        this.servicioRepository = servicioRepository;
         this.salaRepository = salaRepository;
-        this.puntosService = puntosService;
         this.canjeRepository = canjeRepository;
-    }
-
-    public List<Reserva> listarTodos() {
-        return reservaRepository.findAll();
+        this.puntosService = puntosService;
+        this.validador = validador;
+        this.cicloVida = cicloVida;
+        this.usuarioActual = usuarioActual;
+        this.reloj = reloj;
     }
 
     /** Tamaño máximo de página del listado: el listado nunca devuelve la tabla completa. */
     public static final int TAMANO_MAX_LISTADO = 1000;
 
-    /** Página del listado, de la más reciente a la más antigua. */
-    public org.springframework.data.domain.Page<Reserva> listarPagina(int pagina, int tamano) {
+    /**
+     * Página del listado, de la más reciente a la más antigua. Con {@code desde}/{@code hasta} se limita a los días
+     * [desde, hasta); cualquiera de los dos puede faltar.
+     */
+    @Transactional(readOnly = true)
+    public Page<Reserva> listarPagina(int pagina, int tamano, LocalDate desde, LocalDate hasta) {
         int t = Math.max(1, Math.min(tamano, TAMANO_MAX_LISTADO));
-        return reservaRepository.findAll(org.springframework.data.domain.PageRequest.of(Math.max(0, pagina), t,
-                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "fechaHora")));
+        PageRequest pageable = PageRequest.of(Math.max(0, pagina), t, Sort.by(Sort.Direction.DESC, "fechaHora"));
+        if (desde == null && hasta == null) {
+            return reservaRepository.findAll(pageable);
+        }
+        LocalDateTime inicio = desde != null ? desde.atStartOfDay() : LocalDateTime.of(1970, 1, 1, 0, 0);
+        LocalDateTime fin = hasta != null ? hasta.atStartOfDay() : LocalDateTime.of(9999, 1, 1, 0, 0);
+        validarRango(inicio, fin);
+        return reservaRepository.findByFechaHoraGreaterThanEqualAndFechaHoraLessThan(inicio, fin, pageable);
+    }
+
+    public Page<Reserva> listarPagina(int pagina, int tamano) {
+        return listarPagina(pagina, tamano, null, null);
     }
 
     public Reserva buscarPorId(Long id) {
@@ -93,15 +107,15 @@ public class ReservaService {
         if (reserva.getEstado() == null) {
             reserva.setEstado(EstadoReserva.PENDIENTE);
         }
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = LocalDateTime.now(reloj);
         if (reserva.getFechaHora() == null || reserva.getFechaHora().isBefore(ahora)) {
             throw new IllegalArgumentException("La fecha y hora de la reserva debe ser futura");
         }
-        validarReglasDeAgenda(reserva, null);
+        validador.validarReglasDeAgenda(reserva);
         if (reserva.getCliente() != null) {
-            validarCliente(reserva, null, true, ahora);
+            validador.validarCliente(reserva, null, true, ahora);
         }
-        validarDisponibilidad(reserva, null);
+        validador.validarDisponibilidad(reserva, null);
         reserva.setCreadaEn(ahora);
         return reservaRepository.save(reserva);
     }
@@ -120,14 +134,14 @@ public class ReservaService {
             }
             clienteId = request.clienteId();
         } else {
-            clienteId = clienteIdDelUsuario(correo);
+            clienteId = usuarioActual.clienteId(correo);
         }
         // Cola de atención: se bloquea en orden fijo cliente → especialista → sala. Dos reservas simultáneas que
         // compiten por el mismo recurso se procesan una tras otra; la segunda ve a la primera y recibe 409.
         reserva.setCliente(clienteRepository.buscarBloqueado(clienteId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente", clienteId)));
-        liberarPlazosVencidos(LocalDateTime.now());
-        asignarRelaciones(reserva, request);
+        cicloVida.expirarPlazosVencidos(LocalDateTime.now(reloj));
+        validador.asignarRelaciones(reserva, request);
         reserva.setEstado(EstadoReserva.PENDIENTE);
         return crear(reserva);
     }
@@ -136,7 +150,7 @@ public class ReservaService {
     public Reserva actualizar(Long id, ReservaRequest request) {
         Reserva reserva = reservaRepository.buscarParaActualizar(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Reserva", id));
-        if (!estaActiva(reserva)) {
+        if (!ReglasReserva.activa(reserva)) {
             throw new IllegalStateException("Una reserva " + reserva.getEstado()
                     + " ya no se puede editar; cree una reserva nueva.");
         }
@@ -151,7 +165,7 @@ public class ReservaService {
                 throw new IllegalStateException("El estado no se cambia a mano (" + reserva.getEstado() + " → " + nuevo
                         + "): use confirmar-y-pagar, check-in o finalizar. Por aquí solo se puede cancelar.");
             }
-            aplicarCancelacion(reserva, true, LocalDateTime.now());
+            aplicarCancelacion(reserva, true, LocalDateTime.now(reloj));
             return reservaRepository.save(reserva);
         }
         LocalDateTime fechaAnterior = reserva.getFechaHora();
@@ -159,18 +173,18 @@ public class ReservaService {
         Long clienteId = request.clienteId() != null ? request.clienteId() : reserva.getCliente().getId();
         reserva.setCliente(clienteRepository.buscarBloqueado(clienteId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente", clienteId)));
-        liberarPlazosVencidos(LocalDateTime.now());
-        asignarRelaciones(reserva, request);
+        cicloVida.expirarPlazosVencidos(LocalDateTime.now(reloj));
+        validador.asignarRelaciones(reserva, request);
         if (reserva.getPago() != null && !reserva.getServicio().getId().equals(servicioAnterior)) {
             throw new IllegalStateException("La sesión ya está pagada: no se puede cambiar de servicio. "
                     + "Cancélela (el pago queda como crédito) y cree una nueva.");
         }
-        if (!reserva.getFechaHora().equals(fechaAnterior) && reserva.getFechaHora().isBefore(LocalDateTime.now())) {
+        if (!reserva.getFechaHora().equals(fechaAnterior) && reserva.getFechaHora().isBefore(LocalDateTime.now(reloj))) {
             throw new IllegalArgumentException("La nueva fecha y hora de la reserva debe ser futura");
         }
-        validarReglasDeAgenda(reserva, reserva.getId());
-        validarCliente(reserva, reserva.getId(), false, LocalDateTime.now());
-        validarDisponibilidad(reserva, reserva.getId());
+        validador.validarReglasDeAgenda(reserva);
+        validador.validarCliente(reserva, reserva.getId(), false, LocalDateTime.now(reloj));
+        validador.validarDisponibilidad(reserva, reserva.getId());
         return reservaRepository.save(reserva);
     }
 
@@ -183,14 +197,14 @@ public class ReservaService {
     public Reserva cancelar(Long id, String correo, boolean puedeGestionar) {
         Reserva reserva = reservaRepository.buscarParaActualizar(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Reserva", id));
-        if (!puedeGestionar && !reserva.getCliente().getId().equals(clienteIdDelUsuario(correo))) {
+        if (!puedeGestionar && !reserva.getCliente().getId().equals(usuarioActual.clienteId(correo))) {
             throw new AccessDeniedException("Un cliente solo puede cancelar sus propias reservas");
         }
-        if (!estaActiva(reserva)) {
+        if (!ReglasReserva.activa(reserva)) {
             throw new IllegalStateException("Solo se pueden cancelar reservas PENDIENTE o CONFIRMADA (estado actual: "
                     + reserva.getEstado() + ")");
         }
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = LocalDateTime.now(reloj);
         if (!puedeGestionar) {
             // Política para el cliente: anticipación mínima y tope mensual de cancelaciones propias
             if (ahora.isAfter(reserva.getFechaHora().minusHours(ReglasReserva.HORAS_MIN_CANCELACION_CLIENTE))) {
@@ -249,22 +263,22 @@ public class ReservaService {
                 || reserva.getPago() == null) {
             throw new IllegalStateException("Solo se puede reabrir una sesión pagada que se canceló automáticamente por no asistencia.");
         }
-        if (!LocalDateTime.now().isBefore(ReglasReserva.finSesion(reserva))) {
+        if (!LocalDateTime.now(reloj).isBefore(ReglasReserva.finSesion(reserva))) {
             throw new IllegalStateException("La sesión ya terminó; no se puede reabrir.");
         }
         clienteRepository.buscarBloqueado(reserva.getCliente().getId());
         empleadoRepository.buscarBloqueado(reserva.getEmpleado().getId());
         salaRepository.buscarBloqueada(reserva.getSala().getId());
         reserva.setEstado(EstadoReserva.CONFIRMADA);
-        validarDisponibilidad(reserva, reserva.getId());
-        validarCliente(reserva, reserva.getId(), false, LocalDateTime.now());
+        validador.validarDisponibilidad(reserva, reserva.getId());
+        validador.validarCliente(reserva, reserva.getId(), false, LocalDateTime.now(reloj));
         reserva.setCanceladaEn(null);
         reserva.setObservacion("Reabierta por el personal: el cliente llegó tarde.");
         return reservaRepository.save(reserva);
     }
 
     public Reserva checkIn(Long id) {
-        return checkIn(id, LocalDateTime.now());
+        return checkIn(id, LocalDateTime.now(reloj));
     }
 
     /**
@@ -307,19 +321,16 @@ public class ReservaService {
     }
 
     public List<Reserva> buscarMisReservas(String correo) {
-        return reservaRepository.buscarPorCliente(clienteIdDelUsuario(correo));
+        return reservaRepository.buscarPorCliente(usuarioActual.clienteId(correo));
     }
 
     public List<Reserva> buscarPorClienteParaUsuario(Long clienteId, String correo, boolean puedeVerTodas) {
-        if (!puedeVerTodas && !clienteId.equals(clienteIdDelUsuario(correo))) {
+        if (!puedeVerTodas && !clienteId.equals(usuarioActual.clienteId(correo))) {
             throw new AccessDeniedException("Un cliente solo puede consultar sus propias reservas");
         }
         return reservaRepository.buscarPorCliente(clienteId);
     }
 
-    public List<Reserva> buscarPorCliente(Long clienteId) {
-        return reservaRepository.buscarPorCliente(clienteId);
-    }
 
     public List<Reserva> buscarPorRangoYEstado(LocalDateTime inicio, LocalDateTime fin, EstadoReserva estado) {
         validarRango(inicio, fin);
@@ -328,11 +339,8 @@ public class ReservaService {
 
     /** Agenda futura del especialista vinculado al usuario autenticado. */
     public List<Reserva> buscarAgendaEspecialista(String correo) {
-        Usuario usuario = usuarioRepository.findByCorreo(correo)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
-        Empleado empleado = empleadoRepository.findByUsuarioId(usuario.getId())
-                .orElseThrow(() -> new IllegalStateException("El usuario no está vinculado a ningún especialista"));
-        return reservaRepository.buscarAgendaEmpleado(empleado.getId(), LocalDateTime.now());
+        Empleado empleado = usuarioActual.empleado(correo, "El usuario no está vinculado a ningún especialista");
+        return reservaRepository.buscarAgendaEmpleado(empleado.getId(), LocalDateTime.now(reloj));
     }
 
     // Ejemplo de transaccion: confirma la reserva y registra su pago en una sola operacion.
@@ -345,7 +353,7 @@ public class ReservaService {
             throw new IllegalStateException("Solo se pueden confirmar reservas en estado PENDIENTE (estado actual: "
                     + reserva.getEstado() + ")");
         }
-        if (ReglasReserva.holdVencido(reserva, LocalDateTime.now())) {
+        if (ReglasReserva.holdVencido(reserva, LocalDateTime.now(reloj))) {
             throw new IllegalStateException("El plazo para pagar (" + ReglasReserva.HOLD_PAGO_MIN
                     + " min) venció y el cupo se liberó. Crea la reserva de nuevo.");
         }
@@ -355,7 +363,7 @@ public class ReservaService {
         pago.setReserva(reserva);
         reserva.setPago(pago);
         if (pago.getFechaPago() == null) {
-            pago.setFechaPago(LocalDateTime.now());
+            pago.setFechaPago(LocalDateTime.now(reloj));
         }
         pagoRepository.save(pago);
 
@@ -371,7 +379,7 @@ public class ReservaService {
     public Reserva confirmarYPagarParaUsuario(Long reservaId, PagoRequest request, String correo, boolean puedeGestionar) {
         Reserva reserva = reservaRepository.buscarParaActualizar(reservaId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Reserva", reservaId));
-        if (!puedeGestionar && !reserva.getCliente().getId().equals(clienteIdDelUsuario(correo))) {
+        if (!puedeGestionar && !reserva.getCliente().getId().equals(usuarioActual.clienteId(correo))) {
             throw new AccessDeniedException("Un cliente solo puede pagar sus propias reservas");
         }
         BigDecimal precio = reserva.getServicio().getPrecio();
@@ -391,7 +399,7 @@ public class ReservaService {
         Reserva confirmada = confirmarYPagar(reservaId, pago);
         if (canje != null) {
             canje.setEstado(Canje.Estado.USADO);
-            canje.setUsadoEn(LocalDateTime.now());
+            canje.setUsadoEn(LocalDateTime.now(reloj));
             canje.setReserva(confirmada);
             canjeRepository.save(canje);
             // Un crédito mayor que la sesión no se pierde: lo que sobra queda como un crédito nuevo
@@ -403,131 +411,14 @@ public class ReservaService {
         return confirmada;
     }
 
-    /** Datos mínimos para poder evaluar cualquier regla de agenda. */
-    private void exigirDatosCompletos(Reserva reserva) {
-        if (reserva.getSala() == null || reserva.getEmpleado() == null || reserva.getServicio() == null) {
-            throw new IllegalArgumentException("La reserva debe indicar sala, especialista y servicio");
-        }
-    }
 
-    /** La sesión completa debe caber en el horario de atención (el mismo que usa la ocupación diaria). */
-    private void validarReglasDeAgenda(Reserva reserva, Long excluirId) {
-        exigirDatosCompletos(reserva);
-        LocalDateTime inicio = reserva.getFechaHora();
-        LocalDateTime finSesion = ReglasReserva.finSesion(reserva);
-        if (!ReglasReserva.dentroDeHorario(inicio, finSesion)) {
-            throw new IllegalArgumentException("La sesión (" + inicio.toLocalTime().withSecond(0).withNano(0) + " a "
-                    + finSesion.toLocalTime().withSecond(0).withNano(0) + ") debe estar dentro del horario de atención: "
-                    + ReglasReserva.APERTURA + " a " + ReglasReserva.CIERRE + ".");
-        }
-    }
 
-    /**
-     * Reglas que protegen la agenda de un uso abusivo: una persona no puede estar en dos sesiones a la vez, no puede
-     * retener cupos sin pagar y quien deja expirar reservas repetidamente queda bloqueado un tiempo.
-     */
-    private void validarCliente(Reserva reserva, Long excluirId, boolean nueva, LocalDateTime ahora) {
-        Long clienteId = reserva.getCliente().getId();
-        LocalDateTime inicio = reserva.getFechaHora();
-        List<Reserva> propias = reservaRepository.buscarConflictosCliente(clienteId, inicio,
-                ReglasReserva.finSesion(reserva), excluirId);
-        if (!propias.isEmpty()) {
-            throw new ReservaConflictException("El cliente ya tiene otra reserva que se cruza con ese horario: "
-                    + "una persona no puede estar en dos sesiones a la vez.");
-        }
-        if (nueva && reserva.getEstado() == EstadoReserva.PENDIENTE) {
-            if (reservaRepository.countByClienteIdAndEstadoAndCreadaEnIsNotNull(clienteId, EstadoReserva.PENDIENTE) >= ReglasReserva.MAX_PENDIENTES_CLIENTE) {
-                throw new ReservaConflictException("Ya tienes una reserva pendiente de pago. Págala (tienes "
-                        + ReglasReserva.HOLD_PAGO_MIN + " min desde que la creaste) o cancélala antes de reservar otro turno.");
-            }
-            long expiradas = reservaRepository.countByClienteIdAndObservacionAndCanceladaEnGreaterThanEqual(clienteId,
-                    ReglasReserva.EXPIRADA_SIN_PAGO, ahora.minusHours(ReglasReserva.VENTANA_EXPIRADAS_HORAS));
-            if (expiradas >= ReglasReserva.MAX_EXPIRADAS_VENTANA) {
-                throw new ReservaBloqueadaException("Dejaste vencer " + expiradas + " reservas sin pagar en las últimas "
-                        + ReglasReserva.VENTANA_EXPIRADAS_HORAS + " horas. Por seguridad de la agenda, reserva de nuevo mañana o pide a recepción que lo haga en el mostrador.");
-            }
-        }
-    }
 
-    /** Libera el cupo de las reservas PENDIENTES cuyo plazo de pago ya venció (no esperan al planificador). */
-    void liberarPlazosVencidos(LocalDateTime ahora) {
-        for (Reserva r : reservaRepository.buscarPendientesCreadasHasta(ahora.minusMinutes(ReglasReserva.HOLD_PAGO_MIN))) {
-            r.setEstado(EstadoReserva.CANCELADA);
-            r.setCanceladaEn(ahora);
-            r.setObservacion(ReglasReserva.EXPIRADA_SIN_PAGO);
-            reservaRepository.save(r);
-        }
-    }
 
-    /**
-     * Regla de negocio central (misma que el Core Engine del APF1): ningún especialista ni sala
-     * puede tener dos reservas activas cuyos bloques [inicio, inicio + duración + limpieza) se crucen.
-     * Se evalúa con los recursos ya bloqueados, así que la consulta ve todo lo que otras reservas confirmaron.
-     */
-    private void validarDisponibilidad(Reserva reserva, Long excluirId) {
-        exigirDatosCompletos(reserva);
-        LocalDateTime inicio = reserva.getFechaHora();
-        LocalDateTime fin = ReservaResponse.finBloque(inicio, reserva.getServicio());
-        if (!reserva.getSala().isActiva()) {
-            throw new ReservaConflictException(reserva.getSala().getNombre() + " está en mantenimiento y no recibe reservas.");
-        }
-        if (!ausenciaRepository.buscarCruces(reserva.getEmpleado().getId(), inicio, fin).isEmpty()) {
-            throw new ReservaConflictException(reserva.getEmpleado().getNombre() + " no atiende en ese horario (ausencia programada).");
-        }
-        List<Reserva> conflictos = reservaRepository.buscarConflictos(
-                reserva.getSala().getId(), reserva.getEmpleado().getId(), inicio, fin, excluirId);
 
-        boolean especialistaOcupado = conflictos.stream()
-                .anyMatch(r -> r.getEmpleado().getId().equals(reserva.getEmpleado().getId()));
-        if (especialistaOcupado) {
-            throw new ReservaConflictException("El especialista seleccionado no se encuentra disponible en el turno solicitado.");
-        }
-        if (!conflictos.isEmpty()) {
-            throw new ReservaConflictException("La suite o sala de tratamiento seleccionada ya se encuentra ocupada.");
-        }
-    }
 
-    private void asignarRelaciones(Reserva reserva, ReservaRequest request) {
-        reserva.setEmpleado(empleadoRepository.buscarBloqueado(request.empleadoId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", request.empleadoId())));
-        if (!reserva.getEmpleado().isActivo()) {
-            throw new IllegalArgumentException(reserva.getEmpleado().getNombre() + " está dada de baja y no recibe reservas");
-        }
-        reserva.setServicio(servicioRepository.findById(request.servicioId())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Servicio", request.servicioId())));
-        reserva.setFechaHora(request.fechaHora());
-        if (request.salaId() != null) {
-            reserva.setSala(salaRepository.buscarBloqueada(request.salaId())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Sala", request.salaId())));
-        } else if (reserva.getSala() == null) {
-            reserva.setSala(asignarSalaLibre(reserva));
-        } else {
-            salaRepository.buscarBloqueada(reserva.getSala().getId());
-        }
-    }
 
-    /**
-     * Sin sala indicada se usa la primera cabina libre durante todo el bloque (duración + limpieza). Cada candidata
-     * se bloquea y se vuelve a comprobar: si otra reserva la tomó mientras tanto, se pasa a la siguiente.
-     */
-    private Sala asignarSalaLibre(Reserva reserva) {
-        if (reserva.getFechaHora() == null) {
-            throw new IllegalArgumentException("Debe indicar la fecha y hora de la reserva");
-        }
-        LocalDateTime fin = ReservaResponse.finBloque(reserva.getFechaHora(), reserva.getServicio());
-        for (Sala candidata : salaRepository.buscarDisponibles(reserva.getFechaHora(), fin)) {
-            Sala bloqueada = salaRepository.buscarBloqueada(candidata.getId()).orElse(null);
-            if (bloqueada != null && reservaRepository.buscarConflictos(bloqueada.getId(), -1L,
-                    reserva.getFechaHora(), fin, reserva.getId()).isEmpty()) {
-                return bloqueada;
-            }
-        }
-        throw new ReservaConflictException("No hay cabinas disponibles en el turno solicitado.");
-    }
 
-    private boolean estaActiva(Reserva r) {
-        return r.getEstado() == EstadoReserva.PENDIENTE || r.getEstado() == EstadoReserva.CONFIRMADA;
-    }
 
     static void validarRango(LocalDateTime inicio, LocalDateTime fin) {
         if (!inicio.isBefore(fin)) {
@@ -535,51 +426,5 @@ public class ReservaService {
         }
     }
 
-    /**
-     * Turnos del día con su disponibilidad para esa terapeuta y servicio, así la pantalla de reserva solo ofrece lo que
-     * realmente se puede tomar (y explica por qué el resto no). Es informativo: la reserva vuelve a validar todo con
-     * los recursos bloqueados, porque entre mirar y reservar otra persona puede tomar el turno.
-     */
-    @Transactional(isolation = Isolation.READ_COMMITTED)
-    public List<TurnoDisponibleResponse> disponibilidad(Long empleadoId, Long servicioId, LocalDate fecha, String correoCliente) {
-        Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", empleadoId));
-        var servicio = servicioRepository.findById(servicioId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Servicio", servicioId));
-        Long clienteId = correoCliente != null ? clienteIdDelUsuario(correoCliente) : null;
-        LocalDateTime ahora = LocalDateTime.now();
-        liberarPlazosVencidos(ahora);
-        List<TurnoDisponibleResponse> turnos = new ArrayList<>();
-        for (LocalTime turno : ReglasReserva.TURNOS) {
-            LocalDateTime inicio = fecha.atTime(turno);
-            LocalDateTime finSesion = inicio.plusMinutes(servicio.getDuracionMinutos() != null ? servicio.getDuracionMinutos() : 60);
-            LocalDateTime finBloque = ReservaResponse.finBloque(inicio, servicio);
-            String motivo = null;
-            if (!empleado.isActivo()) {
-                motivo = empleado.getNombre() + " no está atendiendo";
-            } else if (inicio.isBefore(ahora)) {
-                motivo = "Este horario ya pasó";
-            } else if (!ReglasReserva.dentroDeHorario(inicio, finSesion)) {
-                motivo = "La sesión terminaría fuera del horario de atención";
-            } else if (!ausenciaRepository.buscarCruces(empleadoId, inicio, finBloque).isEmpty()) {
-                motivo = empleado.getNombre() + " no atiende ese día";
-            } else if (!reservaRepository.buscarConflictos(-1L, empleadoId, inicio, finBloque, null).isEmpty()) {
-                motivo = empleado.getNombre() + " ya tiene una sesión a esa hora";
-            } else if (salaRepository.buscarDisponibles(inicio, finBloque).isEmpty()) {
-                motivo = "No quedan cabinas libres a esa hora";
-            } else if (clienteId != null && !reservaRepository.buscarConflictosCliente(clienteId, inicio, finSesion, null).isEmpty()) {
-                motivo = "Ya tienes otra reserva a esa hora";
-            }
-            turnos.add(new TurnoDisponibleResponse(turno.toString(), motivo == null, motivo));
-        }
-        return turnos;
-    }
 
-    private Long clienteIdDelUsuario(String correo) {
-        Usuario usuario = usuarioRepository.findByCorreo(correo)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
-        return clienteRepository.findByUsuarioId(usuario.getId())
-                .orElseThrow(() -> new IllegalStateException("El usuario no tiene un cliente asociado"))
-                .getId();
-    }
 }

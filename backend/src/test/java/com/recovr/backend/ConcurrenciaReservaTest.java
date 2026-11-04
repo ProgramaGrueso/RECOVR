@@ -182,14 +182,14 @@ class ConcurrenciaReservaTest {
             completada.setEmpleado(maria);
             completada.setSala(c1);
             completada.setServicio(servicio);
-            completada.setFechaHora(LocalDateTime.now().minusDays(5));
+            completada.setFechaHora(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusDays(5));
             completada.setEstado(EstadoReserva.COMPLETADA);
             completada = reservaRepository.save(completada);
             Pago pago = new Pago();
             pago.setReserva(completada);
             pago.setMonto(new BigDecimal("400"));
             pago.setMetodoPago("EFECTIVO");
-            pago.setFechaPago(LocalDateTime.now().minusDays(5));
+            pago.setFechaPago(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusDays(5));
             pagoRepository.save(pago);
 
             String correo = correoDe(a);
@@ -256,7 +256,7 @@ class ConcurrenciaReservaTest {
 
     /** Horarios distintos por ronda, dentro del horario de atención. */
     private LocalDateTime slot(int ronda) {
-        return LocalDateTime.now().plusDays(3 + ronda).withHour(15).withMinute(0).withSecond(0).withNano(0);
+        return LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(3 + ronda).withHour(15).withMinute(0).withSecond(0).withNano(0);
     }
 
     private void vaciarReservas() {

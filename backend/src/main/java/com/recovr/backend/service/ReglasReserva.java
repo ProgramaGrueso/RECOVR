@@ -1,7 +1,10 @@
 package com.recovr.backend.service;
 
+import java.util.List;
+
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Reserva;
+import com.recovr.backend.entity.Servicio;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -43,7 +46,7 @@ public final class ReglasReserva {
     public static final LocalTime CIERRE = LocalTime.of(23, 0);
 
     /** Turnos que ofrece la reserva en línea, cada 90 min dentro del horario de atención (recepción puede usar otras horas). */
-    public static final java.util.List<LocalTime> TURNOS = java.util.List.of(
+    public static final List<LocalTime> TURNOS = List.of(
             LocalTime.of(12, 0), LocalTime.of(13, 30), LocalTime.of(15, 0), LocalTime.of(16, 30),
             LocalTime.of(18, 0), LocalTime.of(19, 30), LocalTime.of(21, 0));
 
@@ -74,9 +77,18 @@ public final class ReglasReserva {
         return d != null ? d : 60;
     }
 
-    public static int limpieza(Reserva r) {
-        Integer l = r.getServicio().getTiempoLimpiezaMinutos();
-        return l != null ? l : 0;
+    /** Fin del bloque que ocuparía una sesión de ese servicio empezando en {@code inicio} (duración + limpieza). */
+    public static LocalDateTime finBloque(LocalDateTime inicio, Servicio s) {
+        int duracion = s.getDuracionMinutos() != null ? s.getDuracionMinutos() : 60;
+        int limpieza = s.getTiempoLimpiezaMinutos() != null ? s.getTiempoLimpiezaMinutos() : 0;
+        return inicio.plusMinutes(duracion + limpieza);
+    }
+
+    /** Pasa la reserva a CANCELADA dejando cuándo y por qué (expiración, no-show, cancelación). */
+    public static void cancelar(Reserva r, LocalDateTime ahora, String motivo) {
+        r.setEstado(EstadoReserva.CANCELADA);
+        r.setCanceladaEn(ahora);
+        r.setObservacion(motivo);
     }
 
     /** Fin de la sesión (sin limpieza). */
@@ -86,7 +98,7 @@ public final class ReglasReserva {
 
     /** Fin del bloque ocupado: sesión + limpieza de la cabina. */
     public static LocalDateTime finBloque(Reserva r) {
-        return finSesion(r).plusMinutes(limpieza(r));
+        return finBloque(r.getFechaHora(), r.getServicio());
     }
 
     /** ¿Venció el plazo de pago de una reserva PENDIENTE? (solo mide desde la creación si se conoce). */
@@ -112,18 +124,6 @@ public final class ReglasReserva {
             case CONFIRMADA -> r.getCheckIn() != null ? EN_SESION : CONFIRMADA;
             case COMPLETADA -> COMPLETADA;
             case CANCELADA -> CANCELADA;
-        };
-    }
-
-    /** Transiciones permitidas entre estados guardados. COMPLETADA y CANCELADA son finales. */
-    public static boolean transicionValida(EstadoReserva desde, EstadoReserva hacia) {
-        if (desde == hacia) {
-            return true;
-        }
-        return switch (desde) {
-            case PENDIENTE -> hacia == EstadoReserva.CONFIRMADA || hacia == EstadoReserva.CANCELADA;
-            case CONFIRMADA -> hacia == EstadoReserva.COMPLETADA || hacia == EstadoReserva.CANCELADA;
-            case COMPLETADA, CANCELADA -> false;
         };
     }
 }

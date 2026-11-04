@@ -113,7 +113,7 @@ Todas las experiencias están configuradas con tarifas oficiales en moneda nacio
 - **Quién crea a quién:** los clientes se registran solos; **recepción, administración y terapeutas los crea un ADMIN** en *Usuarios y accesos* (clave temporal que se muestra una sola vez y cambio de contraseña obligatorio al primer ingreso; se puede desactivar o restablecer cualquier acceso). El **primer ADMIN** nace por configuración (`ADMIN_EMAIL` y `ADMIN_PASSWORD`), no por un endpoint público.
 - **Puntos:** 1 punto por cada S/ 1 pagado en una sesión completada; saldo = ganados − canjeados; el nivel (Bronce, Plata, Oro, Diamante) depende de lo ganado. Se canjean por un código de un solo uso que recepción aplica al cobrar (el servidor recalcula el monto). Todo se calcula de reservas y canjes reales y se explica en *Mi cuenta*.
 - **Perfil público de las terapeutas:** el sitio lee de la base de datos (solo activas): nombre, especialidad, presentación y la **foto que sube la propia terapeuta** (o el administrador) con su consentimiento. Las fotos se validan por firma (JPG/PNG, máx. 3 MB) y se re-codifican, lo que elimina metadatos.
-- **Modo demo vs. modo real:** `./run-demo.sh` (`SEED_DEMO_DATA=true`) carga 11 cuentas y ~600 reservas de práctica; `./run-real.sh` arranca sin nada de eso (catálogo oficial + primer admin por configuración). `backend/bdd/limpiar-demo.sql` borra los datos de demostración de una base ya usada.
+- **Modo demo vs. modo real:** `./run-demo.sh` (perfil `demo`) carga 11 cuentas, 140 pacientes ficticios y ~1.700 citas (90 días de historial + agenda hasta el 31 de diciembre); `./run-real.sh` arranca sin nada de eso (catálogo oficial + primer admin por configuración). `backend/bdd/limpiar-demo.sql` borra los datos de demostración de una base ya usada.
 - **Reservas (reglas en `ReglasReserva` y `ReservaService`):**
   - **Solo el pago completo asegura el turno.** Una reserva nace `PENDIENTE` y retiene el cupo **15 min** desde que se crea; si no se paga el total del servicio en ese plazo, expira y el cupo se libera. El servidor rechaza cualquier monto distinto del precio (menos el código de canje, que decide el servidor) y el estado no se cambia a mano por `PUT` (confirmar exige el pago; completar exige el check-in).
   - **Contra el acaparamiento:** un cliente puede tener **1 reserva pendiente** a la vez, y quien deja vencer **3 reservas sin pagar en 24 h** queda bloqueado temporalmente (HTTP 429).
@@ -144,43 +144,69 @@ cd RECOVR
 ```
 
 ### 2. Iniciar la Base de Datos (MySQL con Docker)
-En una terminal, inicia el contenedor de base de datos MySQL 8 preconfigurado para RECOVR:
+Toda la configuración sale de **variables de entorno**. Copia la plantilla y completa los valores (el archivo `.env` no se sube a git):
 ```bash
 cd backend
-docker compose up -d
-cd ..
+cp .env.example .env        # completa DB_ROOT_PASSWORD, DB_PASSWORD y JWT_SECRET (openssl rand -base64 48)
+docker compose up -d        # MySQL 8 en 127.0.0.1:3306, base recovr_db y usuario propio de la app (no root)
+set -a; . ./.env; set +a    # exporta las variables para mvn (PowerShell: run-demo.ps1 las carga solo)
 ```
-> **Nota:** La base de datos estará disponible en `127.0.0.1:3306` con la base `recovr_db`, usuario `root` y contraseña `root` (credenciales de demostración, ver `backend/docker-compose.yml`).
 
 ### 3. Iniciar el Backend (Spring Boot 3.3.5)
 Requiere Java 21 y Maven 3.9+ (el repositorio no incluye el wrapper `mvnw`). Con la base de datos ya levantada:
 ```bash
 cd backend
-SEED_DEMO_DATA=true mvn spring-boot:run
+SPRING_PROFILES_ACTIVE=demo mvn spring-boot:run
 ```
-*(En Windows PowerShell: `$env:SEED_DEMO_DATA="true"; mvn spring-boot:run`)*
+*(En Windows PowerShell: `$env:SPRING_PROFILES_ACTIVE="demo"; mvn spring-boot:run`)*
 
 - La API inicia en: `http://localhost:8095` (se cambia con la variable `SERVER_PORT`).
 - Documentación Swagger UI interactiva: [http://localhost:8095/swagger-ui/index.html](http://localhost:8095/swagger-ui/index.html)
 - Especificación OpenAPI en formato JSON: `http://localhost:8095/v3/api-docs`
-- Variables opcionales: `JWT_SECRET` (clave Base64 de 32 bytes o más; si falta se genera una temporal al arrancar), `DB_USERNAME`, `DB_PASSWORD` y `SHOW_SQL=true`.
+- Variables: ver `backend/.env.example` y la tabla de *Despliegue y escalado* más abajo. En el perfil `dev`, si falta `JWT_SECRET` se genera una clave temporal; en `prod` es obligatoria.
 - CORS solo acepta orígenes conocidos: `localhost` / `127.0.0.1` (cualquier puerto) y dominios `https://*.vercel.app`. Un origen cualquiera no recibe la cabecera `Access-Control-Allow-Origin`.
 
-**Datos de demostración (`SEED_DEMO_DATA=true`):** al arrancar por primera vez carga el catálogo oficial (RC-01 a RC-06), las 4 cabinas, las 4 terapeutas, 45 clientes y unas 600 reservas entre el 1 de octubre y el 31 de diciembre de 2026 (rango configurable con `recovr.seed.inicio` y `recovr.seed.fin`). Respeta la regla de negocio: ninguna cabina ni terapeuta tiene dos reservas activas que se crucen (duración + tiempo de limpieza). Las sesiones pasadas quedan COMPLETADAS o CANCELADAS y las futuras CONFIRMADAS (con pago) o PENDIENTES. Es idempotente: si ya hay datos demo, no vuelve a cargarlos. Con `DEMO_PASSWORD` crea además las cuentas `admin.demo@recovr.test`, `recepcion.demo@recovr.test`, `ely.demo@recovr.test` (ESPECIALISTA) y `cliente.demo@recovr.test`.
+#### Datos de demostración (seeder con historial de 3 meses)
 
-#### Atajo para el equipo: base de datos + backend con datos de 3 meses (oct–dic)
+El perfil `demo` (o `SEED_DEMO_DATA=true`) deja la base como si el sistema llevara **3 meses en uso**:
+
+| Qué | Detalle |
+| :--- | :--- |
+| Rango | Desde **hoy − 90 días** hasta el **31 de diciembre** del año en curso (`SEED_DIAS_HISTORIAL`, `SEED_FIN=AAAA-MM-DD`). |
+| Catálogo | Los 6 servicios RC-01…RC-06, las 4 cabinas y las 4 terapeutas oficiales (nombres inventados). |
+| Pacientes | 140 pacientes con nombres peruanos **inventados** (combinación aleatoria con semilla fija), correo `@example.com` (dominio reservado, RFC 2606) y teléfono de ficción `900000xxx`. Sin DNI. |
+| Pasado | ~80 % completadas (con check-in y pago), canceladas por el paciente o por no pagar a tiempo, y "no asistió" (pagadas, sin check-in). |
+| Futuro | Confirmadas (pagadas) y algunas pendientes. Cada día es **lleno**, **medio** o **tranquilo**: hay espacio para agendar, pero la agenda no se ve vacía. |
+| Distribución | Lunes a sábado más cargados (viernes y sábado los que más), domingo casi vacío (0–3 citas). Horas pico al abrir (12:30–14:00, el negocio abre a mediodía) y por la tarde-noche (17:30–20:00). |
+| Reglas | Ninguna terapeuta, cabina ni paciente tiene dos citas activas que se crucen (duración + limpieza) y toda sesión cabe en el horario 12:00–23:00. |
+
+Cómo correrlo:
+```bash
+cd backend
+./run-demo.sh                                   # MySQL en Docker + backend con el perfil demo
+# o, con la base ya levantada:
+SPRING_PROFILES_ACTIVE=demo mvn spring-boot:run
+```
+- **Re-ejecutable sin duplicar:** se puede arrancar con el perfil `demo` las veces que se quiera. Los pacientes se buscan por correo y un día que ya tiene citas demo no se vuelve a sembrar; tampoco pisa reservas reales (misma cabina o terapeuta).
+- **Verificar en MySQL:** `docker exec -i recovr-mysql mysql -uroot -p"$DB_PASSWORD" recovr_db < bdd/verificar-agenda.sql` (las consultas de solapes deben devolver 0 filas; además muestra citas por mes/estado y el promedio por día de la semana).
+- **Borrar la demo:** `bdd/limpiar-demo.sql` elimina todo lo marcado con `@example.com` (y el antiguo `@recovr.test`).
+- **Pruebas:** `DemoDataSeederTest` (rango, estados, distribución, huecos en el futuro, datos ficticios, idempotencia y **sin citas solapadas**) y `GeneradorAgendaDemoTest` (determinismo y sin solapes, sin base de datos).
+
+Con el perfil demo se crean además las cuentas `admin.demo@example.com`, `recepcion.demo@example.com`, `ely.demo@example.com` (ESPECIALISTA), `cliente.demo@example.com`, etc.
+
+#### Atajo para el equipo: base de datos + backend con datos de 3 meses
 Con Docker, Java 21 y Maven instalados, en la carpeta `backend`:
 ```bash
 ./run-demo.sh          # Linux / macOS
 .\run-demo.ps1         # Windows PowerShell
 ```
-El script levanta MySQL (`docker compose up -d`), espera a que esté sano y arranca el backend con `SEED_DEMO_DATA=true`. Con `SEED_DEMO_DATA=true` se crean 11 cuentas de demostración (administración, recepción, las 4 terapeutas y 5 clientes), cada una con su propia contraseña: están listadas en `backend/CREDENCIALES_DEMO.md` (archivo local, no se sube a git). Solo para desarrollo.
+El script levanta MySQL (`docker compose up -d`), espera a que esté sano y arranca el backend con el perfil `demo`. Con el perfil `demo` se crean 11 cuentas de demostración (administración, recepción, las 4 terapeutas y 5 clientes), cada una con su propia contraseña: están listadas en `backend/CREDENCIALES_DEMO.md` (archivo local, no se sube a git). Solo para desarrollo.
 > Si Docker responde que el nombre `recovr-mysql` ya está en uso, es un contenedor de una ejecución anterior: `docker start recovr-mysql` (o `docker rm recovr-mysql` y repetir).
 
 #### Asistente con IA (opcional)
 El chat de la portada usa DeepSeek desde el backend (`POST /api/ia/chat`, público y con límites por IP). La clave solo vive en el servidor:
 ```bash
-DEEPSEEK_API_KEY=sk-... SEED_DEMO_DATA=true mvn spring-boot:run
+DEEPSEEK_API_KEY=sk-... SPRING_PROFILES_ACTIVE=demo mvn spring-boot:run
 ```
 Sin `DEEPSEEK_API_KEY` el chat responde que no está disponible y ofrece WhatsApp; las órdenes de navegación de la carita siguen funcionando. `IA_REGISTRAR_CONVERSACIONES=true` deja en el log lo que se pregunta (solo para demos). Límites y datos del negocio en `application.properties` (`recovr.ia.*`, `recovr.negocio.*`).
 
@@ -264,6 +290,45 @@ npm run build
 - **Carga diferida:** Módulos de administración, catálogo y Three.js divididos en chunks independientes (*lazy loading*).
 
 ---
+
+## 📈 Despliegue y escalado
+
+### Perfiles
+| Perfil | Para qué | Comportamiento |
+| :--- | :--- | :--- |
+| `dev` (por defecto) | Desarrollo local contra el MySQL de `docker compose` | Swagger activo; si falta `JWT_SECRET`, clave temporal. |
+| `demo` | `dev` + datos ficticios | Siembra 3 meses de historial y la agenda hasta el 31/12 (ver *Datos de demostración*). |
+| `prod` | Servidor real o contenedores | Sin valores por defecto: si falta `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` o `JWT_SECRET`, no arranca. Swagger apagado (`SWAGGER_ENABLED=true` lo enciende). |
+
+### Variables de entorno principales
+| Variable | Por defecto | Descripción |
+| :--- | :--- | :--- |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | MySQL local / `root` / vacía | Conexión a MySQL. |
+| `DB_POOL_MAX`, `DB_POOL_MIN`, `DB_POOL_TIMEOUT_MS` | 10 / 2 / 5000 | Pool HikariCP. Con N réplicas el total es N × `DB_POOL_MAX` (MySQL acepta 200 en el compose). |
+| `JWT_SECRET`, `JWT_EXPIRATION_MS` | — / 24 h | Firma de los tokens. **La misma en todas las réplicas.** |
+| `CACHE_TTL` | 60s | Vida de la caché del catálogo (servicios, cabinas, terapeutas activas). |
+| `LIFECYCLE_ENABLED` | true | Planificador de estados; con varias réplicas, solo en una. |
+| `DDL_AUTO` | update | Estrategia de esquema de Hibernate. |
+| `SERVER_PORT` | 8095 | Puerto HTTP. |
+
+### Todo en contenedores (con réplicas)
+```bash
+cd backend
+cp .env.example .env   # completa los valores
+docker compose --profile app up -d --build --scale api=2
+curl http://localhost:8095/actuator/health        # {"status":"UP"} a través de nginx
+```
+Servicios: `mysql`, `api` (réplicas sin planificador), `planificador` (una sola instancia: planificador de estados y, con `SEED_DEMO_DATA=true`, el seeder demo) y `lb` (nginx en round-robin; la cabecera `X-Upstream` muestra qué réplica respondió).
+
+### ¿Es stateless? (listo para varias instancias)
+- **Sesión:** no hay `HttpSession` (`SessionCreationPolicy.STATELESS`). Cada petición trae su JWT y la identidad se valida contra la base. Verificado: un token emitido por una réplica vale en la otra.
+- **Archivos:** las fotos de las terapeutas se guardan en MySQL, no en el disco del contenedor.
+- **Caché:** local por instancia, con TTL corto y solo para el catálogo (nunca para la agenda).
+- **Tareas programadas y seeder:** solo en la instancia `planificador` (`LIFECYCLE_ENABLED=false` en las réplicas), así no corren dos a la vez.
+- **Pendiente:** los límites del login (5 intentos) y del chat de IA se cuentan en memoria **por instancia**. Con N réplicas el límite efectivo es N veces mayor; para producción conviene llevarlos a Redis o a la base (ver `RESUMEN.md`).
+
+### Rendimiento
+Índices en las columnas de agenda (fecha, terapeuta, cabina, cliente, estado), sin consultas N+1 en los listados, paginación (`pagina`, `tamano`, `desde`, `hasta`; cabeceras `X-Total-Count` y `X-Total-Pages`), caché del catálogo y gzip. Mediciones antes/después en [`backend/perf/RESULTADOS.md`](backend/perf/RESULTADOS.md) (el listado de la agenda pasó de 7 a 72 req/s y de 3 s a 0,27 s de p50).
 
 ## ☁️ Despliegue e Integración Continua (CI/CD)
 

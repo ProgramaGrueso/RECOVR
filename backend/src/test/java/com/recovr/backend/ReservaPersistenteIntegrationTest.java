@@ -73,7 +73,7 @@ class ReservaPersistenteIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        manana10 = LocalDateTime.now().plusDays(2).withHour(15).withMinute(0).withSecond(0).withNano(0);
+        manana10 = LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).plusDays(2).withHour(15).withMinute(0).withSecond(0).withNano(0);
         tokenAdmin = token("admin@test.com", Rol.ADMIN);
         tokenRecepcion = token("recepcion@test.com", Rol.RECEPCIONISTA);
         tokenCliente = token("cliente@test.com", Rol.CLIENTE);
@@ -155,7 +155,7 @@ class ReservaPersistenteIntegrationTest {
     @Test
     @DisplayName("Fecha en el pasado devuelve 400 y IDs inexistentes devuelven 404")
     void validacionesDeReserva() throws Exception {
-        crearReserva(tokenCliente, empleado, sala, LocalDateTime.now().minusDays(1)).andExpect(status().isBadRequest());
+        crearReserva(tokenCliente, empleado, sala, LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusDays(1)).andExpect(status().isBadRequest());
         mockMvc.perform(auth(post("/api/db/reservas"), tokenCliente).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"empleadoId\":9999,\"servicioId\":" + servicio.getId() + ",\"salaId\":" + sala.getId()
                                 + ",\"fechaHora\":\"" + fmt(manana10) + "\"}"))

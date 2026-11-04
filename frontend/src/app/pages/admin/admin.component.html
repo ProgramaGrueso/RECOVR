@@ -24,7 +24,7 @@
       @for (item of navItems(); track item.key) {
         <button class="nav-item-btn" [class.active]="activeView === item.key" (click)="setView(item.key)">
           <span class="nav-icon">{{ item.icon }}</span>
-          <span class="nav-text">{{ item.key === 'AGENDA' && user().rol === 'ESPECIALISTA' ? 'Mi agenda' : item.label }}</span>
+          <span class="nav-text">{{ etiqueta(item) }}</span>
         </button>
       }
     </nav>

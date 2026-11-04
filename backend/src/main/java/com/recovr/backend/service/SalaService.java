@@ -1,5 +1,7 @@
 package com.recovr.backend.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import com.recovr.backend.entity.Sala;
 import com.recovr.backend.repository.SalaRepository;
 import com.recovr.backend.repository.ReservaRepository;
@@ -13,8 +15,8 @@ import java.util.List;
 @Service
 public class SalaService {
 
-    private static final java.util.List<EstadoReserva> RESERVAS_ACTIVAS =
-            java.util.List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA);
+    private static final List<EstadoReserva> RESERVAS_ACTIVAS =
+            List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA);
 
     private final SalaRepository salaRepository;
     private final ReservaRepository reservaRepository;
@@ -24,6 +26,7 @@ public class SalaService {
         this.reservaRepository = reservaRepository;
     }
 
+    @Cacheable("salas")
     public List<Sala> listarTodos() {
         return salaRepository.findAll();
     }
@@ -33,10 +36,12 @@ public class SalaService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Sala", id));
     }
 
+    @CacheEvict(value = "salas", allEntries = true)
     public Sala crear(Sala sala) {
         return salaRepository.save(sala);
     }
 
+    @CacheEvict(value = "salas", allEntries = true)
     public Sala actualizar(Long id, Sala datos) {
         Sala sala = buscarPorId(id);
         sala.setNombre(datos.getNombre());
@@ -48,6 +53,7 @@ public class SalaService {
      * Pone la cabina en mantenimiento o la reactiva. Igual que dar de baja a una terapeuta, no se puede mientras
      * tenga reservas activas: primero se cancelan o se reubican.
      */
+    @CacheEvict(value = "salas", allEntries = true)
     public Sala cambiarActiva(Long id, boolean activa) {
         Sala sala = buscarPorId(id);
         if (!activa && reservaRepository.existsBySalaIdAndEstadoIn(id, RESERVAS_ACTIVAS)) {
@@ -58,6 +64,7 @@ public class SalaService {
         return salaRepository.save(sala);
     }
 
+    @CacheEvict(value = "salas", allEntries = true)
     public void eliminar(Long id) {
         if (!salaRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Sala", id);

@@ -6,6 +6,8 @@ import com.recovr.backend.dto.ReservaResponse;
 import com.recovr.backend.dto.TurnoDisponibleResponse;
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Reserva;
+import com.recovr.backend.security.Roles;
+import com.recovr.backend.service.DisponibilidadService;
 import com.recovr.backend.service.ReservaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,9 +20,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,25 +34,35 @@ import java.util.List;
 public class ReservaController {
 
     private final ReservaService reservaService;
+    private final DisponibilidadService disponibilidadService;
 
-    public ReservaController(ReservaService reservaService) {
+    public ReservaController(ReservaService reservaService, DisponibilidadService disponibilidadService) {
         this.reservaService = reservaService;
+        this.disponibilidadService = disponibilidadService;
     }
 
-    @Operation(summary = "Listar todas las reservas (DB)", description = "Retorna las reservas persistidas por páginas (la más reciente primero; la cabecera X-Total-Count trae el total). Requiere rol ADMIN o RECEPCIONISTA.")
+    @Operation(summary = "Listar reservas por páginas",
+            description = "Reservas de la más reciente a la más antigua, por páginas (cabeceras X-Total-Count y X-Total-Pages). "
+                    + "Con desde/hasta (fechas ISO) se limita a ese rango de días [desde, hasta). Requiere rol ADMIN o RECEPCIONISTA.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Listado de reservas",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponse.class)))),
+            @ApiResponse(responseCode = "400", description = "Rango de fechas inválido", content = @Content),
             @ApiResponse(responseCode = "401", description = "No autenticado", content = @Content),
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere ADMIN o RECEPCIONISTA)", content = @Content)
     })
     @GetMapping
-    public org.springframework.http.ResponseEntity<List<ReservaResponse>> listar(
+    public ResponseEntity<List<ReservaResponse>> listar(
             @Parameter(description = "Número de página (desde 0)", example = "0") @RequestParam(defaultValue = "0") int pagina,
-            @Parameter(description = "Reservas por página (máximo 1000)", example = "1000") @RequestParam(defaultValue = "1000") int tamano) {
-        var resultado = reservaService.listarPagina(pagina, tamano);
-        return org.springframework.http.ResponseEntity.ok()
+            @Parameter(description = "Reservas por página (máximo 1000)", example = "200") @RequestParam(defaultValue = "1000") int tamano,
+            @Parameter(description = "Primer día incluido (opcional)", example = "2026-11-01")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @Parameter(description = "Día siguiente al último incluido (opcional)", example = "2026-12-01")
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        var resultado = reservaService.listarPagina(pagina, tamano, desde, hasta);
+        return ResponseEntity.ok()
                 .header("X-Total-Count", String.valueOf(resultado.getTotalElements()))
+                .header("X-Total-Pages", String.valueOf(resultado.getTotalPages()))
                 .body(aRespuesta(resultado.getContent()));
     }
 
@@ -60,10 +74,10 @@ public class ReservaController {
             @Parameter(description = "ID de la terapeuta", example = "1") @RequestParam Long empleadoId,
             @Parameter(description = "ID del servicio", example = "1") @RequestParam Long servicioId,
             @Parameter(description = "Fecha (ISO-8601)", example = "2026-10-20")
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate fecha,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
             Authentication authentication) {
-        String correoCliente = esGestionDeReservas(authentication) ? null : authentication.getName();
-        return reservaService.disponibilidad(empleadoId, servicioId, fecha, correoCliente);
+        String correoCliente = Roles.gestionaReservas(authentication) ? null : authentication.getName();
+        return disponibilidadService.disponibilidad(empleadoId, servicioId, fecha, correoCliente);
     }
 
     @Operation(summary = "Obtener reserva por ID (DB)", description = "Consulta una reserva persistida según su ID. Requiere rol ADMIN o RECEPCIONISTA.")
@@ -97,7 +111,7 @@ public class ReservaController {
     @ResponseStatus(HttpStatus.CREATED)
     public ReservaResponse crear(@Valid @RequestBody ReservaRequest request, Authentication authentication) {
         return ReservaResponse.de(reservaService.crearDesdeRequest(
-                request, authentication.getName(), esGestionDeReservas(authentication)));
+                request, authentication.getName(), Roles.gestionaReservas(authentication)));
     }
 
     @Operation(summary = "Actualizar reserva", description = "Modifica una reserva existente (incluido su estado). Requiere rol ADMIN o RECEPCIONISTA.")
@@ -135,7 +149,7 @@ public class ReservaController {
             @Parameter(description = "ID de la reserva a cancelar", example = "1") @PathVariable Long id,
             Authentication authentication) {
         return ReservaResponse.de(reservaService.cancelar(
-                id, authentication.getName(), esGestionDeReservas(authentication)));
+                id, authentication.getName(), Roles.gestionaReservas(authentication)));
     }
 
     @Operation(summary = "Registrar check-in",
@@ -186,7 +200,7 @@ public class ReservaController {
     public List<ReservaResponse> porCliente(
             @Parameter(description = "ID del cliente", example = "1") @PathVariable Long clienteId,
             Authentication authentication) {
-        return aRespuesta(reservaService.buscarPorClienteParaUsuario(clienteId, authentication.getName(), esGestionDeReservas(authentication)));
+        return aRespuesta(reservaService.buscarPorClienteParaUsuario(clienteId, authentication.getName(), Roles.gestionaReservas(authentication)));
     }
 
     @Operation(summary = "Obtener mis reservas (Cliente autenticado)", description = "Devuelve el historial de reservas pertenecientes al CLIENTE en sesión.")
@@ -251,15 +265,10 @@ public class ReservaController {
             @Valid @RequestBody PagoRequest pago,
             Authentication authentication) {
         return ReservaResponse.de(reservaService.confirmarYPagarParaUsuario(
-                id, pago, authentication.getName(), esGestionDeReservas(authentication)));
+                id, pago, authentication.getName(), Roles.gestionaReservas(authentication)));
     }
 
     private List<ReservaResponse> aRespuesta(List<Reserva> reservas) {
         return reservas.stream().map(ReservaResponse::de).toList();
-    }
-
-    private boolean esGestionDeReservas(Authentication authentication) {
-        return authentication.getAuthorities().stream().anyMatch(authority ->
-                authority.getAuthority().equals("ROLE_ADMIN") || authority.getAuthority().equals("ROLE_RECEPCIONISTA"));
     }
 }

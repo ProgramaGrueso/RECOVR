@@ -1,3 +1,5 @@
+import { ahoraLima } from '../../../utils/hora-lima';
+import { Rango, filtrarAgenda } from './agenda-filtro';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -8,15 +10,18 @@ import {
   ClienteOps, EmpleadoEstado, ReservaForm, ReservaOps, SalaEstado, ServicioOps
 } from '../../../models/ops.model';
 import { OpsCobroModalComponent } from './ops-cobro-modal.component';
-import { ESTADO_TXT, codigoReserva, fechaHoraTxt, fechaInput, horaTxt, soles } from './ops.util';
+import { ESTADO_TXT, codigoReserva, fechaHoraTxt, fechaInput, horaTxt, soles, diaRelativo } from './ops.util';
 
-type Rango = 'HOY' | 'MANANA' | 'SEMANA' | 'PASADAS' | 'TODAS';
 
 /**
  * Agenda y control de salas: CRUD completo de reservas sobre la API.
  * Flujo: En espera → (cobrar) Confirmada → (check-in) En sesión → (finalizar o fin de sesión) Completada.
  * Cancelar es posible mientras la reserva esté activa; solo se elimina una reserva ya cancelada (solo ADMIN).
  */
+/** La agenda carga una ventana: los últimos 30 días y los próximos 4 meses (el servidor pagina el resto). */
+const VENTANA_PASADO_DIAS = 30;
+const VENTANA_FUTURO_DIAS = 120;
+
 @Component({
   selector: 'app-ops-agenda',
   standalone: true,
@@ -209,26 +214,8 @@ export class OpsAgendaComponent implements OnInit, OnDestroy {
   /** Una cuenta ESPECIALISTA solo ve su propia agenda futura, sin acciones. */
   soloLectura = computed(() => this.auth.user()?.rol === 'ESPECIALISTA');
 
-  visibles = computed(() => {
-    const ahora = new Date();
-    const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-    const dia = 86_400_000;
-    const q = this.texto().trim().toLowerCase();
-    const lista = this.reservas().filter(r => {
-      const t = new Date(r.fechaHora).getTime();
-      const d = t - inicioHoy.getTime();
-      const enRango = {
-        HOY: d >= 0 && d < dia, MANANA: d >= dia && d < 2 * dia, SEMANA: d >= 0 && d < 7 * dia,
-        PASADAS: d < 0, TODAS: true
-      }[this.rango()];
-      return enRango
-        && (!this.estadoFiltro() || r.estadoOperativo === this.estadoFiltro())
-        && (!this.salaFiltro() || String(r.salaId) === this.salaFiltro())
-        && (!q || r.clienteNombre.toLowerCase().includes(q) || r.servicioNombre.toLowerCase().includes(q));
-    });
-    const asc = this.rango() !== 'PASADAS' && this.rango() !== 'TODAS';
-    return lista.sort((a, b) => (asc ? 1 : -1) * a.fechaHora.localeCompare(b.fechaHora));
-  });
+  visibles = computed(() => filtrarAgenda(this.reservas(),
+    { rango: this.rango(), estado: this.estadoFiltro(), salaId: this.salaFiltro(), texto: this.texto() }, ahoraLima()));
 
   private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -255,7 +242,7 @@ export class OpsAgendaComponent implements OnInit, OnDestroy {
       return;
     }
     forkJoin({
-      reservas: this.admin.reservas(), clientes: this.admin.clientes(), servicios: this.admin.servicios(),
+      reservas: this.admin.reservas(diaRelativo(-VENTANA_PASADO_DIAS), diaRelativo(VENTANA_FUTURO_DIAS)), clientes: this.admin.clientes(), servicios: this.admin.servicios(),
       empleados: this.admin.estadoEmpleados(), salas: this.admin.estadoSalas()
     }).subscribe({
       next: d => {

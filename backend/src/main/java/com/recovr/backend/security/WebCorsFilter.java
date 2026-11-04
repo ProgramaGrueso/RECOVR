@@ -1,5 +1,7 @@
 package com.recovr.backend.security;
 
+import java.util.regex.Pattern;
+
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,7 +19,7 @@ import java.io.IOException;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class WebCorsFilter implements Filter {
 
-    private static final java.util.regex.Pattern ORIGEN_PERMITIDO = java.util.regex.Pattern.compile(
+    private static final Pattern ORIGEN_PERMITIDO = Pattern.compile(
             "^https?://(localhost|127\\.0\\.0\\.1)(:\\d+)?$|^https://[a-z0-9-]+(\\.[a-z0-9-]+)*\\.vercel\\.app$");
 
     @Override

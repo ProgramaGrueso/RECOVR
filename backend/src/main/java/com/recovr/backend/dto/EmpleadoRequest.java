@@ -8,10 +8,10 @@ import jakarta.validation.constraints.Size;
 @Schema(description = "Datos para crear o actualizar un especialista")
 public record EmpleadoRequest(
         @Schema(description = "Nombre completo", example = "Carlos Fisioterapeuta", requiredMode = Schema.RequiredMode.REQUIRED)
-        @NotBlank String nombre,
+        @NotBlank @Size(max = 120) String nombre,
 
         @Schema(description = "Especialidad", example = "Crioterapia y Recuperación Muscular")
-        String especialidad,
+        @Size(max = 255) String especialidad,
 
         @Schema(description = "Teléfono de contacto", example = "911222333")
         @Size(max = 20) String telefono,

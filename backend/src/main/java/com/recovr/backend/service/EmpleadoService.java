@@ -1,5 +1,13 @@
 package com.recovr.backend.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import com.recovr.backend.entity.AusenciaEmpleado;
+import com.recovr.backend.repository.AusenciaEmpleadoRepository;
+import com.recovr.backend.repository.FotoEmpleadoRepository;
+import com.recovr.backend.repository.UsuarioRepository;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.recovr.backend.entity.Empleado;
 import com.recovr.backend.repository.EmpleadoRepository;
 import com.recovr.backend.repository.ReservaRepository;
@@ -13,19 +21,19 @@ import java.util.List;
 @Service
 public class EmpleadoService {
 
-    private static final java.util.List<EstadoReserva> RESERVAS_ACTIVAS =
-            java.util.List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA);
+    private static final List<EstadoReserva> RESERVAS_ACTIVAS =
+            List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA);
 
     private final EmpleadoRepository empleadoRepository;
     private final ReservaRepository reservaRepository;
-    private final com.recovr.backend.repository.AusenciaEmpleadoRepository ausenciaRepository;
-    private final com.recovr.backend.repository.FotoEmpleadoRepository fotoRepository;
-    private final com.recovr.backend.repository.UsuarioRepository usuarioRepository;
+    private final AusenciaEmpleadoRepository ausenciaRepository;
+    private final FotoEmpleadoRepository fotoRepository;
+    private final UsuarioRepository usuarioRepository;
 
     public EmpleadoService(EmpleadoRepository empleadoRepository, ReservaRepository reservaRepository,
-                           com.recovr.backend.repository.AusenciaEmpleadoRepository ausenciaRepository,
-                           com.recovr.backend.repository.FotoEmpleadoRepository fotoRepository,
-                           com.recovr.backend.repository.UsuarioRepository usuarioRepository) {
+                           AusenciaEmpleadoRepository ausenciaRepository,
+                           FotoEmpleadoRepository fotoRepository,
+                           UsuarioRepository usuarioRepository) {
         this.empleadoRepository = empleadoRepository;
         this.reservaRepository = reservaRepository;
         this.ausenciaRepository = ausenciaRepository;
@@ -33,7 +41,7 @@ public class EmpleadoService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    public List<com.recovr.backend.entity.AusenciaEmpleado> ausencias(Long empleadoId) {
+    public List<AusenciaEmpleado> ausencias(Long empleadoId) {
         buscarPorId(empleadoId);
         return ausenciaRepository.findByEmpleadoIdOrderByDesdeAsc(empleadoId);
     }
@@ -42,8 +50,8 @@ public class EmpleadoService {
      * Registra una ausencia (vacaciones, licencia). Mientras dura no recibe reservas; si ya tiene reservas activas
      * en ese periodo no se puede registrar: primero se cancelan o se reasignan, igual que con la baja.
      */
-    @org.springframework.transaction.annotation.Transactional
-    public com.recovr.backend.entity.AusenciaEmpleado registrarAusencia(Long empleadoId, LocalDateTime desde,
+    @Transactional
+    public AusenciaEmpleado registrarAusencia(Long empleadoId, LocalDateTime desde,
                                                                          LocalDateTime hasta, String motivo) {
         Empleado empleado = buscarPorId(empleadoId);
         ReservaService.validarRango(desde, hasta);
@@ -51,7 +59,7 @@ public class EmpleadoService {
             throw new IllegalStateException("No se puede registrar la ausencia de " + empleado.getNombre()
                     + ": tiene reservas activas en ese periodo. Cancélalas o reasígnalas primero.");
         }
-        com.recovr.backend.entity.AusenciaEmpleado a = new com.recovr.backend.entity.AusenciaEmpleado();
+        AusenciaEmpleado a = new AusenciaEmpleado();
         a.setEmpleado(empleado);
         a.setDesde(desde);
         a.setHasta(hasta);
@@ -71,6 +79,7 @@ public class EmpleadoService {
     }
 
     /** Terapeutas que reciben reservas (las dadas de baja no aparecen al reservar). */
+    @Cacheable("terapeutasActivas")
     public List<Empleado> listarActivos() {
         return empleadoRepository.findAll().stream().filter(Empleado::isActivo).toList();
     }
@@ -79,6 +88,7 @@ public class EmpleadoService {
      * Baja lógica: la terapeuta conserva su historial pero deja de recibir reservas. No se puede dar de baja
      * mientras tenga reservas activas (PENDIENTE o CONFIRMADA): primero se cancelan o se reasignan.
      */
+    @CacheEvict(value = "terapeutasActivas", allEntries = true)
     public Empleado cambiarActivo(Long id, boolean activo) {
         Empleado empleado = buscarPorId(id);
         if (!activo && reservaRepository.existsByEmpleadoIdAndEstadoIn(id, RESERVAS_ACTIVAS)) {
@@ -94,10 +104,12 @@ public class EmpleadoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", id));
     }
 
+    @CacheEvict(value = "terapeutasActivas", allEntries = true)
     public Empleado crear(Empleado empleado) {
         return empleadoRepository.save(empleado);
     }
 
+    @CacheEvict(value = "terapeutasActivas", allEntries = true)
     public Empleado actualizar(Long id, Empleado datos) {
         Empleado empleado = buscarPorId(id);
         empleado.setNombre(datos.getNombre());
@@ -107,7 +119,8 @@ public class EmpleadoService {
         return empleadoRepository.save(empleado);
     }
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
+    @CacheEvict(value = "terapeutasActivas", allEntries = true)
     public void eliminar(Long id) {
         if (!empleadoRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Empleado", id);

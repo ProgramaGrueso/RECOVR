@@ -9,7 +9,7 @@ import com.recovr.backend.dto.TurnoDisponibleResponse;
 import com.recovr.backend.entity.Servicio;
 import com.recovr.backend.repository.ServicioRepository;
 import com.recovr.backend.service.PerfilTerapeutaService;
-import com.recovr.backend.service.ReservaService;
+import com.recovr.backend.service.DisponibilidadService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -31,14 +31,14 @@ public class IaHerramientas {
     private final ObjectMapper mapper;
     private final ServicioRepository servicioRepository;
     private final PerfilTerapeutaService perfilTerapeutaService;
-    private final ReservaService reservaService;
+    private final DisponibilidadService disponibilidadService;
 
     public IaHerramientas(ObjectMapper mapper, ServicioRepository servicioRepository,
-                          PerfilTerapeutaService perfilTerapeutaService, ReservaService reservaService) {
+                          PerfilTerapeutaService perfilTerapeutaService, DisponibilidadService disponibilidadService) {
         this.mapper = mapper;
         this.servicioRepository = servicioRepository;
         this.perfilTerapeutaService = perfilTerapeutaService;
-        this.reservaService = reservaService;
+        this.disponibilidadService = disponibilidadService;
     }
 
     /** Definiciones (JSON Schema) que se envían al modelo. */
@@ -119,7 +119,7 @@ public class IaHerramientas {
             return error("Solo se reserva con hasta " + MAX_DIAS_ANTICIPACION + " días de anticipación.");
         }
 
-        List<TurnoDisponibleResponse> turnos = reservaService.disponibilidad(terapeutaId, servicioId, fecha, null);
+        List<TurnoDisponibleResponse> turnos = disponibilidadService.disponibilidad(terapeutaId, servicioId, fecha, null);
         ArrayNode libres = mapper.createArrayNode();
         ArrayNode ocupados = mapper.createArrayNode();
         for (TurnoDisponibleResponse t : turnos) {

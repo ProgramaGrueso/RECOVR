@@ -1,4 +1,5 @@
 import { EstadoOperativo } from '../../../models/ops.model';
+import { ahoraLima } from '../../../utils/hora-lima';
 
 export const ESTADO_TXT: Record<EstadoOperativo, string> = {
   EN_ESPERA: 'En espera',
@@ -36,11 +37,18 @@ export function fechaHoraTxt(iso: string | null): string {
   return iso ? `${fechaTxt(iso)} · ${horaTxt(iso)}` : '—';
 }
 
-/** Fecha local en formato yyyy-mm-dd (la que usa <input type="date">). */
-export function fechaInput(d: Date = new Date()): string {
+/** Fecha en formato yyyy-mm-dd (la que usa <input type="date">); por defecto, el día de hoy en Lima. */
+export function fechaInput(d: Date = ahoraLima()): string {
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
   return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+/** yyyy-mm-dd de hoy (Lima) desplazado {@code dias} días. */
+export function diaRelativo(dias: number, base: string = fechaInput()): string {
+  const d = new Date(`${base}T12:00:00`);
+  d.setDate(d.getDate() + dias);
+  return fechaInput(d);
 }
 
 export function soles(n: number | null | undefined): string {

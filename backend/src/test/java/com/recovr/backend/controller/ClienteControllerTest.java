@@ -55,7 +55,7 @@ public class ClienteControllerTest {
         c.setNombre("Carlos Perez");
         c.setCorreo("carlos@example.com");
 
-        given(clienteService.listarTodos()).willReturn(List.of(c));
+        given(clienteService.listarPagina(0, 1000)).willReturn(new org.springframework.data.domain.PageImpl<>(List.of(c)));
 
         mockMvc.perform(get("/api/clientes"))
                 .andExpect(status().isOk())

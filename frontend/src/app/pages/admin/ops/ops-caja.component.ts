@@ -4,7 +4,7 @@ import { AdminApiService } from '../../../services/admin-api.service';
 import { ApiService } from '../../../services/api.service';
 import { ReservaOps } from '../../../models/ops.model';
 import { OpsCobroModalComponent } from './ops-cobro-modal.component';
-import { METODOS_PAGO, codigoReserva, fechaInput, horaTxt, soles } from './ops.util';
+import { METODOS_PAGO, codigoReserva, fechaInput, horaTxt, soles, diaRelativo } from './ops.util';
 
 /** Caja del día: lo cobrado por método y lo que falta por cobrar, sobre las reservas reales. */
 @Component({
@@ -17,7 +17,7 @@ import { METODOS_PAGO, codigoReserva, fechaInput, horaTxt, soles } from './ops.u
       @if (mensaje()) { <div class="ops-banner" [class.ok]="!mensaje()!.error" [class.err]="mensaje()!.error">{{ mensaje()!.texto }}</div> }
       <div class="ops-head">
         <div class="ops-row"><label for="caja-dia" class="muted">Día de caja</label>
-          <input id="caja-dia" class="ops-input" type="date" [ngModel]="dia()" (ngModelChange)="dia.set($event)"></div>
+          <input id="caja-dia" class="ops-input" type="date" [ngModel]="dia()" (ngModelChange)="dia.set($event); cargar()"></div>
         <button type="button" class="ops-btn" (click)="cargar()">↻ Actualizar</button>
       </div>
 
@@ -92,6 +92,6 @@ export class OpsCajaComponent implements OnInit {
   }
 
   cargar(): void {
-    this.admin.reservas().subscribe({ next: r => this.reservas.set(r), error: e => this.aviso(e.message, true) });
+    this.admin.reservas(this.dia(), diaRelativo(1, this.dia())).subscribe({ next: r => this.reservas.set(r), error: e => this.aviso(e.message, true) });
   }
 }

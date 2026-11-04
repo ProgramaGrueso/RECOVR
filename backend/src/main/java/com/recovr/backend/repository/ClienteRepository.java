@@ -10,7 +10,6 @@ import java.util.Optional;
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
     Optional<Cliente> findByUsuarioId(Long usuarioId);
 
-    boolean existsByCorreoEndingWith(String sufijo);
     Optional<Cliente> findByCorreo(String correo);
 
     /** Lee la fila bloqueándola hasta el fin de la transacción: serializa las operaciones concurrentes sobre ella. */

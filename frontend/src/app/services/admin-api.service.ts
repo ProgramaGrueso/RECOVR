@@ -54,7 +54,10 @@ export class AdminApiService {
   }
 
   // ---- Reservas ----
-  reservas(): Observable<ReservaOps[]> { return this.req('GET', '/db/reservas'); }
+  /** Reservas cuyo día está en [desde, hasta) (yyyy-mm-dd). El servidor pagina; se pide una ventana acotada. */
+  reservas(desde: string, hasta: string): Observable<ReservaOps[]> {
+    return this.req('GET', `/db/reservas?desde=${desde}&hasta=${hasta}&tamano=1000`);
+  }
   miAgenda(): Observable<ReservaOps[]> { return this.req('GET', '/db/reservas/agenda'); }
   crearReserva(body: { clienteId: number; empleadoId: number; servicioId: number; salaId: number | null; fechaHora: string }): Observable<ReservaOps> {
     return this.req('POST', '/db/reservas', body);
