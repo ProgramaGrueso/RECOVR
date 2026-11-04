@@ -6,6 +6,7 @@ import com.recovr.backend.dto.ReservaResponse;
 import com.recovr.backend.dto.TurnoDisponibleResponse;
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Reserva;
+import com.recovr.backend.service.DisponibilidadService;
 import com.recovr.backend.service.ReservaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,9 +19,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,9 +33,11 @@ import java.util.List;
 public class ReservaController {
 
     private final ReservaService reservaService;
+    private final DisponibilidadService disponibilidadService;
 
-    public ReservaController(ReservaService reservaService) {
+    public ReservaController(ReservaService reservaService, DisponibilidadService disponibilidadService) {
         this.reservaService = reservaService;
+        this.disponibilidadService = disponibilidadService;
     }
 
     @Operation(summary = "Listar todas las reservas (DB)", description = "Retorna las reservas persistidas por páginas (la más reciente primero; la cabecera X-Total-Count trae el total). Requiere rol ADMIN o RECEPCIONISTA.")
@@ -43,11 +48,11 @@ public class ReservaController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado (requiere ADMIN o RECEPCIONISTA)", content = @Content)
     })
     @GetMapping
-    public org.springframework.http.ResponseEntity<List<ReservaResponse>> listar(
+    public ResponseEntity<List<ReservaResponse>> listar(
             @Parameter(description = "Número de página (desde 0)", example = "0") @RequestParam(defaultValue = "0") int pagina,
             @Parameter(description = "Reservas por página (máximo 1000)", example = "1000") @RequestParam(defaultValue = "1000") int tamano) {
         var resultado = reservaService.listarPagina(pagina, tamano);
-        return org.springframework.http.ResponseEntity.ok()
+        return ResponseEntity.ok()
                 .header("X-Total-Count", String.valueOf(resultado.getTotalElements()))
                 .body(aRespuesta(resultado.getContent()));
     }
@@ -60,10 +65,10 @@ public class ReservaController {
             @Parameter(description = "ID de la terapeuta", example = "1") @RequestParam Long empleadoId,
             @Parameter(description = "ID del servicio", example = "1") @RequestParam Long servicioId,
             @Parameter(description = "Fecha (ISO-8601)", example = "2026-10-20")
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) java.time.LocalDate fecha,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fecha,
             Authentication authentication) {
         String correoCliente = esGestionDeReservas(authentication) ? null : authentication.getName();
-        return reservaService.disponibilidad(empleadoId, servicioId, fecha, correoCliente);
+        return disponibilidadService.disponibilidad(empleadoId, servicioId, fecha, correoCliente);
     }
 
     @Operation(summary = "Obtener reserva por ID (DB)", description = "Consulta una reserva persistida según su ID. Requiere rol ADMIN o RECEPCIONISTA.")

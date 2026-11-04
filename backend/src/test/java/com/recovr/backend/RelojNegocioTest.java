@@ -57,6 +57,7 @@ class RelojNegocioTest {
     }
 
     @Autowired private ReservaService reservaService;
+    @Autowired private com.recovr.backend.service.DisponibilidadService disponibilidadService;
     @Autowired private ReservaCicloVidaService cicloVidaService;
     @Autowired private ClienteRepository clienteRepository;
     @Autowired private EmpleadoRepository empleadoRepository;
@@ -105,7 +106,7 @@ class RelojNegocioTest {
     @Test
     @DisplayName("La disponibilidad marca como pasados los turnos anteriores a la hora de Lima")
     void disponibilidadSegunLima() {
-        List<TurnoDisponibleResponse> turnos = reservaService.disponibilidad(terapeuta.getId(), servicio.getId(),
+        List<TurnoDisponibleResponse> turnos = disponibilidadService.disponibilidad(terapeuta.getId(), servicio.getId(),
                 LocalDate.of(2030, 1, 15), null);
 
         assertThat(turnos).filteredOn(t -> t.hora().compareTo("20:00") < 0)

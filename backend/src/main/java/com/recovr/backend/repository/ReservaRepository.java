@@ -50,7 +50,6 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
                                           @Param("inicio") LocalDateTime inicio,
                                           @Param("fin") LocalDateTime fin,
                                           @Param("excluirId") Long excluirId);
-    boolean existsByEmpleadoIdAndClienteId(Long empleadoId, Long clienteId);
     boolean existsByEmpleadoIdAndClienteIdAndEstadoIn(Long empleadoId, Long clienteId, java.util.Collection<EstadoReserva> estados);
     long countByEstado(EstadoReserva estado);
     long countByClienteIdAndObservacionAndCanceladaEnGreaterThanEqual(Long clienteId, String observacion, LocalDateTime desde);

@@ -13,7 +13,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -46,7 +45,6 @@ public class ReservaBackendServiceTest {
     @org.mockito.Spy
     private java.time.Clock reloj = java.time.Clock.system(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO);
 
-    @InjectMocks
     private ReservaService reservaService;
 
     private Reserva reservaPrueba;
@@ -57,6 +55,10 @@ public class ReservaBackendServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Solo se usan el repositorio de reservas, el de pagos y el de ausencias; el resto de colaboradores no participa.
+        ValidadorAgenda validador = new ValidadorAgenda(reservaRepository, null, null, null, ausenciaRepository);
+        reservaService = new ReservaService(reservaRepository, pagoRepository, null, null, null, null, null,
+                validador, null, null, reloj);
         manana10 = LocalDateTime.now(reloj).plusDays(1).withHour(15).withMinute(0).withSecond(0).withNano(0);
 
         sala = new Sala();
