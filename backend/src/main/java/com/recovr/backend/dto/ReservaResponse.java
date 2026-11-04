@@ -34,15 +34,8 @@ public record ReservaResponse(
                 r.getEmpleado().getId(), r.getEmpleado().getNombre(),
                 s.getId(), s.getNombre(),
                 r.getSala().getId(), r.getSala().getNombre(),
-                r.getFechaHora(), finBloque(r.getFechaHora(), s),
+                r.getFechaHora(), ReglasReserva.finBloque(r),
                 r.getEstado(), ReglasReserva.estadoOperativo(r), r.getCheckIn(), r.getObservacion(),
                 s.getPrecio(), r.getPago() != null, r.getPago() != null ? r.getPago().getMetodoPago() : null);
-    }
-
-    /** Fin del bloque: inicio + duración (60 min por defecto) + limpieza. Misma regla que la consulta JPQL. */
-    public static LocalDateTime finBloque(LocalDateTime inicio, Servicio s) {
-        int duracion = s.getDuracionMinutos() != null ? s.getDuracionMinutos() : 60;
-        int limpieza = s.getTiempoLimpiezaMinutos() != null ? s.getTiempoLimpiezaMinutos() : 0;
-        return inicio.plusMinutes(duracion + limpieza);
     }
 }

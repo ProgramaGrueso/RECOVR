@@ -1,5 +1,10 @@
 package com.recovr.backend.controller;
 
+import com.recovr.backend.dto.AusenciaDtos;
+import com.recovr.backend.service.FotoService;
+import java.io.IOException;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.recovr.backend.dto.EmpleadoCatalogoResponse;
 import com.recovr.backend.dto.EmpleadoResponse;
 import com.recovr.backend.service.EmpleadoService;
@@ -26,9 +31,9 @@ import java.util.List;
 public class EmpleadoController {
 
     private final EmpleadoService empleadoService;
-    private final com.recovr.backend.service.FotoService fotoService;
+    private final FotoService fotoService;
 
-    public EmpleadoController(EmpleadoService empleadoService, com.recovr.backend.service.FotoService fotoService) {
+    public EmpleadoController(EmpleadoService empleadoService, FotoService fotoService) {
         this.empleadoService = empleadoService;
         this.fotoService = fotoService;
     }
@@ -53,8 +58,8 @@ public class EmpleadoController {
 
     @Operation(summary = "Subir la foto de una terapeuta", description = "JPG o PNG de hasta 3 MB. Solo ADMIN (la terapeuta puede subir la suya en /api/mi-perfil/foto).")
     @PutMapping(path = "/{id}/foto", consumes = "multipart/form-data")
-    public EmpleadoResponse subirFoto(@PathVariable Long id, @RequestParam("archivo") org.springframework.web.multipart.MultipartFile archivo)
-            throws java.io.IOException {
+    public EmpleadoResponse subirFoto(@PathVariable Long id, @RequestParam("archivo") MultipartFile archivo)
+            throws IOException {
         fotoService.guardar(id, archivo.getBytes());
         return EmpleadoResponse.de(empleadoService.buscarPorId(id));
     }
@@ -76,17 +81,17 @@ public class EmpleadoController {
 
     @Operation(summary = "Ausencias de un especialista", description = "Periodos en que no atiende. Requiere rol ADMIN.")
     @GetMapping("/{id}/ausencias")
-    public List<com.recovr.backend.dto.AusenciaDtos.AusenciaResponse> ausencias(@PathVariable Long id) {
-        return empleadoService.ausencias(id).stream().map(com.recovr.backend.dto.AusenciaDtos.AusenciaResponse::de).toList();
+    public List<AusenciaDtos.AusenciaResponse> ausencias(@PathVariable Long id) {
+        return empleadoService.ausencias(id).stream().map(AusenciaDtos.AusenciaResponse::de).toList();
     }
 
     @Operation(summary = "Registrar una ausencia (vacaciones, licencia)",
             description = "Mientras dura no recibe reservas. Falla si ya tiene reservas activas en ese periodo. Requiere rol ADMIN.")
     @PostMapping("/{id}/ausencias")
     @ResponseStatus(HttpStatus.CREATED)
-    public com.recovr.backend.dto.AusenciaDtos.AusenciaResponse registrarAusencia(
-            @PathVariable Long id, @Valid @RequestBody com.recovr.backend.dto.AusenciaDtos.AusenciaRequest request) {
-        return com.recovr.backend.dto.AusenciaDtos.AusenciaResponse.de(
+    public AusenciaDtos.AusenciaResponse registrarAusencia(
+            @PathVariable Long id, @Valid @RequestBody AusenciaDtos.AusenciaRequest request) {
+        return AusenciaDtos.AusenciaResponse.de(
                 empleadoService.registrarAusencia(id, request.desde(), request.hasta(), request.motivo()));
     }
 

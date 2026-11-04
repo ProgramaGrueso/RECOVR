@@ -13,8 +13,8 @@ import java.util.List;
 @Service
 public class SalaService {
 
-    private static final java.util.List<EstadoReserva> RESERVAS_ACTIVAS =
-            java.util.List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA);
+    private static final List<EstadoReserva> RESERVAS_ACTIVAS =
+            List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA);
 
     private final SalaRepository salaRepository;
     private final ReservaRepository reservaRepository;

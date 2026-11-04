@@ -1,5 +1,7 @@
 package com.recovr.backend.service;
 
+import com.recovr.backend.repository.ReservaRepository;
+import com.recovr.backend.repository.UsuarioRepository;
 import com.recovr.backend.entity.Cliente;
 import com.recovr.backend.repository.ClienteRepository;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
@@ -11,17 +13,14 @@ import java.util.List;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
-    private final com.recovr.backend.repository.ReservaRepository reservaRepository;
-    private com.recovr.backend.repository.UsuarioRepository usuarioRepository;
+    private final ReservaRepository reservaRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @org.springframework.beans.factory.annotation.Autowired(required = false)
-    void setUsuarioRepository(com.recovr.backend.repository.UsuarioRepository usuarioRepository) {
-        this.usuarioRepository = usuarioRepository;
-    }
-
-    public ClienteService(ClienteRepository clienteRepository, com.recovr.backend.repository.ReservaRepository reservaRepository) {
+    public ClienteService(ClienteRepository clienteRepository, ReservaRepository reservaRepository,
+                          UsuarioRepository usuarioRepository) {
         this.clienteRepository = clienteRepository;
         this.reservaRepository = reservaRepository;
+        this.usuarioRepository = usuarioRepository;
     }
 
     public List<Cliente> listarTodos() {

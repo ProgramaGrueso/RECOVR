@@ -183,7 +183,7 @@
       <app-brand-mark size="lg" color="var(--color-bubble-pink)"></app-brand-mark>
     </div>
 
-    <h3 class="success-title">{{ bookingSuccess.status === 'PENDIENTE' ? 'TURNO APARTADO — FALTA EL PAGO' : 'CITA CONFIRMADA CON ÉXITO' }}</h3>
+    <h3 class="success-title">{{ successTitle }}</h3>
     <p class="success-code">CÓDIGO DE SEGUIMIENTO: <strong>{{ bookingSuccess.id }}</strong></p>
 
     <div class="summary-box">
@@ -220,7 +220,7 @@
                   [attr.aria-checked]="payMethod === m" [class.selected]="payMethod === m" (click)="payMethod = m">{{ m }}</button>
         </div>
         <button type="button" class="btn-primary" [disabled]="isPaying || bookingSuccess.price == null" (click)="payNow()">
-          <span>{{ isPaying ? 'Registrando pago…' : 'Pagar S/ ' + bookingSuccess.price + ' y asegurar mi turno' }}</span>
+          <span>{{ payButtonText }}</span>
         </button>
         <p class="form-error" *ngIf="payError">{{ payError }}</p>
         <p class="pay-fine">También puedes pagar en recepción antes de que venza el plazo. No hay pasarela de pagos conectada: el método queda registrado tal como lo eliges.</p>

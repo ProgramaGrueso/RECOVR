@@ -31,7 +31,8 @@ export class FluidCanvasComponent implements AfterViewInit, OnDestroy {
   private scene!: THREE.Scene;
   private camera!: THREE.OrthographicCamera;
   private renderer!: THREE.WebGLRenderer;
-  private clock = new THREE.Clock();
+  /** Inicio de la animación (THREE.Clock está obsoleto y avisa en consola). */
+  private inicio = performance.now();
 
   private fluidMaterial!: THREE.ShaderMaterial;
   private mesh!: THREE.Mesh;
@@ -265,7 +266,7 @@ export class FluidCanvasComponent implements AfterViewInit, OnDestroy {
     this.animationFrameId = requestAnimationFrame(this.animate);
     if (document.hidden) return;
 
-    const elapsedTime = this.clock.getElapsedTime();
+    const elapsedTime = (performance.now() - this.inicio) / 1000;
 
     this.mouseVelocity.x = (this.targetMouse.x - this.mouse.x);
     this.mouseVelocity.y = (this.targetMouse.y - this.mouse.y);

@@ -1,3 +1,5 @@
+import { ahoraLima } from '../../../utils/hora-lima';
+import { Rango, filtrarAgenda } from './agenda-filtro';
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -10,7 +12,6 @@ import {
 import { OpsCobroModalComponent } from './ops-cobro-modal.component';
 import { ESTADO_TXT, codigoReserva, fechaHoraTxt, fechaInput, horaTxt, soles } from './ops.util';
 
-type Rango = 'HOY' | 'MANANA' | 'SEMANA' | 'PASADAS' | 'TODAS';
 
 /**
  * Agenda y control de salas: CRUD completo de reservas sobre la API.
@@ -209,26 +210,8 @@ export class OpsAgendaComponent implements OnInit, OnDestroy {
   /** Una cuenta ESPECIALISTA solo ve su propia agenda futura, sin acciones. */
   soloLectura = computed(() => this.auth.user()?.rol === 'ESPECIALISTA');
 
-  visibles = computed(() => {
-    const ahora = new Date();
-    const inicioHoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-    const dia = 86_400_000;
-    const q = this.texto().trim().toLowerCase();
-    const lista = this.reservas().filter(r => {
-      const t = new Date(r.fechaHora).getTime();
-      const d = t - inicioHoy.getTime();
-      const enRango = {
-        HOY: d >= 0 && d < dia, MANANA: d >= dia && d < 2 * dia, SEMANA: d >= 0 && d < 7 * dia,
-        PASADAS: d < 0, TODAS: true
-      }[this.rango()];
-      return enRango
-        && (!this.estadoFiltro() || r.estadoOperativo === this.estadoFiltro())
-        && (!this.salaFiltro() || String(r.salaId) === this.salaFiltro())
-        && (!q || r.clienteNombre.toLowerCase().includes(q) || r.servicioNombre.toLowerCase().includes(q));
-    });
-    const asc = this.rango() !== 'PASADAS' && this.rango() !== 'TODAS';
-    return lista.sort((a, b) => (asc ? 1 : -1) * a.fechaHora.localeCompare(b.fechaHora));
-  });
+  visibles = computed(() => filtrarAgenda(this.reservas(),
+    { rango: this.rango(), estado: this.estadoFiltro(), salaId: this.salaFiltro(), texto: this.texto() }, ahoraLima()));
 
   private timer: ReturnType<typeof setInterval> | null = null;
 

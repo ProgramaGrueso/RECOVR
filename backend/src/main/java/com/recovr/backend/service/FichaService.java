@@ -1,5 +1,8 @@
 package com.recovr.backend.service;
 
+import com.recovr.backend.entity.EstadoReserva;
+
+import java.time.Clock;
 import com.recovr.backend.dto.FichaDtos.*;
 import com.recovr.backend.entity.*;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
@@ -20,19 +23,20 @@ import java.util.stream.Collectors;
  */
 @Service
 public class FichaService {
-
-    private final UsuarioRepository usuarioRepository;
-    private final EmpleadoRepository empleadoRepository;
     private final ClienteRepository clienteRepository;
     private final ReservaRepository reservaRepository;
     private final FichaClienteRepository fichaRepository;
     private final NotaSesionRepository notaRepository;
 
-    public FichaService(UsuarioRepository usuarioRepository, EmpleadoRepository empleadoRepository,
-                        ClienteRepository clienteRepository, ReservaRepository reservaRepository,
-                        FichaClienteRepository fichaRepository, NotaSesionRepository notaRepository) {
-        this.usuarioRepository = usuarioRepository;
-        this.empleadoRepository = empleadoRepository;
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
+    private final UsuarioActualService usuarioActual;
+
+    public FichaService(ClienteRepository clienteRepository, ReservaRepository reservaRepository,
+                        FichaClienteRepository fichaRepository, NotaSesionRepository notaRepository, Clock reloj, UsuarioActualService usuarioActual) {
+        this.usuarioActual = usuarioActual;
+        this.reloj = reloj;
         this.clienteRepository = clienteRepository;
         this.reservaRepository = reservaRepository;
         this.fichaRepository = fichaRepository;
@@ -41,8 +45,8 @@ public class FichaService {
 
     @Transactional(readOnly = true)
     public List<MiClienteResponse> misClientes(String correo) {
-        Empleado yo = empleadoActual(correo);
-        LocalDateTime ahora = LocalDateTime.now();
+        Empleado yo = usuarioActual.empleado(correo);
+        LocalDateTime ahora = LocalDateTime.now(reloj);
         Map<Long, List<Reserva>> porCliente = reservaRepository.buscarPorEmpleado(yo.getId()).stream()
                 .collect(Collectors.groupingBy(r -> r.getCliente().getId()));
         return porCliente.values().stream().map(lista -> {
@@ -78,7 +82,7 @@ public class FichaService {
         ficha.setZonasRestringidas(req.zonasRestringidas());
         ficha.setNotas(req.notas());
         ficha.setActualizadoPor(yo.getNombre());
-        ficha.setActualizadoEn(LocalDateTime.now());
+        ficha.setActualizadoEn(LocalDateTime.now(reloj));
         fichaRepository.save(ficha);
         return respuesta(cliente, yo);
     }
@@ -90,7 +94,7 @@ public class FichaService {
         NotaSesion nota = new NotaSesion();
         nota.setCliente(cliente);
         nota.setEmpleado(yo);
-        nota.setFecha(LocalDateTime.now());
+        nota.setFecha(LocalDateTime.now(reloj));
         nota.setTratamiento(req.tratamiento().trim());
         nota.setObservaciones(req.observaciones());
         nota.setRecomendaciones(req.recomendaciones());
@@ -108,7 +112,7 @@ public class FichaService {
 
     @Transactional
     public void eliminarNota(String correo, Long notaId) {
-        Empleado yo = empleadoActual(correo);
+        Empleado yo = usuarioActual.empleado(correo);
         NotaSesion nota = notaRepository.findById(notaId).orElseThrow(() -> new RecursoNoEncontradoException("Nota", notaId));
         if (!nota.getEmpleado().getId().equals(yo.getId())) {
             throw new AccessDeniedException("Solo puedes eliminar tus propias notas");
@@ -131,22 +135,15 @@ public class FichaService {
     }
 
     private Empleado autorizar(String correo, Long clienteId) {
-        Empleado yo = empleadoActual(correo);
+        Empleado yo = usuarioActual.empleado(correo);
         if (!clienteRepository.existsById(clienteId)) {
             throw new RecursoNoEncontradoException("Cliente", clienteId);
         }
         // Solo quien atiende (o va a atender) al cliente: una reserva cancelada, vencida o sin pagar no da acceso a su ficha
         if (!reservaRepository.existsByEmpleadoIdAndClienteIdAndEstadoIn(yo.getId(), clienteId,
-                java.util.List.of(com.recovr.backend.entity.EstadoReserva.CONFIRMADA, com.recovr.backend.entity.EstadoReserva.COMPLETADA))) {
+                List.of(EstadoReserva.CONFIRMADA, EstadoReserva.COMPLETADA))) {
             throw new AccessDeniedException("Solo puedes ver las fichas de clientes que atiendes");
         }
         return yo;
-    }
-
-    private Empleado empleadoActual(String correo) {
-        Usuario usuario = usuarioRepository.findByCorreo(correo)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
-        return empleadoRepository.findByUsuarioId(usuario.getId())
-                .orElseThrow(() -> new IllegalStateException("Tu usuario no está vinculado a ninguna terapeuta"));
     }
 }

@@ -85,6 +85,11 @@ export class AdminComponent implements OnInit, OnDestroy {
     return this.user().debeCambiarClave;
   }
 
+  /** Texto del menú: una terapeuta ve "Mi agenda" en lugar de "Agenda". */
+  etiqueta(item: NavItem): string {
+    return item.key === 'AGENDA' && this.user()?.rol === 'ESPECIALISTA' ? 'Mi agenda' : item.label;
+  }
+
   get titulo(): string {
     return NAV.find(i => i.key === this.activeView)?.titulo ?? '';
   }

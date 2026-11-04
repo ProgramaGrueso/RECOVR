@@ -1,5 +1,6 @@
 package com.recovr.backend.service;
 
+import java.time.Clock;
 import com.recovr.backend.entity.Auditoria;
 import com.recovr.backend.repository.AuditoriaRepository;
 import org.slf4j.Logger;
@@ -20,7 +21,11 @@ public class AuditoriaService {
 
     private final AuditoriaRepository auditoriaRepository;
 
-    public AuditoriaService(AuditoriaRepository auditoriaRepository) {
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
+    public AuditoriaService(AuditoriaRepository auditoriaRepository, Clock reloj) {
+        this.reloj = reloj;
         this.auditoriaRepository = auditoriaRepository;
     }
 
@@ -28,7 +33,7 @@ public class AuditoriaService {
     public void registrar(String usuario, String rol, String accion, String recurso, Integer estado, String ip, String detalle) {
         try {
             Auditoria a = new Auditoria();
-            a.setFecha(LocalDateTime.now());
+            a.setFecha(LocalDateTime.now(reloj));
             a.setUsuario(recortar(usuario, 120));
             a.setRol(recortar(rol, 20));
             a.setAccion(recortar(accion, 40));

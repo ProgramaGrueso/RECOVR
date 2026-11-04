@@ -1,5 +1,7 @@
 package com.recovr.backend.service;
 
+import com.recovr.backend.repository.FotoEmpleadoRepository;
+
 import com.recovr.backend.dto.EmpleadoEstadoResponse;
 import com.recovr.backend.dto.ResumenResponse;
 import com.recovr.backend.dto.SalaEstadoResponse;
@@ -44,11 +46,11 @@ public class OperacionService {
     private final EmpleadoRepository empleadoRepository;
     private final ReservaRepository reservaRepository;
     private final PagoRepository pagoRepository;
-    private final com.recovr.backend.repository.FotoEmpleadoRepository fotoRepository;
+    private final FotoEmpleadoRepository fotoRepository;
 
     public OperacionService(SalaRepository salaRepository, EmpleadoRepository empleadoRepository,
                             ReservaRepository reservaRepository, PagoRepository pagoRepository,
-                            com.recovr.backend.repository.FotoEmpleadoRepository fotoRepository) {
+                            FotoEmpleadoRepository fotoRepository) {
         this.salaRepository = salaRepository;
         this.empleadoRepository = empleadoRepository;
         this.reservaRepository = reservaRepository;

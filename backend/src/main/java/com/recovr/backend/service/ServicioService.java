@@ -12,8 +12,8 @@ import java.util.List;
 @Service
 public class ServicioService {
 
-    private static final java.util.List<EstadoReserva> RESERVAS_ACTIVAS =
-            java.util.List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA);
+    private static final List<EstadoReserva> RESERVAS_ACTIVAS =
+            List.of(EstadoReserva.PENDIENTE, EstadoReserva.CONFIRMADA);
 
     private final ServicioRepository servicioRepository;
     private final ReservaRepository reservaRepository;

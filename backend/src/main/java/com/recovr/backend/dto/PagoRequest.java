@@ -1,5 +1,6 @@
 package com.recovr.backend.dto;
 
+import jakarta.validation.constraints.Size;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,8 +17,8 @@ public record PagoRequest(
         @NotNull @PositiveOrZero BigDecimal monto,
 
         @Schema(description = "Método de pago", example = "TARJETA", requiredMode = Schema.RequiredMode.REQUIRED)
-        @NotBlank String metodoPago,
+        @NotBlank @Size(max = 40) String metodoPago,
 
         @Schema(description = "Código de canje de puntos (opcional). Si se envía, el monto se recalcula en el servidor", example = "CJ-7F3K2P")
-        String codigoCanje
+        @Size(max = 40) String codigoCanje
 ) {}
