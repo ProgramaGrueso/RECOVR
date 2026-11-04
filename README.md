@@ -218,7 +218,7 @@ npm install
 npm start
 ```
 - La aplicación principal estará disponible en: [http://localhost:4200](http://localhost:4200)
-- **Integración con el backend:** el flujo de reserva (`/reserva`) inicia sesión o registra al cliente en la API y crea reservas reales en MySQL; la cabina la asigna el servidor. La URL de la API (por defecto `http://localhost:8095/api`) se cambia con `localStorage['recovr-api-url']`. Si el backend no responde, el flujo usa una simulación local para que la demo publicada en Vercel siga funcionando. El resto del panel administrativo (`DEMO_USERS`) sigue siendo simulado en el navegador.
+- **Integración con el backend:** el flujo de reserva (`/reserva`) inicia sesión o registra al cliente en la API y crea reservas reales en MySQL; la cabina la asigna el servidor. La URL de la API (por defecto `http://localhost:8095/api`) se cambia con `localStorage['recovr-api-url']`. Si el backend no responde, el flujo informa el error: nunca simula una reserva. El acceso y todo el panel administrativo van siempre contra el backend (no hay usuarios ni contraseñas en el frontend).
 - Acceso directo al **Lab de Experiencias Awwwards**: [http://localhost:4200/PRUEBAS/](http://localhost:4200/PRUEBAS/)
 - Panel de inicio de sesión administrativo: [http://localhost:4200/admin/login](http://localhost:4200/admin/login)
 
@@ -352,4 +352,4 @@ Este proyecto ha sido desarrollado con fines académicos y de demostración tecn
 
 ---
 
-> **Nota sobre credenciales:** los usuarios de `frontend/src/app/services/auth.service.ts` (`DEMO_USERS`) y las credenciales de `docker-compose.yml` son **datos de demostración** para la exposición académica. No corresponden a ningún sistema real.
+> **Nota sobre credenciales:** el repositorio no contiene contraseñas, claves JWT ni API keys. Todo sale de variables de entorno (`backend/.env`, ver `backend/.env.example`). Los datos demo (pacientes `@example.com`, teléfonos `900…`) son ficticios. Detalle en [`SECURITY_REPORT.md`](SECURITY_REPORT.md).
