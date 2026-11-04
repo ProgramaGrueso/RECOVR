@@ -164,7 +164,7 @@ SPRING_PROFILES_ACTIVE=demo mvn spring-boot:run
 - Documentación Swagger UI interactiva: [http://localhost:8095/swagger-ui/index.html](http://localhost:8095/swagger-ui/index.html)
 - Especificación OpenAPI en formato JSON: `http://localhost:8095/v3/api-docs`
 - Variables: ver `backend/.env.example` y la tabla de *Despliegue y escalado* más abajo. En el perfil `dev`, si falta `JWT_SECRET` se genera una clave temporal; en `prod` es obligatoria.
-- CORS solo acepta orígenes conocidos: `localhost` / `127.0.0.1` (cualquier puerto) y dominios `https://*.vercel.app`. Un origen cualquiera no recibe la cabecera `Access-Control-Allow-Origin`.
+- CORS con **lista blanca** en `CORS_ALLOWED_ORIGINS` (por defecto `http://localhost:4200`). Un origen fuera de la lista no recibe `Access-Control-Allow-Origin` y su preflight responde 403. Para el despliegue de Vercel, agrega el dominio exacto del proyecto (o un patrón propio como `https://recovr-*.vercel.app`).
 
 #### Datos de demostración (seeder con historial de 3 meses)
 
