@@ -1,5 +1,7 @@
 package com.recovr.backend.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import com.recovr.backend.entity.Servicio;
 import com.recovr.backend.repository.ServicioRepository;
 import com.recovr.backend.repository.ReservaRepository;
@@ -23,6 +25,7 @@ public class ServicioService {
         this.reservaRepository = reservaRepository;
     }
 
+    @Cacheable("servicios")
     public List<Servicio> listarTodos() {
         return servicioRepository.findAll();
     }
@@ -32,10 +35,12 @@ public class ServicioService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Servicio", id));
     }
 
+    @CacheEvict(value = "servicios", allEntries = true)
     public Servicio crear(Servicio servicio) {
         return servicioRepository.save(servicio);
     }
 
+    @CacheEvict(value = "servicios", allEntries = true)
     public Servicio actualizar(Long id, Servicio datos) {
         Servicio servicio = buscarPorId(id);
         servicio.setNombre(datos.getNombre());
@@ -45,6 +50,7 @@ public class ServicioService {
         return servicioRepository.save(servicio);
     }
 
+    @CacheEvict(value = "servicios", allEntries = true)
     public void eliminar(Long id) {
         if (!servicioRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Servicio", id);

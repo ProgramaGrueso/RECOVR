@@ -27,9 +27,14 @@ public class JwtService {
      * por defecto versionado en el repositorio.
      */
     public JwtService(@Value("${app.jwt.secret:}") String secret,
-                      @Value("${app.jwt.expiration-ms}") long expirationMs) {
+                      @Value("${app.jwt.expiration-ms}") long expirationMs,
+                      @Value("${recovr.seguridad.exigir-jwt-secret:false}") boolean exigirSecreto) {
         this.expirationMs = expirationMs;
-        if (secret.isBlank()) {
+        if (secret == null || secret.isBlank()) {
+            if (exigirSecreto) {
+                // Con varias instancias cada una generaría su propia clave y los tokens no valdrían entre ellas.
+                throw new IllegalStateException("JWT_SECRET es obligatoria en producción (Base64, 32 bytes o más).");
+            }
             log.warn("JWT_SECRET no definida: se usa una clave temporal (los tokens se invalidan al reiniciar).");
             this.clave = Jwts.SIG.HS256.key().build();
         } else {

@@ -46,6 +46,8 @@ public class SecurityConfig {
                         ).permitAll()
                         // /error debe ser público para que los errores 400/404/409 no se conviertan en 401
                         .requestMatchers("/error").permitAll()
+                        // Salud para el balanceador / Docker (sin detalles)
+                        .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         .requestMatchers("/api/auth/registro", "/api/auth/login").permitAll()
                         .requestMatchers("/api/publico/**").permitAll()
                         // Asistente de IA: público (con límites por IP en IaLimitador); solo consulta datos públicos

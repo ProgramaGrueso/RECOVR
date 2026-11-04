@@ -1,5 +1,7 @@
 package com.recovr.backend.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import com.recovr.backend.entity.AusenciaEmpleado;
 import com.recovr.backend.repository.AusenciaEmpleadoRepository;
 import com.recovr.backend.repository.FotoEmpleadoRepository;
@@ -77,6 +79,7 @@ public class EmpleadoService {
     }
 
     /** Terapeutas que reciben reservas (las dadas de baja no aparecen al reservar). */
+    @Cacheable("terapeutasActivas")
     public List<Empleado> listarActivos() {
         return empleadoRepository.findAll().stream().filter(Empleado::isActivo).toList();
     }
@@ -85,6 +88,7 @@ public class EmpleadoService {
      * Baja lógica: la terapeuta conserva su historial pero deja de recibir reservas. No se puede dar de baja
      * mientras tenga reservas activas (PENDIENTE o CONFIRMADA): primero se cancelan o se reasignan.
      */
+    @CacheEvict(value = "terapeutasActivas", allEntries = true)
     public Empleado cambiarActivo(Long id, boolean activo) {
         Empleado empleado = buscarPorId(id);
         if (!activo && reservaRepository.existsByEmpleadoIdAndEstadoIn(id, RESERVAS_ACTIVAS)) {
@@ -100,10 +104,12 @@ public class EmpleadoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Empleado", id));
     }
 
+    @CacheEvict(value = "terapeutasActivas", allEntries = true)
     public Empleado crear(Empleado empleado) {
         return empleadoRepository.save(empleado);
     }
 
+    @CacheEvict(value = "terapeutasActivas", allEntries = true)
     public Empleado actualizar(Long id, Empleado datos) {
         Empleado empleado = buscarPorId(id);
         empleado.setNombre(datos.getNombre());
@@ -114,6 +120,7 @@ public class EmpleadoService {
     }
 
     @Transactional
+    @CacheEvict(value = "terapeutasActivas", allEntries = true)
     public void eliminar(Long id) {
         if (!empleadoRepository.existsById(id)) {
             throw new RecursoNoEncontradoException("Empleado", id);
