@@ -3,7 +3,7 @@ import { forkJoin } from 'rxjs';
 import { AdminApiService } from '../../../services/admin-api.service';
 import { ApiService } from '../../../services/api.service';
 import { EmpleadoEstado, ReservaOps, ResumenOps, SalaEstado } from '../../../models/ops.model';
-import { EMPLEADO_ESTADO_TXT, ESTADO_TXT, SALA_ESTADO_TXT, codigoReserva, fechaHoraTxt, fechaInput, horaTxt, soles } from './ops.util';
+import { EMPLEADO_ESTADO_TXT, ESTADO_TXT, SALA_ESTADO_TXT, codigoReserva, fechaHoraTxt, fechaInput, horaTxt, soles, diaRelativo } from './ops.util';
 
 /** Panel de control: indicadores y estado en vivo, todo calculado por el backend desde las reservas. */
 @Component({
@@ -102,7 +102,7 @@ export class OpsResumenComponent implements OnInit, OnDestroy {
   cargar(): void {
     forkJoin({
       resumen: this.admin.resumen(), empleados: this.admin.estadoEmpleados(),
-      salas: this.admin.estadoSalas(), reservas: this.admin.reservas()
+      salas: this.admin.estadoSalas(), reservas: this.admin.reservas(fechaInput(), diaRelativo(1))
     }).subscribe({
       next: d => {
         this.resumen.set(d.resumen); this.empleados.set(d.empleados); this.salas.set(d.salas); this.reservas.set(d.reservas);

@@ -44,6 +44,13 @@ export function fechaInput(d: Date = ahoraLima()): string {
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
+/** yyyy-mm-dd de hoy (Lima) desplazado {@code dias} días. */
+export function diaRelativo(dias: number, base: string = fechaInput()): string {
+  const d = new Date(`${base}T12:00:00`);
+  d.setDate(d.getDate() + dias);
+  return fechaInput(d);
+}
+
 export function soles(n: number | null | undefined): string {
   return 'S/ ' + Number(n ?? 0).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }

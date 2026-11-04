@@ -1,5 +1,6 @@
 import { filtrarAgenda, FiltroAgenda } from './agenda-filtro';
 import { ReservaOps } from '../../../models/ops.model';
+import { diaRelativo } from './ops.util';
 
 const AHORA = new Date('2026-11-10T15:00:00');
 const r = (id: number, fechaHora: string, extra: Partial<ReservaOps> = {}): ReservaOps =>
@@ -31,5 +32,10 @@ describe('filtrarAgenda', () => {
     expect(filtrarAgenda(reservas, filtro({ salaId: '2' }), AHORA).map(x => x.id)).toEqual([3]);
     expect(filtrarAgenda(reservas, filtro({ texto: 'ñahui' }), AHORA).map(x => x.id)).toEqual([4]);
     expect(filtrarAgenda(reservas, filtro({ texto: 'vip' }), AHORA).map(x => x.id)).toEqual([5]);
+  });
+
+  it('diaRelativo suma y resta días respetando el cambio de mes', () => {
+    expect(diaRelativo(1, '2026-11-30')).toBe('2026-12-01');
+    expect(diaRelativo(-30, '2026-11-04')).toBe('2026-10-05');
   });
 });

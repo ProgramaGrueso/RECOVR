@@ -10,7 +10,7 @@ import {
   ClienteOps, EmpleadoEstado, ReservaForm, ReservaOps, SalaEstado, ServicioOps
 } from '../../../models/ops.model';
 import { OpsCobroModalComponent } from './ops-cobro-modal.component';
-import { ESTADO_TXT, codigoReserva, fechaHoraTxt, fechaInput, horaTxt, soles } from './ops.util';
+import { ESTADO_TXT, codigoReserva, fechaHoraTxt, fechaInput, horaTxt, soles, diaRelativo } from './ops.util';
 
 
 /**
@@ -18,6 +18,10 @@ import { ESTADO_TXT, codigoReserva, fechaHoraTxt, fechaInput, horaTxt, soles } f
  * Flujo: En espera → (cobrar) Confirmada → (check-in) En sesión → (finalizar o fin de sesión) Completada.
  * Cancelar es posible mientras la reserva esté activa; solo se elimina una reserva ya cancelada (solo ADMIN).
  */
+/** La agenda carga una ventana: los últimos 30 días y los próximos 4 meses (el servidor pagina el resto). */
+const VENTANA_PASADO_DIAS = 30;
+const VENTANA_FUTURO_DIAS = 120;
+
 @Component({
   selector: 'app-ops-agenda',
   standalone: true,
@@ -238,7 +242,7 @@ export class OpsAgendaComponent implements OnInit, OnDestroy {
       return;
     }
     forkJoin({
-      reservas: this.admin.reservas(), clientes: this.admin.clientes(), servicios: this.admin.servicios(),
+      reservas: this.admin.reservas(diaRelativo(-VENTANA_PASADO_DIAS), diaRelativo(VENTANA_FUTURO_DIAS)), clientes: this.admin.clientes(), servicios: this.admin.servicios(),
       empleados: this.admin.estadoEmpleados(), salas: this.admin.estadoSalas()
     }).subscribe({
       next: d => {
