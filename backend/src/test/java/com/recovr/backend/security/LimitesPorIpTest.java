@@ -17,10 +17,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Rate limiting por IP. El freno anterior era por par (correo, IP): una misma IP podía probar contraseñas contra
  * cientos de correos distintos (credential stuffing) y crear cuentas sin límite.
  */
-@SpringBootTest
+@SpringBootTest(properties = {"recovr.seguridad.max-fallos-ip=" + LimitesPorIpTest.MAX_FALLOS_IP,
+        "recovr.seguridad.max-registros-ip=" + LimitesPorIpTest.MAX_REGISTROS_IP})
 @AutoConfigureMockMvc
 @Transactional
 class LimitesPorIpTest {
+
+    static final int MAX_FALLOS_IP = 20;
+    static final int MAX_REGISTROS_IP = 5;
 
     @Autowired private MockMvc mockMvc;
 
@@ -31,7 +35,7 @@ class LimitesPorIpTest {
     @Test
     @DisplayName("Muchos logins fallidos desde una IP contra correos distintos terminan en 429")
     void credentialStuffingDesdeUnaIp() throws Exception {
-        for (int i = 0; i < LoginAttemptService.MAX_FALLOS_IP; i++) {
+        for (int i = 0; i < MAX_FALLOS_IP; i++) {
             mockMvc.perform(post("/api/auth/login").with(desde("203.0.113.7")).contentType(MediaType.APPLICATION_JSON)
                             .content("{\"correo\":\"victima" + i + "@example.com\",\"password\":\"Adivina123\"}"))
                     .andExpect(status().isUnauthorized());
@@ -48,7 +52,7 @@ class LimitesPorIpTest {
     @Test
     @DisplayName("El registro de cuentas está limitado por IP")
     void registroLimitadoPorIp() throws Exception {
-        for (int i = 0; i < LoginAttemptService.MAX_REGISTROS_IP; i++) {
+        for (int i = 0; i < MAX_REGISTROS_IP; i++) {
             mockMvc.perform(post("/api/auth/registro").with(desde("203.0.113.50")).contentType(MediaType.APPLICATION_JSON)
                             .content("{\"nombre\":\"Cuenta " + i + "\",\"correo\":\"masivo" + i + "@example.com\",\"password\":\"Clave1234\"}"))
                     .andExpect(status().isCreated());

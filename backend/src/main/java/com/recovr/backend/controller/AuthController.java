@@ -42,8 +42,8 @@ public class AuthController {
     @SecurityRequirements
     @PostMapping("/registro")
     @ResponseStatus(HttpStatus.CREATED)
-    public AuthResponse registroCliente(@Valid @RequestBody RegistroRequest request) {
-        return authService.registrarCliente(request);
+    public AuthResponse registroCliente(@Valid @RequestBody RegistroRequest request, HttpServletRequest http) {
+        return authService.registrarCliente(request, http.getRemoteAddr());
     }
 
     @Operation(

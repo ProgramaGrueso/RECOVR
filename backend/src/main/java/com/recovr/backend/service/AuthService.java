@@ -20,12 +20,16 @@ import com.recovr.backend.security.CustomUserDetailsService;
 import com.recovr.backend.security.JwtService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
+
+    /** Hash BCrypt de una contraseña aleatoria que nadie conoce; solo sirve para igualar tiempos. */
+    private static final String HASH_SEÑUELO = new BCryptPasswordEncoder().encode(java.util.UUID.randomUUID().toString());
     private final UsuarioRepository usuarioRepository;
     private final ClienteRepository clienteRepository;
     private final PasswordEncoder passwordEncoder;
@@ -50,7 +54,11 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse registrarCliente(RegistroRequest request) {
+    public AuthResponse registrarCliente(RegistroRequest request, String ip) {
+        if (!loginAttemptService.permitirRegistro(ip, Instant.now())) {
+            auditoriaService.registrar(request.correo(), "-", "REGISTRO_BLOQUEADO", "/api/auth/registro", 429, ip, "Demasiados registros desde la IP");
+            throw new LoginBloqueadoException("Se crearon demasiadas cuentas desde esta conexión. Intenta más tarde.");
+        }
         Usuario usuario = crearUsuario(request, Rol.CLIENTE);
         // Si recepción ya lo había registrado en mostrador con ese correo, se vincula su ficha en lugar de duplicarla:
         // conserva su historial, sus puntos y su ficha (el correo del cliente es único).
@@ -84,7 +92,10 @@ public class AuthService {
             throw new LoginBloqueadoException("Demasiados intentos fallidos. Espera unos minutos antes de volver a intentar.");
         }
         Usuario usuario = usuarioRepository.findByCorreo(request.correo()).orElse(null);
-        if (usuario == null || !passwordEncoder.matches(request.password(), usuario.getPassword())) {
+        // Con un correo inexistente también se compara contra un hash: mismo tiempo de respuesta, no se revela si existe
+        String hash = usuario != null ? usuario.getPassword() : HASH_SEÑUELO;
+        boolean claveCorrecta = passwordEncoder.matches(request.password(), hash);
+        if (usuario == null || !claveCorrecta) {
             loginAttemptService.registrarFallo(request.correo(), ip, ahora);
             auditoriaService.registrar(request.correo(), "-", "LOGIN_FALLIDO", "/api/auth/login", 401, ip, null);
             throw new BadCredentialsException("Correo o contrasena incorrectos");
