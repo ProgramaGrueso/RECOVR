@@ -1,5 +1,6 @@
 package com.recovr.backend.service;
 
+import java.time.Clock;
 import com.recovr.backend.dto.PuntosDtos.*;
 import com.recovr.backend.entity.Canje;
 import com.recovr.backend.entity.Cliente;
@@ -61,8 +62,12 @@ public class PuntosService {
     private final ReservaRepository reservaRepository;
     private final CanjeRepository canjeRepository;
 
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
     public PuntosService(UsuarioRepository usuarioRepository, ClienteRepository clienteRepository,
-                         ReservaRepository reservaRepository, CanjeRepository canjeRepository) {
+                         ReservaRepository reservaRepository, CanjeRepository canjeRepository, Clock reloj) {
+        this.reloj = reloj;
         this.usuarioRepository = usuarioRepository;
         this.clienteRepository = clienteRepository;
         this.reservaRepository = reservaRepository;
@@ -148,14 +153,14 @@ public class PuntosService {
         c.setPuntos(b.puntos());
         c.setDescuento(b.descuento());
         c.setCodigo(codigoUnico());
-        c.setCreadoEn(LocalDateTime.now());
+        c.setCreadoEn(LocalDateTime.now(reloj));
         c.setVenceEn(c.getCreadoEn().plusDays(ReglasReserva.VIGENCIA_CANJE_DIAS));
         c = canjeRepository.save(c);
         return info(c);
     }
 
     private CanjeInfo info(Canje c) {
-        boolean vencido = c.vencido(LocalDateTime.now());
+        boolean vencido = c.vencido(LocalDateTime.now(reloj));
         boolean anulable = c.getEstado() == Canje.Estado.DISPONIBLE && c.getPuntos() > 0;
         return new CanjeInfo(c.getCodigo(), c.getTitulo(), c.getDescuento(), vencido ? "VENCIDO" : c.getEstado().name(),
                 c.getCreadoEn(), c.getUsadoEn(), c.getVenceEn(), anulable);
@@ -179,7 +184,7 @@ public class PuntosService {
         if (c.getPuntos() <= 0) {
             throw new IllegalStateException("Un crédito por cancelación no se anula: se aplica al pagar tu próxima sesión");
         }
-        if (c.vencido(LocalDateTime.now())) {
+        if (c.vencido(LocalDateTime.now(reloj))) {
             throw new IllegalStateException("El código ya venció: los puntos de un código vencido no se devuelven");
         }
         c.setEstado(Canje.Estado.ANULADO);
@@ -224,7 +229,7 @@ public class PuntosService {
         c.setPuntos(0);
         c.setDescuento(importe);
         c.setCodigo(codigoUnico());
-        c.setCreadoEn(LocalDateTime.now());
+        c.setCreadoEn(LocalDateTime.now(reloj));
         c.setVenceEn(c.getCreadoEn().plusDays(ReglasReserva.VIGENCIA_CREDITO_DIAS));
         return canjeRepository.save(c);
     }
@@ -242,14 +247,14 @@ public class PuntosService {
         }
     }
 
-    private static String motivoInvalido(Canje c, Cliente cliente) {
+    private String motivoInvalido(Canje c, Cliente cliente) {
         if (c.getEstado() == Canje.Estado.ANULADO) {
             return "El código fue anulado";
         }
         if (c.getEstado() != Canje.Estado.DISPONIBLE) {
             return "El código ya fue usado";
         }
-        if (c.vencido(LocalDateTime.now())) {
+        if (c.vencido(LocalDateTime.now(reloj))) {
             return "El código venció el " + c.getVenceEn().toLocalDate();
         }
         if (!c.getCliente().getId().equals(cliente.getId())) {

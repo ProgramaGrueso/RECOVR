@@ -1,5 +1,6 @@
 package com.recovr.backend.service;
 
+import java.time.Clock;
 import com.recovr.backend.entity.EstadoReserva;
 import com.recovr.backend.entity.Reserva;
 import com.recovr.backend.repository.ReservaRepository;
@@ -34,13 +35,17 @@ public class ReservaCicloVidaService {
     private volatile int ultimosCambios;
     private final java.util.concurrent.atomic.AtomicLong totalCambios = new java.util.concurrent.atomic.AtomicLong();
 
-    public ReservaCicloVidaService(ReservaRepository reservaRepository) {
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
+    public ReservaCicloVidaService(ReservaRepository reservaRepository, Clock reloj) {
+        this.reloj = reloj;
         this.reservaRepository = reservaRepository;
     }
 
     @Scheduled(initialDelay = 3000, fixedDelay = 60000)
     public void ejecutarPeriodicamente() {
-        int cambios = actualizarEstados(LocalDateTime.now());
+        int cambios = actualizarEstados(LocalDateTime.now(reloj));
         if (cambios > 0) {
             log.info("Ciclo de vida de reservas: {} reserva(s) actualizadas automáticamente.", cambios);
         }

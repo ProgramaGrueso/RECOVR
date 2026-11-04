@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -99,7 +98,7 @@ public class ApiExceptionHandler {
 
     static Map<String, Object> cuerpo(HttpStatus status, String error, String mensaje) {
         Map<String, Object> body = new LinkedHashMap<>();
-        body.put("timestamp", LocalDateTime.now().toString());
+        body.put("timestamp", java.time.OffsetDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).toString());
         body.put("status", status.value());
         body.put("error", error);
         body.put("message", mensaje);

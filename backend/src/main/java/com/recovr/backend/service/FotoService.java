@@ -1,5 +1,6 @@
 package com.recovr.backend.service;
 
+import java.time.Clock;
 import com.recovr.backend.entity.FotoEmpleado;
 import com.recovr.backend.exception.RecursoNoEncontradoException;
 import com.recovr.backend.repository.EmpleadoRepository;
@@ -37,7 +38,11 @@ public class FotoService {
     private final FotoEmpleadoRepository fotoRepository;
     private final EmpleadoRepository empleadoRepository;
 
-    public FotoService(FotoEmpleadoRepository fotoRepository, EmpleadoRepository empleadoRepository) {
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
+    public FotoService(FotoEmpleadoRepository fotoRepository, EmpleadoRepository empleadoRepository, Clock reloj) {
+        this.reloj = reloj;
         this.fotoRepository = fotoRepository;
         this.empleadoRepository = empleadoRepository;
     }
@@ -60,7 +65,7 @@ public class FotoService {
         foto.setEmpleadoId(empleadoId);
         foto.setTipo("image/jpeg");
         foto.setDatos(recodificar(original));
-        foto.setActualizadaEn(LocalDateTime.now());
+        foto.setActualizadaEn(LocalDateTime.now(reloj));
         fotoRepository.save(foto);
     }
 

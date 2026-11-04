@@ -1,5 +1,6 @@
 package com.recovr.backend.service;
 
+import java.time.Clock;
 import com.recovr.backend.dto.PagoRequest;
 import com.recovr.backend.dto.ReservaRequest;
 import com.recovr.backend.dto.ReservaResponse;
@@ -50,7 +51,11 @@ public class ReservaService {
     private final CanjeRepository canjeRepository;
     private final AusenciaEmpleadoRepository ausenciaRepository;
 
-    public ReservaService(ReservaRepository reservaRepository, PagoRepository pagoRepository, UsuarioRepository usuarioRepository, ClienteRepository clienteRepository, EmpleadoRepository empleadoRepository, ServicioRepository servicioRepository, SalaRepository salaRepository, PuntosService puntosService, CanjeRepository canjeRepository, AusenciaEmpleadoRepository ausenciaRepository) {
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
+    public ReservaService(ReservaRepository reservaRepository, PagoRepository pagoRepository, UsuarioRepository usuarioRepository, ClienteRepository clienteRepository, EmpleadoRepository empleadoRepository, ServicioRepository servicioRepository, SalaRepository salaRepository, PuntosService puntosService, CanjeRepository canjeRepository, AusenciaEmpleadoRepository ausenciaRepository, Clock reloj) {
+        this.reloj = reloj;
         this.ausenciaRepository = ausenciaRepository;
         this.reservaRepository = reservaRepository;
         this.pagoRepository = pagoRepository;
@@ -93,7 +98,7 @@ public class ReservaService {
         if (reserva.getEstado() == null) {
             reserva.setEstado(EstadoReserva.PENDIENTE);
         }
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = LocalDateTime.now(reloj);
         if (reserva.getFechaHora() == null || reserva.getFechaHora().isBefore(ahora)) {
             throw new IllegalArgumentException("La fecha y hora de la reserva debe ser futura");
         }
@@ -126,7 +131,7 @@ public class ReservaService {
         // compiten por el mismo recurso se procesan una tras otra; la segunda ve a la primera y recibe 409.
         reserva.setCliente(clienteRepository.buscarBloqueado(clienteId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente", clienteId)));
-        liberarPlazosVencidos(LocalDateTime.now());
+        liberarPlazosVencidos(LocalDateTime.now(reloj));
         asignarRelaciones(reserva, request);
         reserva.setEstado(EstadoReserva.PENDIENTE);
         return crear(reserva);
@@ -151,7 +156,7 @@ public class ReservaService {
                 throw new IllegalStateException("El estado no se cambia a mano (" + reserva.getEstado() + " → " + nuevo
                         + "): use confirmar-y-pagar, check-in o finalizar. Por aquí solo se puede cancelar.");
             }
-            aplicarCancelacion(reserva, true, LocalDateTime.now());
+            aplicarCancelacion(reserva, true, LocalDateTime.now(reloj));
             return reservaRepository.save(reserva);
         }
         LocalDateTime fechaAnterior = reserva.getFechaHora();
@@ -159,17 +164,17 @@ public class ReservaService {
         Long clienteId = request.clienteId() != null ? request.clienteId() : reserva.getCliente().getId();
         reserva.setCliente(clienteRepository.buscarBloqueado(clienteId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cliente", clienteId)));
-        liberarPlazosVencidos(LocalDateTime.now());
+        liberarPlazosVencidos(LocalDateTime.now(reloj));
         asignarRelaciones(reserva, request);
         if (reserva.getPago() != null && !reserva.getServicio().getId().equals(servicioAnterior)) {
             throw new IllegalStateException("La sesión ya está pagada: no se puede cambiar de servicio. "
                     + "Cancélela (el pago queda como crédito) y cree una nueva.");
         }
-        if (!reserva.getFechaHora().equals(fechaAnterior) && reserva.getFechaHora().isBefore(LocalDateTime.now())) {
+        if (!reserva.getFechaHora().equals(fechaAnterior) && reserva.getFechaHora().isBefore(LocalDateTime.now(reloj))) {
             throw new IllegalArgumentException("La nueva fecha y hora de la reserva debe ser futura");
         }
         validarReglasDeAgenda(reserva, reserva.getId());
-        validarCliente(reserva, reserva.getId(), false, LocalDateTime.now());
+        validarCliente(reserva, reserva.getId(), false, LocalDateTime.now(reloj));
         validarDisponibilidad(reserva, reserva.getId());
         return reservaRepository.save(reserva);
     }
@@ -190,7 +195,7 @@ public class ReservaService {
             throw new IllegalStateException("Solo se pueden cancelar reservas PENDIENTE o CONFIRMADA (estado actual: "
                     + reserva.getEstado() + ")");
         }
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = LocalDateTime.now(reloj);
         if (!puedeGestionar) {
             // Política para el cliente: anticipación mínima y tope mensual de cancelaciones propias
             if (ahora.isAfter(reserva.getFechaHora().minusHours(ReglasReserva.HORAS_MIN_CANCELACION_CLIENTE))) {
@@ -249,7 +254,7 @@ public class ReservaService {
                 || reserva.getPago() == null) {
             throw new IllegalStateException("Solo se puede reabrir una sesión pagada que se canceló automáticamente por no asistencia.");
         }
-        if (!LocalDateTime.now().isBefore(ReglasReserva.finSesion(reserva))) {
+        if (!LocalDateTime.now(reloj).isBefore(ReglasReserva.finSesion(reserva))) {
             throw new IllegalStateException("La sesión ya terminó; no se puede reabrir.");
         }
         clienteRepository.buscarBloqueado(reserva.getCliente().getId());
@@ -257,14 +262,14 @@ public class ReservaService {
         salaRepository.buscarBloqueada(reserva.getSala().getId());
         reserva.setEstado(EstadoReserva.CONFIRMADA);
         validarDisponibilidad(reserva, reserva.getId());
-        validarCliente(reserva, reserva.getId(), false, LocalDateTime.now());
+        validarCliente(reserva, reserva.getId(), false, LocalDateTime.now(reloj));
         reserva.setCanceladaEn(null);
         reserva.setObservacion("Reabierta por el personal: el cliente llegó tarde.");
         return reservaRepository.save(reserva);
     }
 
     public Reserva checkIn(Long id) {
-        return checkIn(id, LocalDateTime.now());
+        return checkIn(id, LocalDateTime.now(reloj));
     }
 
     /**
@@ -332,7 +337,7 @@ public class ReservaService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
         Empleado empleado = empleadoRepository.findByUsuarioId(usuario.getId())
                 .orElseThrow(() -> new IllegalStateException("El usuario no está vinculado a ningún especialista"));
-        return reservaRepository.buscarAgendaEmpleado(empleado.getId(), LocalDateTime.now());
+        return reservaRepository.buscarAgendaEmpleado(empleado.getId(), LocalDateTime.now(reloj));
     }
 
     // Ejemplo de transaccion: confirma la reserva y registra su pago en una sola operacion.
@@ -345,7 +350,7 @@ public class ReservaService {
             throw new IllegalStateException("Solo se pueden confirmar reservas en estado PENDIENTE (estado actual: "
                     + reserva.getEstado() + ")");
         }
-        if (ReglasReserva.holdVencido(reserva, LocalDateTime.now())) {
+        if (ReglasReserva.holdVencido(reserva, LocalDateTime.now(reloj))) {
             throw new IllegalStateException("El plazo para pagar (" + ReglasReserva.HOLD_PAGO_MIN
                     + " min) venció y el cupo se liberó. Crea la reserva de nuevo.");
         }
@@ -355,7 +360,7 @@ public class ReservaService {
         pago.setReserva(reserva);
         reserva.setPago(pago);
         if (pago.getFechaPago() == null) {
-            pago.setFechaPago(LocalDateTime.now());
+            pago.setFechaPago(LocalDateTime.now(reloj));
         }
         pagoRepository.save(pago);
 
@@ -391,7 +396,7 @@ public class ReservaService {
         Reserva confirmada = confirmarYPagar(reservaId, pago);
         if (canje != null) {
             canje.setEstado(Canje.Estado.USADO);
-            canje.setUsadoEn(LocalDateTime.now());
+            canje.setUsadoEn(LocalDateTime.now(reloj));
             canje.setReserva(confirmada);
             canjeRepository.save(canje);
             // Un crédito mayor que la sesión no se pierde: lo que sobra queda como un crédito nuevo
@@ -547,7 +552,7 @@ public class ReservaService {
         var servicio = servicioRepository.findById(servicioId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Servicio", servicioId));
         Long clienteId = correoCliente != null ? clienteIdDelUsuario(correoCliente) : null;
-        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime ahora = LocalDateTime.now(reloj);
         liberarPlazosVencidos(ahora);
         List<TurnoDisponibleResponse> turnos = new ArrayList<>();
         for (LocalTime turno : ReglasReserva.TURNOS) {

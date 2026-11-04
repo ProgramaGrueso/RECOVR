@@ -1,5 +1,6 @@
 package com.recovr.backend.service;
 
+import java.time.Clock;
 import com.recovr.backend.dto.MiCuentaDtos.*;
 import com.recovr.backend.dto.ReservaResponse;
 import com.recovr.backend.entity.Cliente;
@@ -29,8 +30,12 @@ public class MiCuentaService {
     private final ReservaRepository reservaRepository;
     private final PuntosService puntosService;
 
+    /** Reloj del negocio (hora de Lima): nunca la zona horaria del servidor. */
+    private final Clock reloj;
+
     public MiCuentaService(UsuarioRepository usuarioRepository, ClienteRepository clienteRepository,
-                           ReservaRepository reservaRepository, PuntosService puntosService) {
+                           ReservaRepository reservaRepository, PuntosService puntosService, Clock reloj) {
+        this.reloj = reloj;
         this.usuarioRepository = usuarioRepository;
         this.clienteRepository = clienteRepository;
         this.reservaRepository = reservaRepository;
@@ -39,7 +44,7 @@ public class MiCuentaService {
 
     @Transactional(readOnly = true)
     public MiCuentaResponse resumen(String correo) {
-        return resumen(correo, LocalDateTime.now());
+        return resumen(correo, LocalDateTime.now(reloj));
     }
 
     @Transactional(readOnly = true)

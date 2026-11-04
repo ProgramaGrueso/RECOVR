@@ -43,6 +43,9 @@ public class ReservaBackendServiceTest {
     @Mock
     private com.recovr.backend.repository.AusenciaEmpleadoRepository ausenciaRepository;
 
+    @org.mockito.Spy
+    private java.time.Clock reloj = java.time.Clock.system(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO);
+
     @InjectMocks
     private ReservaService reservaService;
 
@@ -54,7 +57,7 @@ public class ReservaBackendServiceTest {
 
     @BeforeEach
     void setUp() {
-        manana10 = LocalDateTime.now().plusDays(1).withHour(15).withMinute(0).withSecond(0).withNano(0);
+        manana10 = LocalDateTime.now(reloj).plusDays(1).withHour(15).withMinute(0).withSecond(0).withNano(0);
 
         sala = new Sala();
         sala.setId(1L);
@@ -134,7 +137,7 @@ public class ReservaBackendServiceTest {
     @Test
     @DisplayName("Debe rechazar reservas con fecha en el pasado")
     void debeRechazarFechaPasada() {
-        assertThatThrownBy(() -> reservaService.crear(nuevaReserva(LocalDateTime.now().minusHours(1))))
+        assertThatThrownBy(() -> reservaService.crear(nuevaReserva(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusHours(1))))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -218,7 +221,7 @@ public class ReservaBackendServiceTest {
     @Test
     @DisplayName("Una pendiente cuyo plazo de pago venció no se puede cobrar")
     void noDebeCobrarPendienteVencida() {
-        reservaPrueba.setCreadaEn(LocalDateTime.now().minusMinutes(ReglasReserva.HOLD_PAGO_MIN + 1));
+        reservaPrueba.setCreadaEn(LocalDateTime.now(com.recovr.backend.config.RelojConfig.ZONA_NEGOCIO).minusMinutes(ReglasReserva.HOLD_PAGO_MIN + 1));
         given(reservaRepository.findById(10L)).willReturn(Optional.of(reservaPrueba));
 
         assertThatThrownBy(() -> reservaService.confirmarYPagar(10L, new Pago()))
