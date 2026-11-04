@@ -17,6 +17,12 @@ public class LoginAttemptService {
 
     static final int MAX_FALLOS = 5;
     static final Duration BLOQUEO = Duration.ofMinutes(5);
+    /** Logins fallidos desde una misma IP (contra cualquier correo) admitidos en {@link #VENTANA_IP}. */
+    static final int MAX_FALLOS_IP = 20;
+    static final Duration VENTANA_IP = Duration.ofMinutes(10);
+    /** Cuentas nuevas que se pueden registrar desde una misma IP por hora. */
+    static final int MAX_REGISTROS_IP = 5;
+    static final Duration VENTANA_REGISTRO = Duration.ofHours(1);
 
     private record Intento(int fallos, Instant bloqueadoHasta) {}
 
