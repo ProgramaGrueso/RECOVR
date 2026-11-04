@@ -2,9 +2,9 @@
 -- anteriores) y deja la base lista para uso real.
 -- Se conservan: servicios, cabinas, terapeutas oficiales (Ely, Miranda, Pamela y Maria), cuentas que NO sean demo
 -- y todo lo que hayan creado personas reales. Ejecutar con el backend APAGADO:
---   docker exec -i recovr-mysql mysql -uroot -proot recovr_db < backend/bdd/limpiar-demo.sql
+--   docker exec -i recovr-mysql sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" recovr_db' < backend/bdd/limpiar-demo.sql
 -- Después arrancar sin datos demo y con el primer administrador por configuración:
---   ADMIN_EMAIL=dueño@tu-negocio.pe ADMIN_PASSWORD='ClaveInicial123' ./run-real.sh
+--   (define ADMIN_EMAIL y ADMIN_PASSWORD en backend/.env)  ./run-real.sh
 
 START TRANSACTION;
 

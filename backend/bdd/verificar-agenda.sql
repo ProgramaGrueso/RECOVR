@@ -1,5 +1,5 @@
 -- Verifica la agenda sembrada (o cualquier agenda real) directamente en MySQL.
--- Uso: docker exec -i recovr-mysql mysql -uroot -p"$DB_PASSWORD" recovr_db < backend/bdd/verificar-agenda.sql
+-- Uso: docker exec -i recovr-mysql sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" recovr_db' < backend/bdd/verificar-agenda.sql
 -- Cada consulta de solapes debe devolver 0 filas.
 
 -- 1) Misma terapeuta con dos citas activas cuyos bloques (sesión + limpieza) se cruzan

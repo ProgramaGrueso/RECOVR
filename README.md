@@ -190,7 +190,7 @@ cd backend
 SPRING_PROFILES_ACTIVE=demo mvn spring-boot:run
 ```
 - **Re-ejecutable sin duplicar:** se puede arrancar con el perfil `demo` las veces que se quiera. Los pacientes se buscan por correo y un día que ya tiene citas demo no se vuelve a sembrar; tampoco pisa reservas reales (misma cabina o terapeuta).
-- **Verificar en MySQL:** `docker exec -i recovr-mysql mysql -uroot -p"$DB_PASSWORD" recovr_db < bdd/verificar-agenda.sql` (las consultas de solapes deben devolver 0 filas; además muestra citas por mes/estado y el promedio por día de la semana).
+- **Verificar en MySQL:** `docker exec -i recovr-mysql sh -c 'mysql -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" recovr_db' < bdd/verificar-agenda.sql` (las consultas de solapes deben devolver 0 filas; además muestra citas por mes/estado y el promedio por día de la semana).
 - **Borrar la demo:** `bdd/limpiar-demo.sql` elimina todo lo marcado con `@example.com` (y el antiguo `@recovr.test`).
 - **Pruebas:** `DemoDataSeederTest` (rango, estados, distribución, huecos en el futuro, datos ficticios, idempotencia y **sin citas solapadas**) y `GeneradorAgendaDemoTest` (determinismo y sin solapes, sin base de datos).
 
