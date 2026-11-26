@@ -82,3 +82,6 @@ backend/CREDENCIALES_DEMO.md
 # Agente de IA (DeepSeek) — nunca versionar credenciales
 agent-api/.env
 agent-api/node_modules
+
+# Volcado de la base local con datos reales (no se sube)
+backend/bdd/local-datos.sql
