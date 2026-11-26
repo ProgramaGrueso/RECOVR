@@ -125,6 +125,30 @@ Todas las experiencias están configuradas con tarifas oficiales en moneda nacio
 
 ---
 
+## 🐳 Inicio rápido con Docker (recomendado)
+
+Funciona igual en Windows, macOS y Linux (Intel o ARM). Solo necesitas [Docker](https://www.docker.com/products/docker-desktop/) y Git: no hace falta instalar Java, Node, Maven ni MySQL.
+
+```bash
+git clone https://github.com/ProgramaGrueso/RECOVR.git
+cd RECOVR
+docker compose up --build
+```
+
+Cuando termine de arrancar, abre **http://localhost:4200**. La primera vez tarda unos minutos porque compila el backend y el frontend dentro de Docker. Por defecto carga datos de demostración.
+
+Opciones (copia `.env.example` a `.env` y edita):
+
+- `WEB_PORT`: puerto de la web si el 4200 está ocupado.
+- `SEED_DEMO_DATA=false` + `ADMIN_EMAIL` y `ADMIN_PASSWORD`: modo real, sin datos de prueba y con tu primer administrador (mínimo 8 caracteres, con letras y números).
+- `JWT_SECRET` y `DB_PASSWORD`: cámbialos si vas a exponerlo fuera de tu equipo (`openssl rand -base64 48`).
+
+Comandos útiles: `docker compose down` apaga todo conservando los datos; `docker compose down -v` también borra la base de datos; `docker compose logs -f backend` muestra el log del backend.
+
+Las secciones siguientes explican la instalación manual, sin Docker para la aplicación.
+
+---
+
 ## 🚀 Requisitos Previos
 
 Asegúrate de contar con el siguiente entorno instalado en tu máquina local:
