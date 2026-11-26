@@ -65,9 +65,16 @@ export class AdminComponent implements OnInit, OnDestroy {
   serverTime = '';
   private clockInterval: ReturnType<typeof setInterval> | undefined;
 
-  user = computed(() => this.auth.user()!);
-  rolInfo = computed(() => ROL_TXT[this.user().rol]);
-  iniciales = computed(() => this.user().nombre.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase());
+  user = computed(() => this.auth.user());
+  rolInfo = computed(() => {
+    const usuario = this.user();
+    return ROL_TXT[usuario ? usuario.rol : 'CLIENTE'];
+  });
+  iniciales = computed(() => {
+    const usuario = this.user();
+    if (!usuario) return '';
+    return usuario.nombre.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+  });
   navItems = computed(() => NAV.filter(i => this.auth.canAccess(i.key)));
 
   ngOnInit(): void {
@@ -82,7 +89,7 @@ export class AdminComponent implements OnInit, OnDestroy {
 
   /** Con una clave temporal el cambio es obligatorio: el modal no se puede cerrar. */
   get claveObligatoria(): boolean {
-    return this.user().debeCambiarClave;
+    return this.user()?.debeCambiarClave ?? false;
   }
 
   get titulo(): string {

@@ -60,10 +60,18 @@ export class ApiService {
 
   private get base(): string {
     try {
-      return localStorage.getItem(URL_KEY) || DEFAULT_API_URL;
-    } catch {
-      return DEFAULT_API_URL;
-    }
+      const guardada = localStorage.getItem(URL_KEY);
+      if (guardada) return guardada;
+    } catch { /* sin almacenamiento */ }
+    // Fuera de localhost (túnel de Cloudflare, Vercel, red local) se usa el mismo origen:
+    // el servidor de la app reenvía /api al backend Spring Boot.
+    try {
+      const host = window.location.hostname;
+      if (host && host !== 'localhost' && host !== '127.0.0.1' && host !== '[::1]') {
+        return `${window.location.origin}/api`;
+      }
+    } catch { /* sin window (pruebas) */ }
+    return DEFAULT_API_URL;
   }
 
   get hasSession(): boolean {

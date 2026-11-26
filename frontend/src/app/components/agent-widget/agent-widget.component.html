@@ -1,0 +1,124 @@
+<div class="agente" [class.agente--abierto]="abierto()">
+  @if (abierto()) {
+    <section class="panel" role="dialog" aria-modal="false" aria-label="Concierge de RECOVR">
+      <header class="panel__head">
+        <div class="carita carita--mini" [class.carita--escucha]="escuchando()" [class.carita--habla]="hablando()" aria-hidden="true">
+          <img class="carita__foto" src="images/asistente.webp" alt="" />
+        </div>
+        <div class="panel__titulo">
+          <strong>Aura <span>concierge</span></strong>
+          <small>
+            @if (escuchando()) { Escuchando… }
+            @else if (hablando()) { Hablando… }
+            @else { En línea · responde en voz }
+          </small>
+        </div>
+        <button type="button" class="panel__cerrar" (click)="cerrar()" aria-label="Cerrar chat">✕</button>
+      </header>
+
+      <div class="panel__registro" #registro aria-live="polite">
+        @for (m of mensajes(); track $index) {
+          <div class="burbuja" [class.burbuja--user]="m.rol === 'user'">
+            <p>{{ m.texto }}</p>
+            @if (m.accion) {
+              <button type="button" class="burbuja__accion" (click)="ejecutarAccion(m.accion)">
+                @switch (m.accion) {
+                  @case ('reserva') { Reservar cita → }
+                  @case ('whatsapp') { Abrir WhatsApp → }
+                  @case ('catalogo') { Ver catálogo → }
+                }
+              </button>
+            }
+            @if (m.propuesta) {
+              <div class="propuesta">
+                <button
+                  type="button"
+                  class="burbuja__accion burbuja__confirmar"
+                  [disabled]="m.confirmada || confirmando() === m.propuesta.ticket"
+                  (click)="confirmar(m.propuesta.ticket, $index)"
+                >
+                  @if (m.confirmada) { Reserva gestionada ✓ }
+                  @else if (confirmando() === m.propuesta.ticket) { Confirmando… }
+                  @else { Confirmar reserva }
+                </button>
+              </div>
+            }
+          </div>
+        }
+        @if (escribiendo()) {
+          <div class="burbuja burbuja--pensando" aria-label="Escribiendo">
+            <span></span><span></span><span></span>
+          </div>
+        }
+      </div>
+
+      <div class="panel__chips">
+        @for (s of sugerencias; track s) {
+          <button type="button" (click)="usarSugerencia(s)">{{ s }}</button>
+        }
+      </div>
+
+      <form class="panel__caja" (submit)="enviarDesdeCaja(caja); $event.preventDefault()">
+        <button
+          type="button"
+          class="mic"
+          [class.mic--on]="escuchando()"
+          (click)="alternarEscucha()"
+          [attr.aria-pressed]="escuchando()"
+          [attr.aria-label]="escuchando() ? 'Detener micrófono' : 'Hablar por micrófono'"
+          [attr.title]="escuchando() ? 'Detener micrófono' : 'Hablar por micrófono'"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <rect x="9" y="3" width="6" height="11" rx="3" />
+            <path d="M5 11a7 7 0 0 0 14 0" />
+            <path d="M12 18v3" />
+          </svg>
+          <span class="mic__onda"></span>
+        </button>
+
+        <input
+          #caja
+          type="text"
+          autocomplete="off"
+          placeholder="{{ escuchando() ? (dictado() || 'Te escucho…') : 'Escribe o dicta tu pregunta' }}"
+          aria-label="Mensaje para el concierge"
+        />
+
+        <button type="submit" class="enviar" aria-label="Enviar mensaje">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 12l16-8-6 16-2.5-6.5L4 12z" />
+          </svg>
+        </button>
+      </form>
+
+      <p class="panel__nota">Aura · asistente de RECOVR · información del spa en tiempo real</p>
+    </section>
+  }
+
+  <button
+    type="button"
+    class="fab"
+    [class.fab--escucha]="escuchando()"
+    [class.fab--habla]="hablando()"
+    (click)="alternar()"
+    [attr.aria-label]="abierto() ? 'Cerrar concierge' : 'Abrir concierge con voz'"
+    [attr.aria-expanded]="abierto()"
+  >
+    <span class="fab__halo" aria-hidden="true"></span>
+    <span class="fab__halo fab__halo--2" aria-hidden="true"></span>
+    <span class="carita" aria-hidden="true">
+      <img class="carita__foto" src="images/asistente.webp" alt="" />
+      <iframe
+        #caraFrame
+        class="carita__lienzo"
+        src="cara/avatar.html"
+        title=""
+        aria-hidden="true"
+        tabindex="-1"
+        scrolling="no"
+        (load)="conectarCara()"
+      ></iframe>
+    </span>
+    <span class="fab__badge" aria-hidden="true" [hidden]="abierto()">1</span>
+  </button>
+</div>

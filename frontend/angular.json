@@ -83,6 +83,10 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json",
+            "allowedHosts": ["localhost", ".trycloudflare.com"]
+          },
           "configurations": {
             "production": {
               "buildTarget": "recovr-frontend:build:production"

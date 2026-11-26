@@ -6,15 +6,114 @@
   <!-- 1b. SCROLL NARRATIVO ANCLADO -->
   <app-scroll-showcase></app-scroll-showcase>
 
-  <!-- 2. CARTA DE TRATAMIENTOS: CARRUSEL INTERACTIVO (como las habitaciones de Wimbledon) -->
-  <app-tratamientos-carrusel
+  <!-- 2. CARTA DE TRATAMIENTOS · CAROUSEL COVERFLOW 3D -->
+  <section
+    #cineSeccion
+    class="cine"
     id="masajes"
-    aria-label="Carta de tratamientos"
-    [servicios]="featuredServices"
-    [filtros]="filtrosTratamientos"
-    (abrir)="openCinemaModal($event)"
-    (reservar)="onReserve($event)">
-  </app-tratamientos-carrusel>
+    aria-label="Carta de masajes exclusivos"
+    tabindex="0"
+  >
+    <div class="cine__barra">
+      <span class="cine__marca">RECOVR SANCTUM</span>
+      <span class="cine__reloj">{{ hora }}</span>
+      <span class="cine__cuenta">TRATAMIENTOS {{ filteredServices.length | number: '2.0-0' }}</span>
+    </div>
+
+    <header class="cine__cabecera">
+      <span class="cine__kicker">CARTA DE TRATAMIENTOS &bull; TARIFAS EN SOLES (S/)</span>
+      <h2 class="cine__titulo">SESIONES SENSORIALES</h2>
+
+      <div class="cine__filtros" role="tablist" aria-label="Filtrar tratamientos">
+        @for (f of filtros; track f) {
+          <button
+            type="button"
+            role="tab"
+            class="cine__filtro"
+            [class.activo]="activeCategory === f"
+            [attr.aria-selected]="activeCategory === f"
+            (click)="filterCategory(f)"
+          >
+            {{ f === 'ALL' ? 'TODOS' : f }}
+            <span>{{ cuenta(f) }}</span>
+          </button>
+        }
+      </div>
+    </header>
+
+    <div class="cine__escenario" [class.cine__escenario--bn]="blancoNegro">
+      <button
+        type="button"
+        class="cine__flecha cine__flecha--izq"
+        (click)="mover(-1)"
+        aria-label="Tratamiento anterior"
+      >
+        ‹
+      </button>
+
+      <div class="cine__pista">
+        @for (s of filteredServices; track s.id; let i = $index) {
+          <article
+            class="cine__carta"
+            [class.cine__carta--activa]="i === cinemaIndex"
+            [style.transform]="transformar(i)"
+            [style.opacity]="opacidad(i)"
+            [style.zIndex]="capa(i)"
+            [attr.aria-hidden]="i - cinemaIndex > 3 || cinemaIndex - i > 3"
+            (click)="seleccionar(i)"
+          >
+            <img [src]="s.posterUrl || s.imageUrl" [alt]="s.name" loading="lazy" />
+            <div class="cine__velo"></div>
+            <span class="cine__codigo">{{ s.code }}</span>
+            <div class="cine__pie">
+              <strong>{{ s.name }}</strong>
+              <span>S/ {{ s.price }} &bull; {{ s.durationMinutes }} MIN</span>
+            </div>
+          </article>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="cine__flecha cine__flecha--der"
+        (click)="mover(1)"
+        aria-label="Tratamiento siguiente"
+      >
+        ›
+      </button>
+    </div>
+
+    @if (servicioActivo; as activo) {
+      <div class="cine__detalle">
+        <span class="cine__meta">
+          TRAT. {{ cinemaIndex + 1 | number: '2.0-0' }} / {{ filteredServices.length | number: '2.0-0' }}
+          &bull; {{ activo.category }} &bull; S/ {{ activo.price }}
+        </span>
+        <h3>{{ activo.name }}</h3>
+        <p class="cine__desc">{{ activo.description }}</p>
+        <ul class="cine__features">
+          @for (f of activo.features; track f) {
+            <li>{{ f }}</li>
+          }
+        </ul>
+        <div class="cine__acciones">
+          <button type="button" class="cine__btn cine__btn--ghost" (click)="openCinemaModal(activo)">
+            VER TRATAMIENTO
+          </button>
+          <button type="button" class="cine__btn cine__btn--cta" (click)="onReserve(activo)">
+            RESERVAR
+          </button>
+        </div>
+      </div>
+    }
+
+    <div class="cine__ayuda">
+      <button type="button" class="cine__bn" (click)="alternarBn()">
+        B&amp;N [{{ blancoNegro ? 'ON' : 'OFF' }}]
+      </button>
+      <span>‹ › PARA MOVERTE &bull; ENTER PARA ABRIR</span>
+    </div>
+  </section>
 
   <!-- 3. CABINAS CLIMATIZADAS SHOWCASE -->
   <section class="cabinas-section" id="cabinas" aria-label="Cabinas privadas climatizadas">

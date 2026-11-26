@@ -1,3 +1,4 @@
+@if (user(); as u) {
 <main class="admin-shell">
   <!-- BARRA LATERAL: solo los módulos que el rol puede usar -->
   <aside class="admin-sidebar">
@@ -5,15 +6,15 @@
       <span class="cross">✠</span>
       <div class="brand-text-col">
         <span class="brand-title">RECOVR</span>
-        <small class="brand-sub">{{ user().rol === 'CLIENTE' ? 'MI ESPACIO' : 'CONTROL CENTER' }}</small>
+        <small class="brand-sub">{{ u.rol === 'CLIENTE' ? 'MI ESPACIO' : 'CONTROL CENTER' }}</small>
       </div>
     </div>
 
     <div class="sidebar-user-card" [attr.data-tone]="rolInfo().tono">
       <div class="user-avatar">{{ iniciales() }}</div>
       <div class="user-info">
-        <div class="user-role-badge" [attr.data-tone]="rolInfo().tono">{{ user().rol }}</div>
-        <strong class="user-name">{{ user().nombre }}</strong>
+        <div class="user-role-badge" [attr.data-tone]="rolInfo().tono">{{ u.rol }}</div>
+        <strong class="user-name">{{ u.nombre }}</strong>
         <span class="user-scope">{{ rolInfo().titulo }}</span>
       </div>
     </div>
@@ -24,7 +25,7 @@
       @for (item of navItems(); track item.key) {
         <button class="nav-item-btn" [class.active]="activeView === item.key" (click)="setView(item.key)">
           <span class="nav-icon">{{ item.icon }}</span>
-          <span class="nav-text">{{ item.key === 'AGENDA' && user().rol === 'ESPECIALISTA' ? 'Mi agenda' : item.label }}</span>
+          <span class="nav-text">{{ item.key === 'AGENDA' && u.rol === 'ESPECIALISTA' ? 'Mi agenda' : item.label }}</span>
         </button>
       }
     </nav>
@@ -50,14 +51,14 @@
       <div class="header-title-box">
         <div class="header-top-nav-row">
           <div style="display:flex; gap:1.5rem; align-items:center; flex-wrap:wrap;">
-            <span class="subhead">[ SANCTUM RECOVR / {{ user().rol === 'CLIENTE' ? 'MI CUENTA' : 'GESTIÓN OPERATIVA' }} ]</span>
+            <span class="subhead">[ SANCTUM RECOVR / {{ u.rol === 'CLIENTE' ? 'MI CUENTA' : 'GESTIÓN OPERATIVA' }} ]</span>
             <span class="subhead" style="font-family:monospace; background:rgba(255,255,255,0.05); padding:0.2rem 0.6rem; border-radius:4px; font-size:0.85rem;">
               🕒 {{ serverTime }}
             </span>
           </div>
         </div>
         <h1 class="title">{{ titulo }}</h1>
-        <p class="header-desc">Sesión de <strong>{{ user().nombre }}</strong> · {{ rolInfo().alcance }}.</p>
+        <p class="header-desc">Sesión de <strong>{{ u.nombre }}</strong> · {{ rolInfo().alcance }}.</p>
       </div>
     </header>
 
@@ -81,3 +82,4 @@
     }
   </section>
 </main>
+}

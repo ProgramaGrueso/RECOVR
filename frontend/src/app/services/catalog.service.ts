@@ -318,8 +318,9 @@ export class CatalogService {
   }
 
   /**
-   * Las terapeutas del sitio salen de la base de datos (solo activas): nombre, especialidad, presentación y la foto que
-   * subieron ellas mismas o la administración. Los videos y textos de las cuatro fundadoras vienen del catálogo local.
+   * Las terapeutas del sitio salen de la base de datos (solo activas): nombre, especialidad y presentación.
+   * Los retratos públicos son los del repositorio (assets/img); la foto subida a la base queda para el
+   * panel interno (Personal), y solo se usa en la web si esa terapeuta no tiene retrato local.
    * Si el servidor no responde se muestra el catálogo local para que el sitio público no quede vacío.
    */
   getProfessionals(): Observable<Professional[]> {
@@ -337,7 +338,7 @@ export class CatalogService {
       name: t.nombre,
       title: local?.title ?? t.especialidad ?? 'Terapeuta RECOVR',
       specialty: t.especialidad ?? local?.specialty ?? '',
-      photoUrl: t.fotoUrl ? origen + t.fotoUrl : (local?.photoUrl ?? 'assets/img/sin-foto.svg'),
+      photoUrl: local?.photoUrl ?? (t.fotoUrl ? origen + t.fotoUrl : 'assets/img/sin-foto.svg'),
       videoUrl: local?.videoUrl,
       bio: t.bio ?? local?.bio ?? '',
       duties: local?.duties ?? '',
